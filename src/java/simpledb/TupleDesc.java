@@ -7,7 +7,6 @@ import java.util.*;
  * TupleDesc describes the schema of a tuple.
  */
 public class TupleDesc implements Serializable {
-
     /**
      * A help class to facilitate organizing the information of each field
      * */
@@ -34,6 +33,8 @@ public class TupleDesc implements Serializable {
             return fieldName + "(" + fieldType + ")";
         }
     }
+    
+    private final TDItem[] schema;
 
     /**
      * @return
@@ -59,7 +60,14 @@ public class TupleDesc implements Serializable {
      *            be null.
      */
     public TupleDesc(Type[] typeAr, String[] fieldAr) {
-        // some code goes here
+    	if (typeAr.length != fieldAr.length) {
+    		throw new IllegalArgumentException("typeAr.length != fieldAr.length");
+    	}
+    	int len = typeAr.length;
+    	schema = new TDItem[len];
+    	for (int i = 0; i < len; i++) {
+    		schema[i] = new TDItem(typeAr[i], fieldAr[i]);
+    	}
     }
 
     /**
@@ -71,15 +79,25 @@ public class TupleDesc implements Serializable {
      *            TupleDesc. It must contain at least one entry.
      */
     public TupleDesc(Type[] typeAr) {
-        // some code goes here
+    	int len = typeAr.length;
+    	schema = new TDItem[len];
+    	for (int i = 0; i < len; i++) {
+    		schema[i] = new TDItem(typeAr[i], null);
+    	}
+    }
+    
+    /**
+     * Constructor. Create a new tuple desc directly from a schema list.
+     */
+    private TupleDesc(TDItem[] schema) {
+    	this.schema = schema;
     }
 
     /**
      * @return the number of fields in this TupleDesc
      */
     public int numFields() {
-        // some code goes here
-        return 0;
+        return schema.length;
     }
 
     /**
@@ -92,8 +110,10 @@ public class TupleDesc implements Serializable {
      *             if i is not a valid field reference.
      */
     public String getFieldName(int i) throws NoSuchElementException {
-        // some code goes here
-        return null;
+        if (i < 0 || i >= numFields()) {
+        	throw new NoSuchElementException();
+        }
+        return schema[i].fieldName;
     }
 
     /**
@@ -107,8 +127,10 @@ public class TupleDesc implements Serializable {
      *             if i is not a valid field reference.
      */
     public Type getFieldType(int i) throws NoSuchElementException {
-        // some code goes here
-        return null;
+    	if (i < 0 || i >= numFields()) {
+        	throw new NoSuchElementException();
+        }
+        return schema[i].fieldType;
     }
 
     /**
@@ -121,8 +143,17 @@ public class TupleDesc implements Serializable {
      *             if no field with a matching name is found.
      */
     public int fieldNameToIndex(String name) throws NoSuchElementException {
-        // some code goes here
-        return 0;
+    	if (name == null) {
+    		throw new NoSuchElementException();
+    	}
+        int index = 0;
+        for (TDItem i : schema) {
+        	if (name.equals(i.fieldName)) {
+        		return index;
+        	}
+        	index++;
+        }
+        throw new NoSuchElementException();
     }
 
     /**
@@ -130,8 +161,11 @@ public class TupleDesc implements Serializable {
      *         Note that tuples from a given TupleDesc are of a fixed size.
      */
     public int getSize() {
-        // some code goes here
-        return 0;
+        int size = 0;
+        for (TDItem i : schema) {
+        	size += i.fieldType.getLen();
+        }
+        return size;
     }
 
     /**
@@ -145,8 +179,17 @@ public class TupleDesc implements Serializable {
      * @return the new TupleDesc
      */
     public static TupleDesc merge(TupleDesc td1, TupleDesc td2) {
-        // some code goes here
-        return null;
+        TDItem[] s1 = td1.schema, 
+        		 s2 = td2.schema, 
+        		 s = new TDItem[s1.length + s2.length];
+        int j = 0;
+        for (int i = 0; i < s1.length; i++) {
+        	s[j++] = s1[i];
+        }
+        for (int i = 0; i < s2.length; i++) {
+        	s[j++] = s2[i];
+        }
+        return new TupleDesc(s);
     }
 
     /**
@@ -158,18 +201,37 @@ public class TupleDesc implements Serializable {
      *            the Object to be compared for equality with this TupleDesc.
      * @return true if the object is equal to this TupleDesc.
      */
-    public boolean equals(Object o) {
-        // some code goes here
-        return false;
-    }
-
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		TupleDesc other = (TupleDesc) obj;
+		if (schema.length != other.schema.length) {
+			return false;
+		}
+		for (int i = 0; i < schema.length; i++) {
+			Type t1 = schema[i].fieldType, t2 = other.schema[i].fieldType;
+			if (!t1.equals(t2)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
     public int hashCode() {
         // If you want to use TupleDesc as keys for HashMap, implement this so
         // that equal objects have equals hashCode() results
         throw new UnsupportedOperationException("unimplemented");
     }
 
-    /**
+	/**
      * Returns a String describing this descriptor. It should be of the form
      * "fieldType[0](fieldName[0]), ..., fieldType[M](fieldName[M])", although
      * the exact format does not matter.
@@ -177,7 +239,14 @@ public class TupleDesc implements Serializable {
      * @return String describing this descriptor.
      */
     public String toString() {
-        // some code goes here
-        return "";
+    	StringBuilder sb = new StringBuilder();
+    	for (int i = 0; i < schema.length; i++) {
+    		TDItem td = schema[i];
+    		sb.append(String.format("%s[%d](%s[%d])", td.fieldType, i, td.fieldName, i));
+    		if (i < schema.length - 1) {
+    			sb.append(", ");
+    		}
+    	}
+    	return sb.toString();
     }
 }

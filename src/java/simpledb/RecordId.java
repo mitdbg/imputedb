@@ -7,8 +7,10 @@ import java.io.Serializable;
  * specific table.
  */
 public class RecordId implements Serializable {
-
     private static final long serialVersionUID = 1L;
+    
+    private final PageId pageId;
+    private final int tupleNum;
 
     /**
      * Creates a new RecordId referring to the specified PageId and tuple
@@ -20,23 +22,22 @@ public class RecordId implements Serializable {
      *            the tuple number within the page.
      */
     public RecordId(PageId pid, int tupleno) {
-        // some code goes here
+        pageId = pid;
+        tupleNum = tupleno;
     }
 
     /**
      * @return the tuple number this RecordId references.
      */
     public int getTupleNumber() {
-        // some code goes here
-        return 0;
+        return tupleNum;
     }
 
     /**
      * @return the page id this RecordId references.
      */
     public PageId getPageId() {
-        // some code goes here
-        return null;
+        return pageId;
     }
 
     /**
@@ -46,10 +47,29 @@ public class RecordId implements Serializable {
      * @return True if this and o represent the same tuple
      */
     @Override
-    public boolean equals(Object o) {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-    }
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		RecordId other = (RecordId) obj;
+		if (pageId == null) {
+			if (other.pageId != null) {
+				return false;
+			}
+		} else if (!pageId.equals(other.pageId)) {
+			return false;
+		}
+		if (tupleNum != other.tupleNum) {
+			return false;
+		}
+		return true;
+	}
 
     /**
      * You should implement the hashCode() so that two equal RecordId instances
@@ -58,10 +78,12 @@ public class RecordId implements Serializable {
      * @return An int that is the same for equal RecordId objects.
      */
     @Override
-    public int hashCode() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-
-    }
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((pageId == null) ? 0 : pageId.hashCode());
+		result = prime * result + tupleNum;
+		return result;
+	}
 
 }

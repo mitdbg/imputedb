@@ -2,6 +2,9 @@ package simpledb;
 
 /** Unique identifier for HeapPage objects. */
 public class HeapPageId implements PageId {
+	private final int tableId;
+	private final int pageNum;
+	private final int hashCode;
 
     /**
      * Constructor. Create a page id structure for a specific page of a
@@ -11,13 +14,14 @@ public class HeapPageId implements PageId {
      * @param pgNo The page number in that table.
      */
     public HeapPageId(int tableId, int pgNo) {
-        // some code goes here
+        this.tableId = tableId;
+        pageNum = pgNo;
+        hashCode = Integer.valueOf(String.format("%d%d", tableId, pageNum));
     }
 
     /** @return the table associated with this PageId */
     public int getTableId() {
-        // some code goes here
-        return 0;
+        return tableId;
     }
 
     /**
@@ -25,8 +29,7 @@ public class HeapPageId implements PageId {
      *   this PageId
      */
     public int getPageNumber() {
-        // some code goes here
-        return 0;
+        return pageNum;
     }
 
     /**
@@ -35,10 +38,10 @@ public class HeapPageId implements PageId {
      *   key in a hash table in the BufferPool, for example.)
      * @see BufferPool
      */
-    public int hashCode() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-    }
+    @Override
+	public int hashCode() {
+    	return hashCode;
+	}
 
     /**
      * Compares one PageId to another.
@@ -47,10 +50,26 @@ public class HeapPageId implements PageId {
      * @return true if the objects are equal (e.g., page numbers and table
      *   ids are the same)
      */
-    public boolean equals(Object o) {
-        // some code goes here
-        return false;
-    }
+    @Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		HeapPageId other = (HeapPageId) obj;
+		if (pageNum != other.pageNum) {
+			return false;
+		}
+		if (tableId != other.tableId) {
+			return false;
+		}
+		return true;
+	}
 
     /**
      *  Return a representation of this object as an array of
