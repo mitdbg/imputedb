@@ -4,7 +4,6 @@ package simpledb;
 public class HeapPageId implements PageId {
 	private final int tableId;
 	private final int pageNum;
-	private final int hashCode;
 
     /**
      * Constructor. Create a page id structure for a specific page of a
@@ -16,7 +15,11 @@ public class HeapPageId implements PageId {
     public HeapPageId(int tableId, int pgNo) {
         this.tableId = tableId;
         pageNum = pgNo;
-        hashCode = Integer.valueOf(String.format("%d%d", tableId, pageNum));
+    }
+    
+    public HeapPageId(PageId pid) {
+    	tableId = pid.getTableId();
+    	pageNum = pid.getPageNumber();
     }
 
     /** @return the table associated with this PageId */
@@ -40,7 +43,11 @@ public class HeapPageId implements PageId {
      */
     @Override
 	public int hashCode() {
-    	return hashCode;
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + pageNum;
+		result = prime * result + tableId;
+		return result;
 	}
 
     /**

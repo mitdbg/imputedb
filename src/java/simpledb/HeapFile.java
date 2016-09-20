@@ -1,6 +1,9 @@
 package simpledb;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import static java.nio.file.StandardOpenOption.READ;
 import java.util.*;
 
 /**
@@ -61,10 +64,18 @@ public class HeapFile implements DbFile {
     public TupleDesc getTupleDesc() {
         return schema;
     }
-
-    // see DbFile.java for javadocs
-    public Page readPage(PageId pid) {
-        // some code goes here
+    
+    public Page readPage(PageId pid) {    	
+    	try (FileChannel fc = FileChannel.open(file.toPath(), READ)) {
+    		int pageSize = BufferPool.getPageSize();
+			int pageOffset = pid.getPageNumber() * pageSize;
+			
+			ByteBuffer buf = ByteBuffer.allocate(pageSize);
+			fc.read(buf, pageOffset);
+			return new HeapPage(new HeapPageId(pid), buf.array());
+    	} catch (IOException e) {
+			e.printStackTrace();
+		}
         return null;
     }
 
@@ -78,8 +89,7 @@ public class HeapFile implements DbFile {
      * Returns the number of pages in this HeapFile.
      */
     public int numPages() {
-        // some code goes here
-        return 0;
+        return (int)(file.length() / BufferPool.getPageSize());
     }
 
     // see DbFile.java for javadocs
@@ -97,12 +107,80 @@ public class HeapFile implements DbFile {
         return null;
         // not necessary for lab1
     }
+    
+    private class PageIterator {
+    	private int pageNum;
+    	private final TransactionId tid;
+    	
+    	public PageIterator(TransactionId tid) {
+    		this.tid = tid;
+    	}
+		
+		public boolean hasNext() {
+			return pageNum < numPages();
+		}
 
-    // see DbFile.java for javadocs
-    public DbFileIterator iterator(TransactionId tid) {
-        // some code goes here
-        return null;
+		public HeapPage next() throws DbException, TransactionAbortedException {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			
+			BufferPool bp = Database.getBufferPool();
+			HeapPage p = (HeapPage)bp.getPage(tid, new HeapPageId(id, pageNum), Permissions.READ_ONLY);
+			pageNum++;
+			return p;
+		}
     }
+    
+    public DbFileIterator iterator(TransactionId tid) {
+        return new DbFileIterator() {
+        	private PageIterator pages;
+        	private Iterator<Tuple> tuplesInPage;
+        	        	
+			@Override
+			public void open() throws DbException, TransactionAbortedException {
+				pages = new PageIterator(tid);
+				tuplesInPage = null;
+			}
 
+			@Override
+			public boolean hasNext() throws DbException, TransactionAbortedException {
+				// Iterator is closed.
+				if (pages == null) {
+					return false;
+				}
+				
+				// Iterator is open but we haven't read a page, 
+				// or iterator is open and we've just finished reading a page.
+				if (tuplesInPage == null || !tuplesInPage.hasNext()) {
+					if (pages.hasNext()) {
+						tuplesInPage = pages.next().iterator();
+					} else {
+						return false;
+					}
+				}
+				return tuplesInPage.hasNext();
+			}
+
+			@Override
+			public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+				if (!hasNext()) {
+					throw new NoSuchElementException();
+				}
+				return tuplesInPage.next();
+			}
+
+			@Override
+			public void rewind() throws DbException, TransactionAbortedException {
+				open();
+			}
+
+			@Override
+			public void close() {
+				pages = null;
+				tuplesInPage = null;
+			}
+        };
+    }
 }
 
