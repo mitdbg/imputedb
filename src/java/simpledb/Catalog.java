@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Catalog keeps track of all available tables in the database and their
@@ -112,9 +111,9 @@ public class Catalog {
     public void loadSchema(String catalogFile) {
         String line = "";
         String baseFolder=new File(new File(catalogFile).getAbsolutePath()).getParent();
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(new File(catalogFile)));
-            
+        try (
+        	BufferedReader br = new BufferedReader(new FileReader(new File(catalogFile)));
+        ) {
             while ((line = br.readLine()) != null) {
                 //assume line is of the format name (field type, field type, ...)
                 String name = line.substring(0, line.indexOf("(")).trim();

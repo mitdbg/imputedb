@@ -180,13 +180,14 @@ public class TestUtil {
                && (count = is.read(buf, offset, buf.length - offset)) >= 0) {
             offset += count;
         }
+    	is.close();
 
         // check that we grabbed the entire file
-        if (offset < buf.length)
+        if (offset < buf.length) {
             throw new IOException("failed to read test data");
+        }
 
         // Close the input stream and return bytes
-        is.close();
         return buf;
     }
 
@@ -245,7 +246,8 @@ public class TestUtil {
      * Mock SeqScan class for unit testing.
      */
     public static class MockScan implements DbIterator {
-        private int cur, low, high, width;
+		private static final long serialVersionUID = -9047494995901857958L;
+		private int cur, low, high, width;
 
         /**
          * Creates a fake SeqScan that returns tuples sequentially with 'width'

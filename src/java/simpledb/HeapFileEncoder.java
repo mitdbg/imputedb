@@ -37,6 +37,7 @@ public class HeapFileEncoder {
           for (Integer field : tuple) {
               writtenFields++;
               if (writtenFields > numFields) {
+            	  bw.close();
                   throw new RuntimeException("Tuple has more than " + numFields + " fields: (" +
                           Utility.listToString(tuple) + ")");
               }
