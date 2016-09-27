@@ -382,7 +382,7 @@ public class LogicalPlan {
                 throw new ParsingException("Unknown table in WHERE clause " + lj.t2Alias);
             
             DbIterator j;
-            j = jo.instantiateJoin(lj,plan1,plan2);
+            j = JoinOptimizer.instantiateJoin(lj,plan1,plan2);
             subplanMap.put(t1name, j);
 
             if (!isSubqueryJoin) {
