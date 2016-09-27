@@ -13,3 +13,7 @@ LAB 1
 
 Instructions for Lab 1 (including how to submit answers) are [here](https://github.com/MIT-DB-Class/course-info/blob/master/lab1.md)
 
+Lab 2
+-----
+
+Instructions for Lab 2 (including how to submit answers) are [here](https://github.com/MIT-DB-Class/course-info/blob/master/lab2.md)
