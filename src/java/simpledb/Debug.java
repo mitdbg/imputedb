@@ -19,7 +19,7 @@ public class Debug {
       if (debug == null) {
           // No system property = disabled
           DEBUG_LEVEL = -1;
-      } else if (debug == "") {
+      } else if (debug.length() == 0) {
           // Empty property = level 0
           DEBUG_LEVEL = 0;
       } else {
