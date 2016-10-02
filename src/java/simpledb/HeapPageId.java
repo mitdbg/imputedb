@@ -65,14 +65,14 @@ public class HeapPageId implements PageId {
 		if (obj == null) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
+		if (!(obj instanceof PageId)) {
 			return false;
 		}
-		HeapPageId other = (HeapPageId) obj;
-		if (pageNum != other.pageNum) {
+		PageId other = (PageId) obj;
+		if (pageNum != other.getPageNumber()) {
 			return false;
 		}
-		if (tableId != other.tableId) {
+		if (tableId != other.getTableId()) {
 			return false;
 		}
 		return true;

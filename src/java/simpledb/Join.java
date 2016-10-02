@@ -6,8 +6,11 @@ import java.util.*;
  * The Join operator implements the relational join operation.
  */
 public class Join extends Operator {
-
     private static final long serialVersionUID = 1L;
+    
+    private final JoinPredicate pred;
+    private DbIterator child1, child2;
+    private Tuple t1 = null;
 
     /**
      * Constructor. Accepts to children to join and the predicate to join them
@@ -21,12 +24,13 @@ public class Join extends Operator {
      *            Iterator for the right(inner) relation to join
      */
     public Join(JoinPredicate p, DbIterator child1, DbIterator child2) {
-        // some code goes here
+        pred = p;
+        this.child1 = child1;
+        this.child2 = child2;
     }
 
     public JoinPredicate getJoinPredicate() {
-        // some code goes here
-        return null;
+        return pred;
     }
 
     /**
@@ -35,8 +39,10 @@ public class Join extends Operator {
      *       alias or table name.
      * */
     public String getJoinField1Name() {
-        // some code goes here
-        return null;
+    	TupleDesc schema = child1.getTupleDesc();
+        String fName = schema.getFieldName(pred.getField1());
+        // TODO: Should be qualified. DbIterator doesn't support this though...
+        return fName;
     }
 
     /**
@@ -45,30 +51,40 @@ public class Join extends Operator {
      *       alias or table name.
      * */
     public String getJoinField2Name() {
-        // some code goes here
-        return null;
+    	TupleDesc schema = child2.getTupleDesc();
+        String fName = schema.getFieldName(pred.getField2());
+        // TODO: Should be qualified. DbIterator doesn't support this though...
+        return fName;
     }
 
     /**
      * @see simpledb.TupleDesc#merge(TupleDesc, TupleDesc) for possible
      *      implementation logic.
      */
+    @Override
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return TupleDesc.merge(child1.getTupleDesc(), child2.getTupleDesc());
     }
 
+    @Override
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
-        // some code goes here
+        super.open();
+        child1.open();
+        child2.open();
     }
 
+    @Override
     public void close() {
-        // some code goes here
+        super.close();
+        child1.close();
+        child2.close();
     }
 
+    @Override
     public void rewind() throws DbException, TransactionAbortedException {
-        // some code goes here
+        child1.rewind();
+        child2.rewind();
     }
 
     /**
@@ -89,20 +105,45 @@ public class Join extends Operator {
      * @return The next matching tuple.
      * @see JoinPredicate#filter
      */
-    protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+    @Override
+    protected Tuple fetchNext() throws TransactionAbortedException, DbException {    	
+    	while (true) {
+    		// If we don't have a working tuple from the outer relation, get one.
+    		// If nothing's available, we're done.
+    		if (t1 == null) {
+    			if (child1.hasNext()) {
+    				t1 = child1.next();
+    			} else {
+    				return null;
+    			}
+    		}
+    		
+    		while (true) {
+	    		if (child2.hasNext()) {
+	    			Tuple t2 = child2.next();
+	    			if (pred.filter(t1, t2)) {
+	    				return new Tuple(t1, t2);
+	    			}
+	    		} else {
+	    			t1 = null;
+	    			child2.rewind();
+	    			break;
+	    		}
+    		}
+    	}
     }
 
     @Override
     public DbIterator[] getChildren() {
-        // some code goes here
-        return null;
+        return new DbIterator[] { child1, child2 };
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
-        // some code goes here
+        if (children.length != 2) {
+        	throw new IllegalArgumentException("Expected two new children.");
+        }
+        this.child1 = children[0];
+        this.child2 = children[1];
     }
-
 }

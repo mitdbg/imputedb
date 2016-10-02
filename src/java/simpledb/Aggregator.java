@@ -75,6 +75,12 @@ public interface Aggregator extends Serializable {
      * @param tup the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup);
+    
+    /**
+     * Returns the TupleDesc associated with this Aggregator. 
+     * @return the TupleDesc associated with this Aggregator.
+     */
+    public TupleDesc getTupleDesc();
 
     /**
      * Create a DbIterator over group aggregate results.

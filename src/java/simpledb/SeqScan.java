@@ -8,14 +8,12 @@ import java.util.*;
  * disk).
  */
 public class SeqScan implements DbIterator {
-
     private static final long serialVersionUID = 1L;
     
     private final TransactionId tid;
     private int tableId;
     private String tableAlias;
     
-    private DbFile file;
     private DbFileIterator tuples;
     
     /**
@@ -53,7 +51,11 @@ public class SeqScan implements DbIterator {
      * @return Return the alias of the table this operator scans. 
      * */
     public String getAlias() {
-    	return tableAlias;
+    	return tableAlias == null ? "null" : tableAlias;
+    }
+    
+    private DbFile getFile() {
+    	return Database.getCatalog().getDatabaseFile(tableId);
     }
 
     /**
@@ -78,8 +80,7 @@ public class SeqScan implements DbIterator {
     }
 
     public void open() throws DbException, TransactionAbortedException {
-        file = Database.getCatalog().getDatabaseFile(tableId);
-        tuples = file.iterator(tid);
+        tuples = getFile().iterator(tid);
         tuples.open();
     }
 
@@ -93,7 +94,7 @@ public class SeqScan implements DbIterator {
      *         prefixed with the tableAlias string from the constructor.
      */
     public TupleDesc getTupleDesc() {
-        return file.getTupleDesc();
+        return getFile().getTupleDesc();
     }
 
     public boolean hasNext() throws TransactionAbortedException, DbException {

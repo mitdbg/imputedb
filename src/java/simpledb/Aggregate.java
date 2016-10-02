@@ -8,8 +8,13 @@ import java.util.*;
  * single column.
  */
 public class Aggregate extends Operator {
-
     private static final long serialVersionUID = 1L;
+    
+    private final int aggField, grpField;
+    private DbIterator child;
+    private final Aggregator.Op op;
+    private final Aggregator agg;
+    private DbIterator aggIterator;
 
     /**
      * Constructor.
@@ -30,7 +35,23 @@ public class Aggregate extends Operator {
      *            The aggregation operator to use
      */
     public Aggregate(DbIterator child, int afield, int gfield, Aggregator.Op aop) {
-	// some code goes here
+		aggField = afield;
+		grpField = gfield;
+		this.child = child;
+		op = aop;
+		
+		Type aggFieldType = child.getTupleDesc().getFieldType(aggField);
+		Type grpFieldType = grpField == Aggregator.NO_GROUPING ? null : child.getTupleDesc().getFieldType(grpField);
+		switch(aggFieldType) {
+		case INT_TYPE:
+			agg = new IntegerAggregator(grpField, grpFieldType, aggField, op);
+			break;
+		case STRING_TYPE:
+			agg = new StringAggregator(grpField, grpFieldType, aggField, op);
+			break;
+		default:
+			throw new RuntimeException("Unexpected field type.");
+		}
     }
 
     /**
@@ -39,8 +60,7 @@ public class Aggregate extends Operator {
      *         {@link simpledb.Aggregator#NO_GROUPING}
      * */
     public int groupField() {
-	// some code goes here
-	return -1;
+		return grpField;
     }
 
     /**
@@ -49,16 +69,17 @@ public class Aggregate extends Operator {
      *         null;
      * */
     public String groupFieldName() {
-	// some code goes here
-	return null;
+    	if (grpField == Aggregator.NO_GROUPING) {
+    		return null;
+    	}
+    	return child.getTupleDesc().getFieldName(grpField);
     }
 
     /**
      * @return the aggregate field
      * */
     public int aggregateField() {
-	// some code goes here
-	return -1;
+		return aggField;
     }
 
     /**
@@ -66,25 +87,36 @@ public class Aggregate extends Operator {
      *         tuples
      * */
     public String aggregateFieldName() {
-	// some code goes here
-	return null;
+    	return child.getTupleDesc().getFieldName(aggField);
     }
 
     /**
      * @return return the aggregate operator
      * */
     public Aggregator.Op aggregateOp() {
-	// some code goes here
-	return null;
+    	return op;
     }
 
     public static String nameOfAggregatorOp(Aggregator.Op aop) {
-	return aop.toString();
+    	return aop.toString();
     }
 
+    @Override
     public void open() throws NoSuchElementException, DbException,
 	    TransactionAbortedException {
-	// some code goes here
+    	super.open();
+    	
+    	try {
+    		child.open();
+        	while (child.hasNext()) {
+        		agg.mergeTupleIntoGroup(child.next());
+        	}
+    	} finally {
+    		child.close();
+    	}
+    	
+    	aggIterator = agg.iterator();
+    	aggIterator.open();
     }
 
     /**
@@ -94,13 +126,20 @@ public class Aggregate extends Operator {
      * the result tuple should contain one field representing the result of the
      * aggregate. Should return null if there are no more tuples.
      */
+    @Override
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-	// some code goes here
-	return null;
+    	if (aggIterator.hasNext()) {
+    		return aggIterator.next();
+    	}
+    	return null;
     }
 
+    @Override
     public void rewind() throws DbException, TransactionAbortedException {
-	// some code goes here
+    	if (aggIterator == null) {
+    		throw new IllegalStateException();
+    	}
+    	aggIterator.rewind();
     }
 
     /**
@@ -114,24 +153,28 @@ public class Aggregate extends Operator {
      * given in the constructor, and child_td is the TupleDesc of the child
      * iterator.
      */
+    @Override
     public TupleDesc getTupleDesc() {
-	// some code goes here
-	return null;
+    	return agg.getTupleDesc();
     }
 
+    @Override
     public void close() {
-	// some code goes here
+    	aggIterator.close();
+    	aggIterator = null;
     }
 
     @Override
     public DbIterator[] getChildren() {
-	// some code goes here
-	return null;
+    	return new DbIterator[] { child };
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
-	// some code goes here
+    	if (children.length != 1) {
+    		throw new IllegalArgumentException("Expected one new child.");
+    	}
+    	child = children[0];
     }
     
 }

@@ -27,7 +27,25 @@ public class Tuple implements Serializable {
      */
     public Tuple(TupleDesc td) {
         schema = td;
-        fields = new Field[schema.getSize()];
+        fields = new Field[schema.numFields()];
+    }
+    
+    public Tuple(TupleDesc td, Field[] fields) {
+    	if (td.numFields() != fields.length) {
+    		throw new IllegalArgumentException("Schema does not match fields.");
+    	}
+    	schema = td;
+    	this.fields = fields;
+    }
+    
+    /**
+     * Create a new tuple which is the concatenation of two existing tuples.
+     */
+    public Tuple(Tuple t1, Tuple t2) {
+    	schema = TupleDesc.merge(t1.schema, t2.schema);
+    	fields = new Field[schema.numFields()];
+    	System.arraycopy(t1.fields, 0, fields, 0, t1.fields.length);
+    	System.arraycopy(t2.fields, 0, fields, t1.fields.length, t2.fields.length);
     }
 
     /**

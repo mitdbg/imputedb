@@ -1,5 +1,7 @@
 package simpledb;
 
+import java.io.IOException;
+
 /**
  * Inserts tuples read from the child operator into the tableid specified in the
  * constructor
@@ -7,6 +9,12 @@ package simpledb;
 public class Insert extends Operator {
 
     private static final long serialVersionUID = 1L;
+    
+    private final TransactionId transId;
+    private DbIterator child;
+    private final int tableId;
+    
+    private static final TupleDesc SCHEMA = new TupleDesc(new Type[] { Type.INT_TYPE });
 
     /**
      * Constructor.
@@ -23,24 +31,33 @@ public class Insert extends Operator {
      */
     public Insert(TransactionId t,DbIterator child, int tableid)
             throws DbException {
-        // some code goes here
+    	if (t == null || child == null) {
+    		throw new IllegalArgumentException();
+    	}
+    	
+        transId = t;
+        this.child = child;
+        tableId = tableid;
     }
 
+    @Override
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return SCHEMA;
     }
 
+    @Override
     public void open() throws DbException, TransactionAbortedException {
-        // some code goes here
+    	super.open();
     }
 
+    @Override
     public void close() {
-        // some code goes here
+        super.close();
     }
 
+    @Override
     public void rewind() throws DbException, TransactionAbortedException {
-        // some code goes here
+    	throw new DbException("Rewind is not supported for INSERT.");
     }
 
     /**
@@ -56,19 +73,41 @@ public class Insert extends Operator {
      * @see Database#getBufferPool
      * @see BufferPool#insertTuple
      */
+    @Override
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+    	// If this is the second call to fetchNext, return null.
+    	if (child == null) {
+    		return null;
+    	}
+    	
+    	child.open();
+    	BufferPool bp = Database.getBufferPool();
+    	int inserted = 0;
+    	while (child.hasNext()) {
+    		Tuple t = child.next();
+    		try {
+				bp.insertTuple(transId, tableId, t);
+			} catch (IOException e) {
+				throw new DbException("IO operation failed during INSERT.");
+			}
+    		inserted++;
+    	}
+    	child.close();
+    	child = null;
+    	
+    	return new Tuple(SCHEMA, new Field[] { new IntField(inserted) });
     }
 
     @Override
     public DbIterator[] getChildren() {
-        // some code goes here
-        return null;
+        return new DbIterator[] { child };
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
-        // some code goes here
+        if (children.length != 1) {
+        	throw new IllegalArgumentException("Expected one new child.");
+        }
+        child = children[0];
     }
 }

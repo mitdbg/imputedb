@@ -12,7 +12,6 @@ import java.io.*;
  *
  */
 public class HeapPage implements Page {
-
     final HeapPageId pid;
     final TupleDesc td;
     final byte header[];
@@ -21,6 +20,9 @@ public class HeapPage implements Page {
 
     byte[] oldData;
     private final Byte oldDataLock=new Byte((byte)0);
+    
+    private boolean isDirty;
+    private TransactionId dirtyId;
 
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
@@ -59,6 +61,16 @@ public class HeapPage implements Page {
         }
         dis.close();
 
+        setBeforeImage();
+    }
+    
+    public HeapPage(HeapPageId id, TupleDesc td) {
+    	this.pid = id;
+        this.td = td;
+        this.numSlots = getNumTuples();
+        
+        header = new byte[getHeaderSize()];
+        tuples = new Tuple[numSlots];
         setBeforeImage();
     }
 
@@ -243,8 +255,28 @@ public class HeapPage implements Page {
      * @param t The tuple to delete
      */
     public void deleteTuple(Tuple t) throws DbException {
-        // some code goes here
-        // not necessary for lab1
+    	RecordId rid = t.getRecordId();
+        if (rid == null || !rid.getPageId().equals(pid)) {
+        	throw new DbException("Tuple is not on this page.");
+        }
+        int tupleNum = rid.getTupleNumber();
+		if (!isSlotUsed(tupleNum)) {
+        	throw new DbException("Slot is already empty.");
+        }
+        
+        // TODO: Should we be be clearing the storage information after deleting the tuple?
+        //t.setRecordId(null);
+        tuples[tupleNum] = null;
+        markSlotUsed(tupleNum, false);
+    }
+    
+    private int getEmptySlot() throws DbException {
+    	for (int slot = 0; slot < numSlots; slot++) {
+    		if (!isSlotUsed(slot)) {
+    			return slot;
+    		}
+    	}
+    	throw new DbException("No empty slots.");
     }
 
     /**
@@ -255,8 +287,13 @@ public class HeapPage implements Page {
      * @param t The tuple to add.
      */
     public void insertTuple(Tuple t) throws DbException {
-        // some code goes here
-        // not necessary for lab1
+        if (!t.getTupleDesc().equals(td)) {
+        	throw new DbException("Tuple description mismatch.");
+        }
+        int slot = getEmptySlot();
+        tuples[slot] = t;
+        t.setRecordId(new RecordId(pid, slot));
+        markSlotUsed(slot, true);
     }
 
     /**
@@ -264,17 +301,15 @@ public class HeapPage implements Page {
      * that did the dirtying
      */
     public void markDirty(boolean dirty, TransactionId tid) {
-        // some code goes here
-	// not necessary for lab1
+        isDirty = dirty;
+        dirtyId = tid;
     }
 
     /**
      * Returns the tid of the transaction that last dirtied this page, or null if the page is not dirty
      */
     public TransactionId isDirty() {
-        // some code goes here
-	// Not necessary for lab1
-        return null;      
+        return isDirty ? dirtyId : null;
     }
 
     /**
@@ -306,8 +341,18 @@ public class HeapPage implements Page {
      * Abstraction to fill or clear a slot on this page.
      */
     private void markSlotUsed(int i, boolean value) {
-        // some code goes here
-        // not necessary for lab1
+    	if (i < 0 || i > numSlots) {
+        	throw new IllegalArgumentException("Slot index out of range.");
+        }
+    	// See http://stackoverflow.com/questions/21408109/set-specific-bit-in-byte-array
+        int byteIndex = i / 8;
+        int bitIndex = i % 8;
+        byte mask = (byte)(1 << bitIndex);
+        if (value) {
+        	header[byteIndex] |= mask;
+        } else {
+        	header[byteIndex] &= ~mask;
+        }
     }
 
     /**
