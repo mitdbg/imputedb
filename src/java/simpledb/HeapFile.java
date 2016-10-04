@@ -63,25 +63,27 @@ public class HeapFile implements DbFile {
     }
     
     public Page readPage(PageId pid) {    	
-    	try (RandomAccessFile fc = new RandomAccessFile(file, "r")) {
+    	try (RandomAccessFile f = new RandomAccessFile(file, "r")) {
     		int pageSize = BufferPool.getPageSize();
 			int pageOffset = pid.getPageNumber() * pageSize;
 			byte[] buf = new byte[pageSize];
 
-			fc.seek(pageOffset);
-			fc.readFully(buf);
+			f.seek(pageOffset);
+			f.readFully(buf);
 			return new HeapPage(new HeapPageId(pid), buf);
     	} catch (IOException e) {
-    		// TODO: This should really throw an IOException.
-			e.printStackTrace();
 		}
         return null;
     }
 
     // see DbFile.java for javadocs
     public void writePage(Page page) throws IOException {
-        // some code goes here
-        // not necessary for lab1
+    	try (RandomAccessFile f = new RandomAccessFile(file, "rw")) {
+    		int pageSize = BufferPool.getPageSize();
+			int pageOffset = page.getId().getPageNumber() * pageSize;
+			f.seek(pageOffset);
+			f.write(page.getPageData());
+    	}
     }
 
     /**
@@ -194,19 +196,25 @@ public class HeapFile implements DbFile {
 				
 				// Iterator is open but we haven't read a page, 
 				// or iterator is open and we've just finished reading a page.
-				if (tuplesInPage == null || !tuplesInPage.hasNext()) {
-					if (pages.hasNext()) {
-						// Release previous page before getting a new one.
-						if (page != null) {
-							bp.releasePage(tid, page.pid);
+				while (true) {
+					if (tuplesInPage == null || !tuplesInPage.hasNext()) {
+						if (pages.hasNext()) {
+							// Release previous page before getting a new one.
+							if (page != null) {
+								bp.releasePage(tid, page.pid);
+							}
+							page = pages.next();
+							tuplesInPage = page.iterator();
+						} else {
+							return false;
 						}
-						page = pages.next();
-						tuplesInPage = page.iterator();
+					}
+					if (tuplesInPage.hasNext()) {
+						return true;
 					} else {
-						return false;
+						tuplesInPage = null;
 					}
 				}
-				return tuplesInPage.hasNext();
 			}
 
 			@Override

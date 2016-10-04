@@ -265,7 +265,7 @@ public class HeapPage implements Page {
         }
         
         // TODO: Should we be be clearing the storage information after deleting the tuple?
-        //t.setRecordId(null);
+		//t.setRecordId(new RecordId(null, t.getRecordId().getTupleNumber()));
         tuples[tupleNum] = null;
         markSlotUsed(tupleNum, false);
     }

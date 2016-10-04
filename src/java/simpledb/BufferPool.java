@@ -55,6 +55,22 @@ public class BufferPool {
     public static void resetPageSize() {
     	BufferPool.pageSize = DEFAULT_PAGE_SIZE;
     }
+    
+    /**
+     * Add a page to the BufferPool. Will evict pages if necessary.
+     * @param p
+     * @throws DbException 
+     */
+    private void addPage(Page p) throws DbException {
+    	if (pages.size() >= numPages) {
+        	evictPage();
+        }
+        
+        PageId pid = p.getId();
+		pages.put(pid, p);
+		usedPages.remove(pid);
+        usedPages.push(pid);
+    }
 
     /**
      * Retrieve the specified page with the associated permissions.
@@ -81,18 +97,12 @@ public class BufferPool {
         	usedPages.remove(pid);
         	usedPages.push(pid);
         	return p;
+        } else {
+        	DbFile dbf = Database.getCatalog().getDatabaseFile(pid.getTableId());
+            p = dbf.readPage(pid);
+            addPage(p);
+            return p;
         }
-        
-        // If the pool is full, drop a page before loading a new one.
-        if (pages.size() >= numPages) {
-        	evictPage();
-        }
-        
-    	DbFile dbf = Database.getCatalog().getDatabaseFile(pid.getTableId());
-        p = dbf.readPage(pid);
-        pages.put(pid, p);
-        usedPages.push(pid);
-        return p;
     }
 
     /**
@@ -160,10 +170,7 @@ public class BufferPool {
     	ArrayList<Page> dirtyPages = file.insertTuple(tid, t);
     	for (Page p : dirtyPages) {
     		p.markDirty(true, tid);
-    		PageId pid = p.getId();
-			pages.put(pid, p);
-    		usedPages.add(pid);
-    		releasePage(tid, pid);
+    		addPage(p);
     	}
     }
 
@@ -186,10 +193,7 @@ public class BufferPool {
     	ArrayList<Page> dirtyPages = file.deleteTuple(tid, t);
     	for (Page p : dirtyPages) {
     		p.markDirty(true, tid);
-    		PageId pid = p.getId();
-			pages.put(pid, p);
-    		usedPages.add(pid);
-    		releasePage(tid, pid);
+    		addPage(p);
     	}
     }
 
