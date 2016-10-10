@@ -85,6 +85,13 @@ public class TupleDesc implements Serializable {
     	}
     }
     
+    public TupleDesc(TupleDesc td, String prefix) {
+    	schema = new TDItem[td.schema.length];
+    	for (int i = 0; i < td.schema.length; i++) {
+    		schema[i] = new TDItem(td.schema[i].fieldType, prefix + "." + td.schema[i].fieldName);
+    	}
+    }
+    
     /**
      * Constructor. Create a new tuple desc directly from a schema list.
      */
