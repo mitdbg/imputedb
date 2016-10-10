@@ -1,9 +1,6 @@
 package simpledb;
 
 import java.util.*;
-import java.util.function.Consumer;
-
-import simpledb.TupleDesc.TDItem;
 
 /**
  * SeqScan is an implementation of a sequential scan access method that reads
