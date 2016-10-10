@@ -3,7 +3,11 @@ package simpledb;
 /** A class to represent a fixed-width histogram over a single integer-based field.
  */
 public class IntHistogram {
-
+	private final double[] buckets;
+	private final int min, max;
+	private final int valuesPerBucket;
+	private int numValues;
+	
     /**
      * Create a new IntHistogram.
      * 
@@ -20,8 +24,27 @@ public class IntHistogram {
      * @param min The minimum integer value that will ever be passed to this class for histogramming
      * @param max The maximum integer value that will ever be passed to this class for histogramming
      */
-    public IntHistogram(int buckets, int min, int max) {
-    	// some code goes here
+    public IntHistogram(int buckets, int min, int max) { 
+    	if (min > max || buckets <= 0) {
+    		throw new IllegalArgumentException();
+    	}
+    	int numBuckets = Math.min(buckets, max - min + 1);
+    	this.buckets = new double[numBuckets];
+    	this.min = min;
+    	this.max = max;
+    	valuesPerBucket = (int) Math.ceil((max - min + 1) / (double)this.buckets.length);
+    }
+    
+    private int bucketOfValue(int v) {
+    	return (v - min) / valuesPerBucket;
+    }
+    
+    private int bucketMin(int v) {
+    	return (bucketOfValue(v) * valuesPerBucket) + min;
+    }
+    
+    private int bucketMax(int v) {
+    	return bucketMin(v) + valuesPerBucket - 1;
     }
 
     /**
@@ -29,7 +52,8 @@ public class IntHistogram {
      * @param v Value to add to the histogram
      */
     public void addValue(int v) {
-    	// some code goes here
+    	buckets[bucketOfValue(v)]++;
+    	numValues++;
     }
 
     /**
@@ -43,9 +67,88 @@ public class IntHistogram {
      * @return Predicted selectivity of this particular operator and value
      */
     public double estimateSelectivity(Predicate.Op op, int v) {
-
-    	// some code goes here
-        return -1.0;
+    	double selValues;
+    	
+    	if (v < min) {
+    		switch(op) {
+			case EQUALS:
+				return 0.0;
+			case GREATER_THAN:
+				return 1.0;
+			case GREATER_THAN_OR_EQ:
+				return 1.0;
+			case LESS_THAN:
+				return 0.0;
+			case LESS_THAN_OR_EQ:
+				return 0.0;
+			case LIKE:
+				throw new RuntimeException("LIKE not valid for integer values.");
+			case NOT_EQUALS:
+				return 1.0;
+			default:
+				throw new RuntimeException("Unexpected operator.");
+    		}
+    	} 
+    	
+    	if (v > max) {
+    		switch(op) {
+			case EQUALS:
+				return 0.0;
+			case GREATER_THAN:
+				return 0.0;
+			case GREATER_THAN_OR_EQ:
+				return 0.0;
+			case LESS_THAN:
+				return 1.0;
+			case LESS_THAN_OR_EQ:
+				return 1.0;
+			case LIKE:
+				throw new RuntimeException("LIKE not valid for integer values.");
+			case NOT_EQUALS:
+				return 1.0;
+			default:
+				throw new RuntimeException("Unexpected operator.");
+    		}
+    	}
+    	
+    	switch(op) {
+		case EQUALS:
+			selValues = buckets[bucketOfValue(v)] / valuesPerBucket;
+			break;
+		case GREATER_THAN:
+			selValues = (buckets[bucketOfValue(v)] / valuesPerBucket) * (bucketMax(v) - v);
+			for (int b = bucketOfValue(v) + 1; b < buckets.length; b++) {
+				selValues += buckets[b];
+			}
+			break;
+		case GREATER_THAN_OR_EQ:
+			selValues = (buckets[bucketOfValue(v)] / valuesPerBucket) * (bucketMax(v) - v + 1);
+			for (int b = bucketOfValue(v) + 1; b < buckets.length; b++) {
+				selValues += buckets[b];
+			}
+			break;
+		case LESS_THAN:
+			selValues = (buckets[bucketOfValue(v)] / valuesPerBucket) * (v - bucketMin(v));
+			for (int b = bucketOfValue(v) - 1; b >= 0; b--) {
+				selValues += buckets[b];
+			}
+			break;
+		case LESS_THAN_OR_EQ:
+			selValues = (buckets[bucketOfValue(v)] / valuesPerBucket) * (v - bucketMin(v) + 1);
+			for (int b = bucketOfValue(v) - 1; b >= 0; b--) {
+				selValues += buckets[b];
+			}
+			break;
+		case LIKE:
+			throw new RuntimeException("LIKE not valid for integer values.");
+		case NOT_EQUALS:
+			selValues = numValues - (buckets[bucketOfValue(v)] / valuesPerBucket);
+			break;
+		default:
+			throw new RuntimeException("Unexpected operator.");
+    	}
+    	
+    	return selValues / numValues;
     }
     
     /**
@@ -56,8 +159,7 @@ public class IntHistogram {
      *     join optimization. It may be needed if you want to
      *     implement a more efficient optimization
      * */
-    public double avgSelectivity()
-    {
+    public double avgSelectivity() {
         // some code goes here
         return 1.0;
     }
