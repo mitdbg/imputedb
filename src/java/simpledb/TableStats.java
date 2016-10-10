@@ -1,8 +1,10 @@
 package simpledb;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -12,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * This class is not needed in implementing lab1 and lab2.
  */
 public class TableStats {
-
     private static final ConcurrentHashMap<String, TableStats> statsMap = new ConcurrentHashMap<String, TableStats>();
 
     static final int IOCOSTPERPAGE = 1000;
@@ -65,6 +66,12 @@ public class TableStats {
      * histograms.
      */
     static final int NUM_HIST_BINS = 100;
+    
+    private final IntHistogram[] intStats;
+    private final StringHistogram[] stringStats;
+    private final int ioCostPerPage;
+    private final TupleDesc schema;
+    private final int numTuples;
 
     /**
      * Create a new TableStats object, that keeps track of statistics on each
@@ -77,14 +84,64 @@ public class TableStats {
      *            sequential-scan IO and disk seeks.
      */
     public TableStats(int tableid, int ioCostPerPage) {
-        // For this function, you'll have to get the
-        // DbFile for the table in question,
-        // then scan through its tuples and calculate
-        // the values that you need.
-        // You should try to do this reasonably efficiently, but you don't
-        // necessarily have to (for example) do everything
-        // in a single scan of the table.
-        // some code goes here
+    	this.ioCostPerPage = ioCostPerPage;
+    	
+    	DbFile file = Database.getCatalog().getDatabaseFile(tableid);
+    	schema = file.getTupleDesc();
+    	final int numFields = schema.numFields();
+    	
+    	intStats = new IntHistogram[numFields];
+    	stringStats = new StringHistogram[numFields];
+    	
+		final int[] min = new int[numFields], max = new int[numFields];
+		int nt = 0;
+		Arrays.fill(min, Integer.MAX_VALUE);
+		Arrays.fill(max, Integer.MIN_VALUE);
+    	DbFileIterator iter = file.iterator(new TransactionId());
+    	try {
+    		iter.open();
+    		
+			while (iter.hasNext()) {
+				Tuple tup = iter.next();
+				for (int i = 0; i < numFields; i++) {
+					if (tup.getTupleDesc().getFieldType(i) == Type.INT_TYPE) {
+						int value = ((IntField)tup.getField(i)).getValue();
+						min[i] = Math.min(min[i], value);
+						max[i] = Math.max(max[i], value);
+					}
+				}
+				nt++;
+			}
+			
+	    	iter.rewind();
+
+			while (iter.hasNext()) {
+				Tuple tup = iter.next();
+				for (int i = 0; i < tup.getTupleDesc().numFields(); i++) {
+					switch(tup.getTupleDesc().getFieldType(i)) {
+					case INT_TYPE:
+						if (intStats[i] == null) {
+							intStats[i] = new IntHistogram(NUM_HIST_BINS, min[i], max[i]);
+						}
+						intStats[i].addValue(((IntField)tup.getField(i)).getValue());
+						break;
+					case STRING_TYPE:
+						if (stringStats[i] == null) {
+							stringStats[i] = new StringHistogram(NUM_HIST_BINS);
+						}
+						stringStats[i].addValue(((StringField)tup.getField(i)).getValue());
+						break;
+					default:
+						throw new RuntimeException("Unexpected type.");
+					}
+				}
+			}
+		} catch (NoSuchElementException | DbException | TransactionAbortedException e) {
+			e.printStackTrace();
+		} finally {
+			this.numTuples = nt;
+			iter.close();
+		}
     }
 
     /**
@@ -100,8 +157,7 @@ public class TableStats {
      * @return The estimated cost of scanning the table.
      */
     public double estimateScanCost() {
-        // some code goes here
-        return 0;
+		return ((double)totalTuples() / BufferPool.getPageSize()) * ioCostPerPage;
     }
 
     /**
@@ -114,8 +170,7 @@ public class TableStats {
      *         selectivityFactor
      */
     public int estimateTableCardinality(double selectivityFactor) {
-        // some code goes here
-        return 0;
+        return (int) Math.round(totalTuples() * selectivityFactor);
     }
 
     /**
@@ -147,16 +202,20 @@ public class TableStats {
      *         predicate
      */
     public double estimateSelectivity(int field, Predicate.Op op, Field constant) {
-        // some code goes here
-        return 1.0;
+    	switch (schema.getFieldType(field)) {
+		case INT_TYPE:
+			return intStats[field].estimateSelectivity(op, ((IntField)constant).getValue());
+		case STRING_TYPE:
+			return stringStats[field].estimateSelectivity(op, ((StringField)constant).getValue());
+		default:
+			throw new RuntimeException("Unexpected type.");
+    	}
     }
 
     /**
      * return the total number of tuples in this table
      * */
     public int totalTuples() {
-        // some code goes here
-        return 0;
+        return numTuples;
     }
-
 }
