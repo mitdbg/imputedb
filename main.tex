@@ -1,6 +1,16 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[margin=1in]{geometry}
+\usepackage{qtree} % for diagram
+\usepackage{listings} % for code excerpt
+\usepackage{color} % for code excerpt
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  language=SQL,
+  keywordstyle=\color{blue},
+  otherkeywords={IMPUTE, impute}
+}
+\usepackage{booktabs} % for table
 
 \title{6.830 Project Proposal \\
   \large Data Imputation as a Query Optimization}
@@ -16,6 +26,42 @@ Data imputation is a well studied problem in the machine learning literature, bu
 In order to study the placement of an imputation step, we propose to create a logical imputation operator (along with respective physical instances) and incorporate its placement as part of the query plan optimization process in SimpleDB.  We plan to introduce measures for uncertainty and completeness of query results as well as the cost of imputation, which outline the main tradeoffs in the imputation placement. We introduce these measures into our cost estimation, allowing us to intelligently place the data imputation step during query planning. Finally, we plan to produce empirical results that show the tradeoffs between efficiency and accuracy in the context of simple data imputation models in queries that perform aggregate operations or return a significant number of tuples (in contrast to simple point-queries) and compare to existing approaches.  These types of queries are more likely to provide reasonable cases for imputation of missing values and reflecting an increasingly large portion of workloads in modern OLAP warehouses.
 
 \section{Example}
+We consider a simple example that shows the potential impact of placing an imputation operator at different points in our query plan.
+
+We assume the following relation \lstinline{Employees(id, salary, dept)}, with tuples shown in Table~\ref{example-table}. We impute by averaging over \lstinline{salary}, and we consider the query \lstinline{SELECT AVG(salary) FROM Employees GROUP BY dept}.
+
+\begin{table}[h]
+\centering
+\caption{Example table with missing data}
+\label{example-table}
+\begin{tabular}{@{}lll@{}}
+\toprule
+id & salary & dept \\ \midrule
+1  & 10     & 1    \\
+2  & 15     & 1    \\
+3  & NA     & 1    \\
+4  & 5      & 2    \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}
+ \begin{minipage}[b]{0.5\textwidth}
+	\Tree [.\lstinline{AVG(salary)} [.\lstinline{GROUP BY (dept)} [.\lstinline{IMPUTE(Salary)} \lstinline{Employees} ] ] ]
+    \caption{Early placement of impute operator}
+    \label{early-fig}
+  \end{minipage}
+\hfill
+ \begin{minipage}[b]{0.5\textwidth}
+	\Tree [.\lstinline{AVG(salary)} [.\lstinline{IMPUTE(Salary)} [.\lstinline{GROUP BY (dept)} \lstinline{Employees} ] ] ]
+    \caption{Late placement of impute operator}
+    \label{late-fig}
+  \end{minipage}
+\end{figure}
+
+In the early case (Figure~\ref{early-fig}), we impute over all salaries, and obtain as a final result \lstinline{[(1, 11.67), (2, 5)]}, while the late case (Figure~\ref{late-fig}) results in \lstinline{[(1, 12.5), (2, 5)]}.
+
+This example shows that the imputation operator, even in its simplest form, can have a significant impact on the query results. Furthermore, this example fails to capture other important dimensions such as cost of imputation.
+
 
 \section{Evaluation}
 We are considering various possible data sources to experiment with. Existing literature has used the American Community Survey, so this may be a natural choice in our case as well. The ACS data is a good test dataset because of its scale and relative simplicity. Additionally, we may be able to compare to existing work that used ACS data.
