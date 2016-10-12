@@ -27,6 +27,17 @@ In contrast to pre-processing-based imputation, we plan to make a case for imput
 Furthermore, we plan to show that there is an opportunity for more efficient imputation on (smaller) intermediate results. In very large databases it may not be feasible to perform imputation on the base tables, particularly if the imputation method of choice is expensive. However, queries often return results that are smaller than the base tables, so it may be more reasonable to perform imputation on these intermediate results. The intermediate results could then be stored as a materialized view if they are expected to be reused or recomputed as necessary.
 
 \section{Project Milestones}
+
+We outline a series of milestones to be completed:
+\begin{enumerate}
+\item Initial data collection and query workload for evaluation.
+\item Consolidate set of imputation strategies.
+\item Formalize a measure of uncertainty, completeness and cost in imputation as related to 2.
+\item Formalize the possible query rewrites when using an imputation operator.
+\item Incorporate imputation-related measures into cost estimation for SimpleDB.
+\item Incorporate imputation-related rewrites for SimpleDB.
+\item Evaluate performance.
+\end{enumerate}
 \end{document}
 
 %%% Local Variables:
