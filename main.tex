@@ -23,7 +23,7 @@
 Data imputation is a well studied problem in the machine learning literature, but some aspects related to the implementation of imputation in database systems have not been sufficiently examined. Traditionally studies have viewed imputation as a pre-processing step on a table, rather than as an active step in each query. Particularly, existing work has not incorporated imputation into query optimization, nor has it investigated the relative impact of early versus late stage imputation on the quality of query results.
 
 \section{Approach}
-In order to study the placement of an imputation step, we propose to create a logical imputation operator (along with respective physical instances) and incorporate its placement as part of the query plan optimization process in SimpleDB.  We plan to introduce measures for uncertainty and completeness of query results as well as the cost of imputation, which outline the main tradeoffs in the imputation placement. We introduce these measures into our cost estimation, allowing us to intelligently place the data imputation step during query planning. Finally, we plan to produce empirical results that show the tradeoffs between efficiency and accuracy in the context of simple data imputation models in queries that perform aggregate operations or return a significant number of tuples (in contrast to simple point-queries) and compare to existing approaches.  These types of queries are more likely to provide reasonable cases for imputation of missing values and reflecting an increasingly large portion of workloads in modern OLAP warehouses.
+In order to study the placement of an imputation step, we propose to create a logical imputation operator (along with respective physical instances) and incorporate its placement as part of the query plan optimization process in SimpleDB.  We plan to introduce measures for uncertainty and completeness of query results as well as the cost of imputation, which outline the main tradeoffs in the imputation placement. We introduce these measures into our cost estimation, allowing us to intelligently place the data imputation step during query planning. Finally, we plan to produce empirical results that show the tradeoffs between efficiency and accuracy in the context of simple data imputation models in queries that perform aggregate operations or return a significant number of tuples (in contrast to simple point-queries) and compare to existing approaches.  These types of queries are more likely to provide reasonable cases for imputation of missing values and reflect an increasingly large portion of workloads in modern OLAP warehouses.
 
 \section{Example}
 We consider a simple example that shows the potential impact of placing an imputation operator at different points in our query plan.
@@ -60,7 +60,7 @@ id & salary & dept \\ \midrule
 
 In the early case (Figure~\ref{early-fig}), we impute over all salaries, and obtain as a final result \lstinline{[(1, 11.67), (2, 5)]}, while the late case (Figure~\ref{late-fig}) results in \lstinline{[(1, 12.5), (2, 5)]}.
 
-This example shows that the imputation operator, even in its simplest form, can have a significant impact on the query results. Furthermore, this example fails to capture other important dimensions such as cost of imputation.
+This example shows that the imputation operator, even in its simplest form, can have a significant impact on query results. Furthermore, this example fails to capture other important dimensions such as cost of imputation.
 
 
 \section{Evaluation}
