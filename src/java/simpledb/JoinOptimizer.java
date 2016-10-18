@@ -107,11 +107,7 @@ public class JoinOptimizer {
             // You do not need to implement proper support for these for Lab 5.
             return card1 + cost1 + cost2;
         } else {
-            // Insert your code here.
-            // HINT: You may need to use the variable "j" if you implemented
-            // a join algorithm that's more complicated than a basic
-            // nested-loops join.
-            return -1.0;
+        	return cost1 + card1 * cost2 + card1 * card2;
         }
     }
 
@@ -155,9 +151,21 @@ public class JoinOptimizer {
             String field2PureName, int card1, int card2, boolean t1pkey,
             boolean t2pkey, Map<String, TableStats> stats,
             Map<String, Integer> tableAliasToId) {
-        int card = 1;
-        // some code goes here
-        return card <= 0 ? 1 : card;
+    	// Equality joins
+    	if (joinOp.equals(Predicate.Op.EQUALS)) {
+    		if (t1pkey) {
+    			return card2;
+    		} else if (t2pkey) {
+    			return card1;
+    		} else {
+    			return Math.max(card1, card2);
+    		}
+    	} 
+    	
+    	// Everything else returns 30% of cross product
+    	else {
+    		return (int) (card1 * card2 * 0.3);
+    	}
     }
 
     /**
@@ -216,12 +224,28 @@ public class JoinOptimizer {
     public Vector<LogicalJoinNode> orderJoins(
             HashMap<String, TableStats> stats,
             HashMap<String, Double> filterSelectivities, boolean explain)
-            throws ParsingException {
-        //Not necessary for labs 1--3
+            throws ParsingException {    	
+    	PlanCache cache = new PlanCache();
+    	
+    	for (int i = 1; i <= joins.size(); i++) {
+    		for (Set<LogicalJoinNode> s : enumerateSubsets(joins, i)) {
+    			double bestCost = Double.MAX_VALUE;
+    			for (LogicalJoinNode j : s) {    				
+    				CostCard subplan = computeCostAndCardOfSubplan(stats, filterSelectivities, 
+    						j, s, bestCost, cache);
+    				if (subplan != null) {
+    					cache.addPlan(s, subplan.cost, subplan.card, subplan.plan);
+    					bestCost = subplan.cost;
+    				}
+    			}
+    		}
+    	}
 
-        // some code goes here
-        //Replace the following
-        return joins;
+        Vector<LogicalJoinNode> order = cache.getOrder(new HashSet<LogicalJoinNode>(joins));
+        if (explain) {
+        	printJoins(order, cache, stats, filterSelectivities);
+        }
+        return order;
     }
 
     // ===================== Private Methods =================================
