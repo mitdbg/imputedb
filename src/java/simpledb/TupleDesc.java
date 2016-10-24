@@ -119,7 +119,8 @@ public class TupleDesc implements Serializable {
         if (i < 0 || i >= numFields()) {
         	throw new NoSuchElementException();
         }
-        return schema[i].fieldName;
+        String name = schema[i].fieldName;
+        return name == null ? "null" : name;
     }
 
     /**
