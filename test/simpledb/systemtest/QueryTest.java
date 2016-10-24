@@ -3,6 +3,7 @@ package simpledb.systemtest;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+
 import org.junit.Test;
 
 import simpledb.BufferPool;
@@ -89,11 +90,9 @@ public class QueryTest {
 	 * and there are too many tables for a brute-force search of all possible query plans.
 	 */
 	// Not required for Lab 4
-	/*@Test(timeout=60000) public void hashJoinTest() throws IOException, DbException, TransactionAbortedException {
+	@Test(timeout=60000) public void hashJoinTest() throws IOException, DbException, TransactionAbortedException {
 		final int IO_COST = 103;
-		
-		HashMap<String, TableStats> stats = new HashMap<String,TableStats>();
-				
+						
 		ArrayList<ArrayList<Integer>> smallHeapFileTuples = new ArrayList<ArrayList<Integer>>();
 		HeapFile smallHeapFileA = SystemTestUtil.createRandomHeapFile(2, 100, Integer.MAX_VALUE, null, smallHeapFileTuples, "c");		
 		HeapFile smallHeapFileB = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");		
@@ -133,35 +132,34 @@ public class QueryTest {
 		Database.getCatalog().addTable(smallHeapFileM, "m");
 		Database.getCatalog().addTable(smallHeapFileN, "n");
 		
-		stats.put("bigTable", new TableStats(bigHeapFile.getId(), IO_COST));
-		stats.put("a", new TableStats(smallHeapFileA.getId(), IO_COST));
-		stats.put("b", new TableStats(smallHeapFileB.getId(), IO_COST));
-		stats.put("c", new TableStats(smallHeapFileC.getId(), IO_COST));
-		stats.put("d", new TableStats(smallHeapFileD.getId(), IO_COST));
-		stats.put("e", new TableStats(smallHeapFileE.getId(), IO_COST));
-		stats.put("f", new TableStats(smallHeapFileF.getId(), IO_COST));
-		stats.put("g", new TableStats(smallHeapFileG.getId(), IO_COST));
-		stats.put("h", new TableStats(smallHeapFileG.getId(), IO_COST));
-		stats.put("i", new TableStats(smallHeapFileG.getId(), IO_COST));
-		stats.put("j", new TableStats(smallHeapFileG.getId(), IO_COST));
-		stats.put("k", new TableStats(smallHeapFileG.getId(), IO_COST));
-		stats.put("l", new TableStats(smallHeapFileG.getId(), IO_COST));
-		stats.put("m", new TableStats(smallHeapFileG.getId(), IO_COST));
-		stats.put("n", new TableStats(smallHeapFileG.getId(), IO_COST));
-
-		Parser.setStatsMap(stats);
+		TableStats.setTableStats("bigTable", new TableStats(bigHeapFile.getId(), IO_COST));
+		TableStats.setTableStats("a", new TableStats(smallHeapFileA.getId(), IO_COST));
+		TableStats.setTableStats("b", new TableStats(smallHeapFileB.getId(), IO_COST));
+		TableStats.setTableStats("c", new TableStats(smallHeapFileC.getId(), IO_COST));
+		TableStats.setTableStats("d", new TableStats(smallHeapFileD.getId(), IO_COST));
+		TableStats.setTableStats("e", new TableStats(smallHeapFileE.getId(), IO_COST));
+		TableStats.setTableStats("f", new TableStats(smallHeapFileF.getId(), IO_COST));
+		TableStats.setTableStats("g", new TableStats(smallHeapFileG.getId(), IO_COST));
+		TableStats.setTableStats("h", new TableStats(smallHeapFileG.getId(), IO_COST));
+		TableStats.setTableStats("i", new TableStats(smallHeapFileG.getId(), IO_COST));
+		TableStats.setTableStats("j", new TableStats(smallHeapFileG.getId(), IO_COST));
+		TableStats.setTableStats("k", new TableStats(smallHeapFileG.getId(), IO_COST));
+		TableStats.setTableStats("l", new TableStats(smallHeapFileG.getId(), IO_COST));
+		TableStats.setTableStats("m", new TableStats(smallHeapFileG.getId(), IO_COST));
+		TableStats.setTableStats("n", new TableStats(smallHeapFileG.getId(), IO_COST));
 		
+		Parser p = new Parser();		
 		Transaction t = new Transaction();
 		t.start();
-		Parser.setTransaction(t);
+		p.setTransaction(t);
 		
 		// Each of these should return around 20,000
 		// This Parser implementation currently just dumps to stdout, so checking that isn't terribly clean.
 		// So, don't bother for now; future TODO.
 		// Regardless, each of the following should be optimized to run quickly,
 		// even though the worst case takes a very long time.
-		Parser.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE bigTable.c0 = n.c0 AND a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1;");
-		Parser.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1 AND bigTable.c0 = n.c0;");
-		Parser.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE k.c1 = l.c1 AND a.c1 = b.c1 AND f.c0 = g.c0 AND bigTable.c0 = n.c0 AND d.c0 = e.c0 AND c.c1 = d.c1 AND e.c1 = f.c1 AND i.c1 = j.c1 AND b.c0 = c.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND j.c0 = k.c0 AND m.c1 = n.c1 AND l.c0 = m.c0;");
-	}*/
+		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE bigTable.c0 = n.c0 AND a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1;");
+		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1 AND bigTable.c0 = n.c0;");
+		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE k.c1 = l.c1 AND a.c1 = b.c1 AND f.c0 = g.c0 AND bigTable.c0 = n.c0 AND d.c0 = e.c0 AND c.c1 = d.c1 AND e.c1 = f.c1 AND i.c1 = j.c1 AND b.c0 = c.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND j.c0 = k.c0 AND m.c1 = n.c1 AND l.c0 = m.c0;");
+	}
 }
