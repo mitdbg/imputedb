@@ -1,0 +1,44 @@
+* Design decisions
+
+Plan cost and join costs are estimated using the cost formulas in the
+assignment. Only nested loop joins are considered. The effects of
+caching are ignored.
+
+My implementation estimates filter selectivity as suggested in the
+assignment. First, it computes the minimum and maximum of each
+attribute using a table scan. Then, it constructs a histogram using a
+fixed number of buckets, with each bucket containing a count of the
+number of elements in the range covered by the bucket. Equality and
+range expressions are implemented as described in the assignment
+document. Within a bucket, values are assumed to be uniformly
+distributed.
+
+Join cardinality estimation is implemented as described in the
+assignment. For equality joins when one attribute is a primary key,
+the cardinality is estimated as the cardinality of the non-primary key
+attribute. If neither attribute is a primary key, then the cardinality
+is estimated to be the cardinality of the larger table. Range scans
+are assumed to have cardinality equal to 30% of the cross product.
+
+Join ordering is implemented as described in the assignment document,
+using a dynamic programming algorithm. However, I implemented one of
+the extra credit assignments and replaced the use of hashsets with
+bitsets. Enumeration of subsets is done using the algorithm described
+in [1]. In the original implementation, a join with 20 tables timed
+out after 10 minutes of planning time. In the revised implementation,
+the same join plans in under 2 seconds. See largeJoinTest (a revised
+version of hashJoinTest) for details.
+
+* API changes
+
+None.
+
+* Missing code
+
+None.
+
+* Time spent.
+
+10-12 hours. Nothing was difficult or confusing.
+
+[1] Donald Knuth. (2011). 7.2.1.3. Generating all combinations. In Combinatorial Algorithms: Part 1 (Vol. 4a). Retrieved from http://www.cs.utsa.edu/~wagner/knuth/fasc3a.pdf
