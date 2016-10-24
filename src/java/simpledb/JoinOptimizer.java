@@ -172,33 +172,60 @@ public class JoinOptimizer {
      * Helper method to enumerate all of the subsets of a given size of a
      * specified vector.
      * 
-     * @param v
-     *            The vector whose subsets are desired
+     * @param numElems
+     *            The size of the vector whose subsets are desired
      * @param size
      *            The size of the subsets of interest
      * @return a set of all subsets of the specified size
      */
-    @SuppressWarnings("unchecked")
-    public <T> Set<Set<T>> enumerateSubsets(Vector<T> v, int size) {
-        Set<Set<T>> els = new HashSet<Set<T>>();
-        els.add(new HashSet<T>());
-        // Iterator<Set> it;
-        // long start = System.currentTimeMillis();
+    public Iterable<BitSet> enumerateSubsets(int numElems, int size) {
+    	// Implemented as per Knuth, 7.2.1.3 pg. 4.
+    	int[] c = new int[size + 3];
+    	for (int j = 1; j <= size; j++) {
+    		c[j] = j - 1;
+    	}
+    	c[size + 1] = numElems;
+    	c[size + 2] = 0;
+    	
+    	return new Iterable<BitSet>() {
+    		boolean hasNext = true;
 
-        for (int i = 0; i < size; i++) {
-            Set<Set<T>> newels = new HashSet<Set<T>>();
-            for (Set<T> s : els) {
-                for (T t : v) {
-                    Set<T> news = (Set<T>) (((HashSet<T>) s).clone());
-                    if (news.add(t))
-                        newels.add(news);
-                }
-            }
-            els = newels;
-        }
+			@Override
+			public Iterator<BitSet> iterator() {
+				return new Iterator<BitSet>() {
+					@Override
+					public boolean hasNext() {
+						return hasNext;
+					}
 
-        return els;
-
+					@Override
+					public BitSet next() {
+						if (!hasNext) {
+							throw new NoSuchElementException(); 
+						}
+						
+						BitSet ret = new BitSet(numElems);
+						for (int j = 1; j <= size; j++) {
+							ret.set(c[j]);
+						}
+						
+						int j = 1;
+						while (c[j] + 1 == c[j + 1]) {
+							c[j] = j - 1;
+							j++;
+						}
+						
+						if (j > size) {
+							hasNext = false;
+						} else {
+							c[j]++;
+						}
+						
+						return ret;
+					}
+				};
+			}
+    	};
     }
 
     /**
@@ -228,20 +255,25 @@ public class JoinOptimizer {
     	PlanCache cache = new PlanCache();
     	
     	for (int i = 1; i <= joins.size(); i++) {
-    		for (Set<LogicalJoinNode> s : enumerateSubsets(joins, i)) {
+    		for (BitSet s : enumerateSubsets(joins.size(), i)) {
     			double bestCost = Double.MAX_VALUE;
-    			for (LogicalJoinNode j : s) {    				
+    			
+    			int j = s.nextSetBit(0);
+    			while (j != -1) {
     				CostCard subplan = computeCostAndCardOfSubplan(stats, filterSelectivities, 
     						j, s, bestCost, cache);
     				if (subplan != null) {
     					cache.addPlan(s, subplan.cost, subplan.card, subplan.plan);
     					bestCost = subplan.cost;
     				}
+    				j = s.nextSetBit(j + 1);
     			}
     		}
     	}
 
-        Vector<LogicalJoinNode> order = cache.getOrder(new HashSet<LogicalJoinNode>(joins));
+    	BitSet allJoins = new BitSet(joins.size());
+    	allJoins.set(0, joins.size());
+        Vector<LogicalJoinNode> order = cache.getOrder(allJoins);
         if (explain) {
         	printJoins(order, cache, stats, filterSelectivities);
         }
@@ -284,10 +316,10 @@ public class JoinOptimizer {
     private CostCard computeCostAndCardOfSubplan(
             HashMap<String, TableStats> stats,
             HashMap<String, Double> filterSelectivities,
-            LogicalJoinNode joinToRemove, Set<LogicalJoinNode> joinSet,
+            int joinToRemove, BitSet joinSet,
             double bestCostSoFar, PlanCache pc) throws ParsingException {
 
-        LogicalJoinNode j = joinToRemove;
+        LogicalJoinNode j = joins.get(joinToRemove);
 
         Vector<LogicalJoinNode> prevBest;
 
@@ -303,9 +335,8 @@ public class JoinOptimizer {
         String table1Alias = j.t1Alias;
         String table2Alias = j.t2Alias;
 
-        Set<LogicalJoinNode> news = (Set<LogicalJoinNode>) ((HashSet<LogicalJoinNode>) joinSet)
-                .clone();
-        news.remove(j);
+        BitSet news = (BitSet) joinSet.clone();
+        news.clear(joinToRemove);
 
         double t1cost, t2cost;
         int t1card, t2card;
@@ -478,12 +509,12 @@ public class JoinOptimizer {
 
         // int k;
         DefaultMutableTreeNode root = null, treetop = null;
-        HashSet<LogicalJoinNode> pathSoFar = new HashSet<LogicalJoinNode>();
+        BitSet pathSoFar = new BitSet(joins.size());
         boolean neither;
 
         System.out.println(js);
         for (LogicalJoinNode j : js) {
-            pathSoFar.add(j);
+            pathSoFar.set(joins.indexOf(j));
             System.out.println("PATH SO FAR = " + pathSoFar);
 
             String table1Name = Database.getCatalog().getTableName(
