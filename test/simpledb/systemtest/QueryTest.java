@@ -90,7 +90,7 @@ public class QueryTest {
 	 * and there are too many tables for a brute-force search of all possible query plans.
 	 */
 	// Not required for Lab 4
-	@Test(timeout=60000) public void hashJoinTest() throws IOException, DbException, TransactionAbortedException {
+	@Test(timeout=600000) public void hashJoinTest() throws IOException, DbException, TransactionAbortedException {
 		final int IO_COST = 103;
 						
 		ArrayList<ArrayList<Integer>> smallHeapFileTuples = new ArrayList<ArrayList<Integer>>();
@@ -108,6 +108,12 @@ public class QueryTest {
 		HeapFile smallHeapFileL = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
 		HeapFile smallHeapFileM = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
 		HeapFile smallHeapFileN = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
+		HeapFile smallHeapFileO = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
+		HeapFile smallHeapFileP = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
+		HeapFile smallHeapFileQ = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
+		HeapFile smallHeapFileR = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
+		HeapFile smallHeapFileS = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
+		HeapFile smallHeapFileT = createDuplicateHeapFile(smallHeapFileTuples, 2, "c");
 		
 		ArrayList<ArrayList<Integer>> bigHeapFileTuples = new ArrayList<ArrayList<Integer>>();
 		for (int i = 0; i < 1000; i++) {
@@ -131,6 +137,12 @@ public class QueryTest {
 		Database.getCatalog().addTable(smallHeapFileL, "l");
 		Database.getCatalog().addTable(smallHeapFileM, "m");
 		Database.getCatalog().addTable(smallHeapFileN, "n");
+		Database.getCatalog().addTable(smallHeapFileO, "o");
+		Database.getCatalog().addTable(smallHeapFileP, "p");
+		Database.getCatalog().addTable(smallHeapFileQ, "q");
+		Database.getCatalog().addTable(smallHeapFileR, "r");
+		Database.getCatalog().addTable(smallHeapFileS, "s");
+		Database.getCatalog().addTable(smallHeapFileT, "t");
 		
 		TableStats.setTableStats("bigTable", new TableStats(bigHeapFile.getId(), IO_COST));
 		TableStats.setTableStats("a", new TableStats(smallHeapFileA.getId(), IO_COST));
@@ -140,13 +152,19 @@ public class QueryTest {
 		TableStats.setTableStats("e", new TableStats(smallHeapFileE.getId(), IO_COST));
 		TableStats.setTableStats("f", new TableStats(smallHeapFileF.getId(), IO_COST));
 		TableStats.setTableStats("g", new TableStats(smallHeapFileG.getId(), IO_COST));
-		TableStats.setTableStats("h", new TableStats(smallHeapFileG.getId(), IO_COST));
-		TableStats.setTableStats("i", new TableStats(smallHeapFileG.getId(), IO_COST));
-		TableStats.setTableStats("j", new TableStats(smallHeapFileG.getId(), IO_COST));
-		TableStats.setTableStats("k", new TableStats(smallHeapFileG.getId(), IO_COST));
-		TableStats.setTableStats("l", new TableStats(smallHeapFileG.getId(), IO_COST));
-		TableStats.setTableStats("m", new TableStats(smallHeapFileG.getId(), IO_COST));
-		TableStats.setTableStats("n", new TableStats(smallHeapFileG.getId(), IO_COST));
+		TableStats.setTableStats("h", new TableStats(smallHeapFileH.getId(), IO_COST));
+		TableStats.setTableStats("i", new TableStats(smallHeapFileI.getId(), IO_COST));
+		TableStats.setTableStats("j", new TableStats(smallHeapFileJ.getId(), IO_COST));
+		TableStats.setTableStats("k", new TableStats(smallHeapFileK.getId(), IO_COST));
+		TableStats.setTableStats("l", new TableStats(smallHeapFileL.getId(), IO_COST));
+		TableStats.setTableStats("m", new TableStats(smallHeapFileM.getId(), IO_COST));
+		TableStats.setTableStats("n", new TableStats(smallHeapFileN.getId(), IO_COST));
+		TableStats.setTableStats("o", new TableStats(smallHeapFileO.getId(), IO_COST));
+		TableStats.setTableStats("p", new TableStats(smallHeapFileP.getId(), IO_COST));
+		TableStats.setTableStats("q", new TableStats(smallHeapFileQ.getId(), IO_COST));
+		TableStats.setTableStats("r", new TableStats(smallHeapFileR.getId(), IO_COST));
+		TableStats.setTableStats("s", new TableStats(smallHeapFileS.getId(), IO_COST));
+		TableStats.setTableStats("t", new TableStats(smallHeapFileT.getId(), IO_COST));
 		
 		Parser p = new Parser();		
 		Transaction t = new Transaction();
@@ -158,8 +176,6 @@ public class QueryTest {
 		// So, don't bother for now; future TODO.
 		// Regardless, each of the following should be optimized to run quickly,
 		// even though the worst case takes a very long time.
-		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE bigTable.c0 = n.c0 AND a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1;");
-		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1 AND bigTable.c0 = n.c0;");
-		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n WHERE k.c1 = l.c1 AND a.c1 = b.c1 AND f.c0 = g.c0 AND bigTable.c0 = n.c0 AND d.c0 = e.c0 AND c.c1 = d.c1 AND e.c1 = f.c1 AND i.c1 = j.c1 AND b.c0 = c.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND j.c0 = k.c0 AND m.c1 = n.c1 AND l.c0 = m.c0;");
+		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t WHERE bigTable.c0 = n.c0 AND a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1 AND n.c0 = o.c0 AND o.c1 = p.c1 AND p.c1 = q.c1 AND q.c0 = r.c0 AND r.c1 = s.c1 AND s.c0 = t.c0;");
 	}
 }
