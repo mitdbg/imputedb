@@ -90,7 +90,7 @@ public class QueryTest {
 	 * and there are too many tables for a brute-force search of all possible query plans.
 	 */
 	// Not required for Lab 4
-	@Test(timeout=600000) public void hashJoinTest() throws IOException, DbException, TransactionAbortedException {
+	@Test(timeout=600000) public void largeJoinTest() throws IOException, DbException, TransactionAbortedException {
 		final int IO_COST = 103;
 						
 		ArrayList<ArrayList<Integer>> smallHeapFileTuples = new ArrayList<ArrayList<Integer>>();
