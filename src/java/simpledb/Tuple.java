@@ -108,13 +108,12 @@ public class Tuple implements Serializable {
     	for (int i = 0; i < fields.length; i++) {
     		sb.append(fields[i].toString());
     		if (i < fields.length - 1) {
-    			sb.append("\t");
+    			sb.append(",");
     		}
     	}
-    	sb.append("\n");
     	return sb.toString();
     }
-    
+
     /**
      * @return
      *        An iterator which iterates over all the fields of this tuple

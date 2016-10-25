@@ -4,7 +4,9 @@ import simpledb.TestUtil.SkeletonFile;
 import simpledb.systemtest.SimpleDbTestBase;
 import simpledb.systemtest.SystemTestUtil;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -57,7 +59,8 @@ public class HeapPageReadTest extends SimpleDbTestBase {
         try {
             File temp = File.createTempFile("table", ".dat");
             temp.deleteOnExit();
-            HeapFileEncoder.convert(table, temp, BufferPool.getPageSize(), 2);
+            BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
+            HeapFileEncoder.convert(table, out, BufferPool.getPageSize(), 2);
             EXAMPLE_DATA = TestUtil.readFileBytes(temp.getAbsolutePath());
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -1,6 +1,8 @@
 package simpledb.systemtest;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +83,8 @@ public class SystemTestUtil {
         // Convert the tuples list to a heap file and open it
         File temp = File.createTempFile("table", ".dat");
         temp.deleteOnExit();
-        HeapFileEncoder.convert(tuples, temp, BufferPool.getPageSize(), columns);
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
+        HeapFileEncoder.convert(tuples, out, BufferPool.getPageSize(), columns);
         return temp;
     }
 

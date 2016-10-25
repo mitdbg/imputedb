@@ -1,6 +1,8 @@
 package simpledb;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +40,8 @@ public class JoinOptimizerTest extends SimpleDbTestBase {
             throws IOException {
         File temp = File.createTempFile("table", ".dat");
         temp.deleteOnExit();
-        HeapFileEncoder.convert(tuples, temp, BufferPool.getPageSize(), columns);
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
+        HeapFileEncoder.convert(tuples, out, BufferPool.getPageSize(), columns);
         return Utility.openHeapFile(columns, colPrefix, temp);
     }
 
