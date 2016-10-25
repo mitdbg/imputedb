@@ -27,6 +27,7 @@
         <pathelement location="${lib}/slf4j-log4j12-1.6.1.jar"/>
         <pathelement location="${lib}/log4j-1.2.17.jar"/>
         <pathelement location="${lib}/jzlib-1.0.7.jar"/>
+    	<pathelement location="${lib}/commons-csv-1.4.jar"/>
     </path>
 
     <path id="classpath.test">
@@ -190,7 +191,7 @@
         <jar jarfile="${jarfile}" basedir="${build.src}">
             <manifest>
                 <attribute name="Main-Class" value="simpledb.SimpleDb"/>
-                <attribute name="Class-Path" value="../lib/zql.jar ../lib/jline-0.9.94.jar ../lib/jzlib-1.0.7.jar ../lib/mina-core-2.0.4.jar ../lib/mina-filter-compression-2.0.4.jar ../lib/slf4j-api-1.6.1.jar ../lib/slf4j-log4j12-1.6.1.jar ../lib/log4j-1.2.17.jar "/>
+                <attribute name="Class-Path" value="../lib/zql.jar ../lib/jline-0.9.94.jar ../lib/jzlib-1.0.7.jar ../lib/mina-core-2.0.4.jar ../lib/mina-filter-compression-2.0.4.jar ../lib/slf4j-api-1.6.1.jar ../lib/slf4j-log4j12-1.6.1.jar ../lib/log4j-1.2.17.jar ../lib/commons-csv-1.4.jar"/>
             </manifest>
             <!-- Merge library jars into final jar file -->
             <!--<zipgroupfileset refid="lib.jars"/>-->
