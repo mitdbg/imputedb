@@ -132,7 +132,7 @@ public class HeapFileEncoder {
 		final DataOutputStream headerStream = new DataOutputStream(headerBAOS);
 		final DataOutputStream pageStream = new DataOutputStream(pageBAOS);
 
-		final CSVParser p = new CSVParser(in, CSVFormat.EXCEL.withHeader());
+		final CSVParser p = new CSVParser(in, CSVFormat.EXCEL);
 		final Iterator<CSVRecord> records = p.iterator();
 		
 		boolean done = false;
