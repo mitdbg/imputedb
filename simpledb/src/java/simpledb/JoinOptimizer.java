@@ -251,7 +251,11 @@ public class JoinOptimizer {
     public Vector<LogicalJoinNode> orderJoins(
             HashMap<String, TableStats> stats,
             HashMap<String, Double> filterSelectivities, boolean explain)
-            throws ParsingException {    	
+            throws ParsingException {
+    	if (joins.isEmpty()) {
+    		return joins;
+    	}
+    	
     	PlanCache cache = new PlanCache();
     	
     	for (int i = 1; i <= joins.size(); i++) {
