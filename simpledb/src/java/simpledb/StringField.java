@@ -11,8 +11,12 @@ public class StringField implements Field {
 
 	private final String value;
 	private final int maxSize;
+	private final boolean missing;
 
 	public String getValue() {
+		if (isMissing()) {
+			throw new UnsupportedOperationException("cannot get value on missing");
+		}
 		return value;
 	}
 
@@ -31,9 +35,21 @@ public class StringField implements Field {
 			value = s.substring(0, maxSize);
 		else
 			value = s;
+
+		missing = false;
 	}
 
+	public StringField(int maxSize) {
+		this.maxSize = maxSize;
+		value = Type.MISSING_STRING;
+		missing = true;
+	}
+
+
 	public String toString() {
+		if (isMissing()) {
+			return HeapFileEncoder.NULL_STRING;
+		}
 		return value;
 	}
 
@@ -75,6 +91,9 @@ public class StringField implements Field {
 	 * @see Field#compare
 	 */
 	public boolean compare(Predicate.Op op, Field val) {
+		if (isMissing()) {
+			return false;
+		}
 
 		StringField iVal = (StringField) val;
 		int cmpVal = value.compareTo(iVal.value);
@@ -111,5 +130,9 @@ public class StringField implements Field {
 	public Type getType() {
 
 		return Type.STRING_TYPE;
+	}
+
+	public boolean isMissing() {
+		return missing;
 	}
 }

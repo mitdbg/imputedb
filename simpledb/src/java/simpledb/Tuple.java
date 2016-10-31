@@ -1,8 +1,10 @@
 package simpledb;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Tuple maintains information about the contents of a tuple. Tuples have a
@@ -128,4 +130,32 @@ public class Tuple implements Serializable {
     public void resetTupleDesc(TupleDesc td) {
         schema = td;
     }
+
+    /**
+     * True if tuple has any missing fields
+     * @return
+     */
+    public boolean hasMissingFields() {
+        for(Field field : fields) {
+            if (field.isMissing()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns list of missing field indices
+     * @return
+     */
+    public List<Integer> missingFieldsIndices() {
+        List<Integer> missing = new ArrayList<>();
+        for(int i = 0; i < getTupleDesc().numFields(); i++) {
+            if (getField(i).isMissing()) {
+                missing.add(i);
+            }
+        }
+        return missing;
+    }
+
 }

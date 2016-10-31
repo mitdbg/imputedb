@@ -16,6 +16,7 @@ import org.apache.commons.csv.CSVRecord;
  */
 
 public class HeapFileEncoder {
+	public static final String NULL_STRING = "";
 
 	/**
 	 * Convert the specified tuple list (with only integer fields) into a binary
@@ -132,14 +133,17 @@ public class HeapFileEncoder {
 		final DataOutputStream headerStream = new DataOutputStream(headerBAOS);
 		final DataOutputStream pageStream = new DataOutputStream(pageBAOS);
 
-		final CSVParser p = new CSVParser(in, CSVFormat.EXCEL);
+		// allow missing values
+		final CSVParser p = new CSVParser(in, CSVFormat.EXCEL.withNullString(NULL_STRING));
 		final Iterator<CSVRecord> records = p.iterator();
-		
+
+
 		boolean done = false;
 		try {
 			while (!done) {
 				if (records.hasNext()) {
 					CSVRecord r = records.next();
+
 					// Write out record fields.
 					for (int f = 0; f < r.size(); f++) {
 						String field = r.get(f);
@@ -147,6 +151,9 @@ public class HeapFileEncoder {
 						switch(typeAr[f]) {
 						case INT_TYPE:
 							try {
+								if (field == null) {
+									field = Integer.toString(Type.MISSING_INTEGER);
+								}
 								pageStream.writeInt(Integer.parseInt(field));
 							} catch (NumberFormatException e) {
 								System.err.format("Bad record (line=%d): %s", r.getRecordNumber(), r);
@@ -154,6 +161,9 @@ public class HeapFileEncoder {
 							}
 							break;
 						case STRING_TYPE:
+							if (field == null) {
+								field = Type.MISSING_STRING;
+							}
 							int overflow = Type.STRING_LEN - field.length();
 							if (overflow < 0) {
 								System.err.format("String too long (line=%d): %s", r.getRecordNumber(), r);

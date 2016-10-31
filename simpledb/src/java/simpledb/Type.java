@@ -18,7 +18,12 @@ public enum Type implements Serializable {
         @Override
         public Field parse(DataInputStream dis) throws ParseException {
             try {
-                return new IntField(dis.readInt());
+                int readValue = dis.readInt();
+                if (readValue == MISSING_INTEGER) {
+                    return new IntField();
+                } else {
+                    return new IntField(readValue);
+                }
             }  catch (IOException e) {
                 throw new ParseException("couldn't parse", 0);
             }
@@ -37,7 +42,12 @@ public enum Type implements Serializable {
                 byte bs[] = new byte[strLen];
                 dis.read(bs);
                 dis.skipBytes(STRING_LEN-strLen);
-                return new StringField(new String(bs), STRING_LEN);
+                String readValue = new String(bs);
+                if (readValue.equals(MISSING_STRING)) {
+                    return new StringField(STRING_LEN);
+                } else {
+                    return new StringField(readValue, STRING_LEN);
+                }
             } catch (IOException e) {
                 throw new ParseException("couldn't parse", 0);
             }
@@ -60,4 +70,8 @@ public enum Type implements Serializable {
    */
     public abstract Field parse(DataInputStream dis) throws ParseException;
 
+    // dummy value for missing integers
+    public static final int MISSING_INTEGER = Integer.MIN_VALUE;
+    // dummy string for missing strings
+    public static final String MISSING_STRING = new String(new char[STRING_LEN]).replace('\0', 'Z');
 }
