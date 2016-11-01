@@ -91,6 +91,10 @@ public class StringHistogram {
         return hist.estimateSelectivity(op, val);
     }
 
+    public double estimateSelectivityNull(Predicate.Op op) {
+        return hist.estimateSelectivityNull(op);
+    }
+
     /**
      * @return the average selectivity of this histogram.
      * 

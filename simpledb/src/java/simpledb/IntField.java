@@ -61,8 +61,9 @@ public class IntField implements Field {
      * @see Field#compare
      */
     public boolean compare(Predicate.Op op, Field val) {
+        // predicate on missing field only true if checking equality against missing (i.e null)
         if (isMissing()) {
-            return false;
+            return op == Predicate.Op.EQUALS && val.isMissing();
         }
 
         IntField iVal = (IntField) val;

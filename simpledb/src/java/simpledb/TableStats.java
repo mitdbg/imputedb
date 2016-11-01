@@ -203,11 +203,20 @@ public class TableStats {
      *         predicate
      */
     public double estimateSelectivity(int field, Predicate.Op op, Field constant) {
+      boolean isNullConstant = constant.isMissing();
     	switch (schema.getFieldType(field)) {
 		case INT_TYPE:
-			return intStats[field].estimateSelectivity(op, ((IntField)constant).getValue());
+		  if (isNullConstant) {
+        return intStats[field].estimateSelectivityNull(op);
+      } else {
+        return intStats[field].estimateSelectivity(op, ((IntField)constant).getValue());
+      }
 		case STRING_TYPE:
-			return stringStats[field].estimateSelectivity(op, ((StringField)constant).getValue());
+		  if (isNullConstant) {
+        return stringStats[field].estimateSelectivityNull(op);
+      } else {
+        return stringStats[field].estimateSelectivity(op, ((StringField)constant).getValue());
+      }
 		default:
 			throw new RuntimeException("Unexpected type.");
     	}

@@ -184,6 +184,24 @@ public class IntHistogram {
 		return selValues / numValues;
 	}
 
+	/**
+	 * Estimating selectivity relative to null (i.e. missing). Only defined over equals and not-equals
+	 * This is a stand in for traditional SQL
+	 * SELECT * FROM t WHERE c1 IS [NOT] NULL
+	 * @param op
+	 * @return
+	 */
+	public double estimateSelectivityNull(Predicate.Op op) {
+		switch(op) {
+			case EQUALS:
+				return ((double) getCtMissing()) / numValues;
+			case NOT_EQUALS:
+				return ((double) numValues - getCtMissing()) / numValues;
+			default:
+				return 0.0;
+		}
+	}
+
 	private double sum(double[] vs) {
 		double res = 0;
 		for (double v : vs) res+= v;
