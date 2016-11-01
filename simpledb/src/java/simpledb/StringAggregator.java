@@ -59,9 +59,13 @@ public class StringAggregator implements Aggregator {
      */
     public void mergeTupleIntoGroup(Tuple tup) {
     	Field key = gbField == NO_GROUPING ? NONE : tup.getField(gbField);
-    	CountAgg agg = groups.containsKey(key) ? groups.get(key) : new CountAgg();
-    	agg.add();
-    	groups.put(key, agg);
+		// can't aggregate with missing key
+		if (!key.isMissing()) {
+			// only doing count, so always doable
+			CountAgg agg = groups.containsKey(key) ? groups.get(key) : new CountAgg();
+			agg.add();
+			groups.put(key, agg);
+		}
     }
     
     @Override

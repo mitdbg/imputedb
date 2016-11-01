@@ -65,6 +65,18 @@ public class StringHistogram {
         hist.addValue(val);
     }
 
+    public void addValue(Tuple tup, int index) {
+        if (tup.getField(index).isMissing()) {
+            hist.incrCtMissing();
+        } else {
+            hist.addValue(tup, index);
+        }
+    }
+
+    public int getCtMissing() {
+        return hist.getCtMissing();
+    }
+
     /**
      * Estimate the selectivity (as a double between 0 and 1) of the specified
      * predicate over the specified string

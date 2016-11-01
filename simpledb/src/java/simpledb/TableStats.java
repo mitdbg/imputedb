@@ -119,24 +119,21 @@ public class TableStats {
 			while (iter.hasNext()) {
 				Tuple tup = iter.next();
 				for (int i = 0; i < tup.getTupleDesc().numFields(); i++) {
-                    // TODO: missing value stuff
-                    if (!tup.getField(i).isMissing()) {
-                        switch (tup.getTupleDesc().getFieldType(i)) {
-                            case INT_TYPE:
-                                if (intStats[i] == null) {
-                                    intStats[i] = new IntHistogram(NUM_HIST_BINS, min[i], max[i]);
-                                }
-                                intStats[i].addValue(((IntField) tup.getField(i)).getValue());
-                                break;
-                            case STRING_TYPE:
-                                if (stringStats[i] == null) {
-                                    stringStats[i] = new StringHistogram(NUM_HIST_BINS);
-                                }
-                                stringStats[i].addValue(((StringField) tup.getField(i)).getValue());
-                                break;
-                            default:
-                                throw new RuntimeException("Unexpected type.");
-                        }
+                    switch (tup.getTupleDesc().getFieldType(i)) {
+                        case INT_TYPE:
+                            if (intStats[i] == null) {
+                                intStats[i] = new IntHistogram(NUM_HIST_BINS, min[i], max[i]);
+                            }
+                            intStats[i].addValue(tup, i);
+                            break;
+                        case STRING_TYPE:
+                            if (stringStats[i] == null) {
+                                stringStats[i] = new StringHistogram(NUM_HIST_BINS);
+                            }
+                            stringStats[i].addValue(tup, i);
+                            break;
+                        default:
+                            throw new RuntimeException("Unexpected type.");
                     }
 				}
 			}
