@@ -133,10 +133,15 @@ public class IntegerAggregator implements Aggregator {
      */
     public void mergeTupleIntoGroup(Tuple tup) {
     	Field key = gbField == NO_GROUPING ? NONE : tup.getField(gbField);
-    	int value = ((IntField)tup.getField(aggField)).getValue();
-    	Agg agg = groups.containsKey(key) ? groups.get(key) : newAgg();
-    	agg.add(value);
-    	groups.put(key, agg);
+		IntField val = (IntField) tup.getField(aggField);
+		// can only aggregate on a key if not missing or None and
+		// value is not missing or we are working on a count
+		if (!key.isMissing() && (!val.isMissing() || op == Op.COUNT)) {
+			int value = (val.isMissing()) ? 1 : val.getValue();
+			Agg agg = groups.containsKey(key) ? groups.get(key) : newAgg();
+			agg.add(value);
+			groups.put(key, agg);
+		}
     }
     
     @Override

@@ -323,10 +323,22 @@ public class LogicalPlan {
             } catch (java.util.NoSuchElementException e) {
                 throw new ParsingException("Unknown field in filter expression " + lf.fieldQuantifiedName);
             }
-            if (ftyp == Type.INT_TYPE)
-                f = new IntField(new Integer(lf.c).intValue());
-            else
-                f = new StringField(lf.c, Type.STRING_LEN);
+            // treat comparisons to null as comparisons to missing
+            boolean isNull = lf.c.equalsIgnoreCase("NULL");
+            // create an appropriate constant field value to compare against
+            if (ftyp == Type.INT_TYPE) {
+                if (isNull) {
+                    f = new IntField();
+                } else {
+                    f = new IntField(new Integer(lf.c).intValue());
+                }
+            } else {
+                if (isNull) {
+                    f = new StringField(Type.STRING_LEN);
+                } else {
+                    f = new StringField(lf.c, Type.STRING_LEN);
+                }
+            }
 
             Predicate p = null;
             try {

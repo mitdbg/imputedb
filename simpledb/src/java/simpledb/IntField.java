@@ -10,8 +10,12 @@ public class IntField implements Field {
 	private static final long serialVersionUID = 1L;
 	
 	private final int value;
+    private final boolean missing;
 
     public int getValue() {
+        if (isMissing()) {
+            throw new UnsupportedOperationException("cannot get value on missing");
+        }
         return value;
     }
 
@@ -22,9 +26,18 @@ public class IntField implements Field {
      */
     public IntField(int i) {
         value = i;
+        missing = false;
+    }
+
+    public IntField() {
+        value = Type.MISSING_INTEGER;
+        missing = true;
     }
 
     public String toString() {
+        if (isMissing()) {
+            return HeapFileEncoder.NULL_STRING;
+        }
         return Integer.toString(value);
     }
 
@@ -48,6 +61,10 @@ public class IntField implements Field {
      * @see Field#compare
      */
     public boolean compare(Predicate.Op op, Field val) {
+        // predicate on missing field only true if checking equality against missing (i.e null)
+        if (isMissing()) {
+            return op == Predicate.Op.EQUALS && val.isMissing();
+        }
 
         IntField iVal = (IntField) val;
 
@@ -83,4 +100,8 @@ public class IntField implements Field {
 	public Type getType() {
 		return Type.INT_TYPE;
 	}
+
+	public boolean isMissing() {
+        return missing;
+    }
 }

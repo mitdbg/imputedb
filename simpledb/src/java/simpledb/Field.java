@@ -36,5 +36,7 @@ public interface Field extends Serializable{
     public int hashCode();
     public boolean equals(Object field);
 
+    public boolean isMissing();
+
     public String toString();
 }

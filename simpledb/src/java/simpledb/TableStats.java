@@ -104,7 +104,8 @@ public class TableStats {
 			while (iter.hasNext()) {
 				Tuple tup = iter.next();
 				for (int i = 0; i < numFields; i++) {
-					if (tup.getTupleDesc().getFieldType(i) == Type.INT_TYPE) {
+                    // TODO: missing value stuff
+					if (tup.getTupleDesc().getFieldType(i) == Type.INT_TYPE && !tup.getField(i).isMissing()) {
 						int value = ((IntField)tup.getField(i)).getValue();
 						min[i] = Math.min(min[i], value);
 						max[i] = Math.max(max[i], value);
@@ -112,28 +113,28 @@ public class TableStats {
 				}
 				nt++;
 			}
-			
+
 	    	iter.rewind();
 
 			while (iter.hasNext()) {
 				Tuple tup = iter.next();
 				for (int i = 0; i < tup.getTupleDesc().numFields(); i++) {
-					switch(tup.getTupleDesc().getFieldType(i)) {
-					case INT_TYPE:
-						if (intStats[i] == null) {
-							intStats[i] = new IntHistogram(NUM_HIST_BINS, min[i], max[i]);
-						}
-						intStats[i].addValue(((IntField)tup.getField(i)).getValue());
-						break;
-					case STRING_TYPE:
-						if (stringStats[i] == null) {
-							stringStats[i] = new StringHistogram(NUM_HIST_BINS);
-						}
-						stringStats[i].addValue(((StringField)tup.getField(i)).getValue());
-						break;
-					default:
-						throw new RuntimeException("Unexpected type.");
-					}
+                    switch (tup.getTupleDesc().getFieldType(i)) {
+                        case INT_TYPE:
+                            if (intStats[i] == null) {
+                                intStats[i] = new IntHistogram(NUM_HIST_BINS, min[i], max[i]);
+                            }
+                            intStats[i].addValue(tup, i);
+                            break;
+                        case STRING_TYPE:
+                            if (stringStats[i] == null) {
+                                stringStats[i] = new StringHistogram(NUM_HIST_BINS);
+                            }
+                            stringStats[i].addValue(tup, i);
+                            break;
+                        default:
+                            throw new RuntimeException("Unexpected type.");
+                    }
 				}
 			}
 		} catch (NoSuchElementException | DbException | TransactionAbortedException e) {
@@ -202,11 +203,20 @@ public class TableStats {
      *         predicate
      */
     public double estimateSelectivity(int field, Predicate.Op op, Field constant) {
+      boolean isNullConstant = constant.isMissing();
     	switch (schema.getFieldType(field)) {
 		case INT_TYPE:
-			return intStats[field].estimateSelectivity(op, ((IntField)constant).getValue());
+		  if (isNullConstant) {
+        return intStats[field].estimateSelectivityNull(op);
+      } else {
+        return intStats[field].estimateSelectivity(op, ((IntField)constant).getValue());
+      }
 		case STRING_TYPE:
-			return stringStats[field].estimateSelectivity(op, ((StringField)constant).getValue());
+		  if (isNullConstant) {
+        return stringStats[field].estimateSelectivityNull(op);
+      } else {
+        return stringStats[field].estimateSelectivity(op, ((StringField)constant).getValue());
+      }
 		default:
 			throw new RuntimeException("Unexpected type.");
     	}
