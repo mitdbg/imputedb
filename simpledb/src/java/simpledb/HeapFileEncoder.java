@@ -175,6 +175,15 @@ public class HeapFileEncoder {
 								pageStream.write((byte) 0);
 							}
 							break;
+						case DOUBLE_TYPE:
+							try {
+								double v = field == null ? Type.MISSING_DOUBLE : Double.parseDouble(field);
+								pageStream.writeDouble(v);
+							} catch (NumberFormatException e) {
+								System.err.format("Bad record (line=%d): %s", r.getRecordNumber(), r);
+								throw new IOException("Conversion failed.");
+							}
+							break;
 						default:
 							throw new RuntimeException("Unexpected type.");
 						}
