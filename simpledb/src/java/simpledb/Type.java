@@ -95,4 +95,20 @@ public enum Type implements Serializable {
     public static final String MISSING_STRING = new String(new char[STRING_LEN]).replace('\0', 'Z');
     public static final double MISSING_DOUBLE = Double.MIN_VALUE;
     
+    /**
+     * Parse a Type object from a string.
+     */
+    public static Type ofString(String typeStr) throws ParseException {
+    	typeStr = typeStr.toLowerCase();
+    	
+    	if (typeStr.equals("int")) {
+    		return Type.INT_TYPE;
+    	} else if (typeStr.equals("string")) {
+    		return Type.STRING_TYPE;
+    	} else if (typeStr.equals("double")) {
+    		return Type.DOUBLE_TYPE;
+    	} else {
+    		throw new ParseException("Unexpected type: " + typeStr, 0);
+    	}
+    }
 }
