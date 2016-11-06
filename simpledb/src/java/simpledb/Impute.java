@@ -1,37 +1,33 @@
 package simpledb;
 
-public class Impute extends Operator {
+public abstract class Impute extends Operator {
 
     private static final long serialVersionUID = 1L;
 
-	@Override
-	public void rewind() throws DbException, TransactionAbortedException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected Tuple fetchNext() throws DbException, TransactionAbortedException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    protected DbIterator child;
+    protected TupleDesc td;
+    
+    public Impute(DbIterator child){
+    	this.child = child;
+    	this.td = child.getTupleDesc();
+    }
 
 	@Override
 	public DbIterator[] getChildren() {
-		// TODO Auto-generated method stub
-		return null;
+        return new DbIterator[] { child };
 	}
 
 	@Override
 	public void setChildren(DbIterator[] children) {
-		// TODO Auto-generated method stub
-
+    	if (children.length != 1) {
+    		throw new IllegalArgumentException("Expected a single new child.");
+    	}
+    	child = children[0];
 	}
 
 	@Override
 	public TupleDesc getTupleDesc() {
-		// TODO Auto-generated method stub
-		return null;
+		return td;
 	}
 
 }
