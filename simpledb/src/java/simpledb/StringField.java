@@ -135,4 +135,8 @@ public class StringField implements Field {
 	public boolean isMissing() {
 		return missing;
 	}
+	
+	public int getSize() {
+		return maxSize;
+	}
 }
