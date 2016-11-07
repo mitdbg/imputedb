@@ -132,6 +132,8 @@ public class TableStats {
                             }
                             stringStats[i].addValue(tup, i);
                             break;
+                        case DOUBLE_TYPE:
+                        	break;
                         default:
                             throw new RuntimeException("Unexpected type.");
                     }
@@ -203,22 +205,25 @@ public class TableStats {
      *         predicate
      */
     public double estimateSelectivity(int field, Predicate.Op op, Field constant) {
-      boolean isNullConstant = constant.isMissing();
+    	boolean isNullConstant = constant.isMissing();
     	switch (schema.getFieldType(field)) {
-		case INT_TYPE:
-		  if (isNullConstant) {
-        return intStats[field].estimateSelectivityNull(op);
-      } else {
-        return intStats[field].estimateSelectivity(op, ((IntField)constant).getValue());
-      }
-		case STRING_TYPE:
-		  if (isNullConstant) {
-        return stringStats[field].estimateSelectivityNull(op);
-      } else {
-        return stringStats[field].estimateSelectivity(op, ((StringField)constant).getValue());
-      }
-		default:
-			throw new RuntimeException("Unexpected type.");
+    	case INT_TYPE:
+    		if (isNullConstant) {
+    			return intStats[field].estimateSelectivityNull(op);
+    		} else {
+    			return intStats[field].estimateSelectivity(op, ((IntField)constant).getValue());
+    		}
+    	case STRING_TYPE:
+    		if (isNullConstant) {
+    			return stringStats[field].estimateSelectivityNull(op);
+    		} else {
+    			return stringStats[field].estimateSelectivity(op, ((StringField)constant).getValue());
+    		}
+    	case DOUBLE_TYPE:
+    		// TODO: Real selectivity estimation.
+    		return 1.0;
+    	default:
+    		throw new RuntimeException("Unexpected type.");
     	}
     }
 
