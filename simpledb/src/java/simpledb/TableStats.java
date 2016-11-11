@@ -72,6 +72,7 @@ public class TableStats {
     private final int ioCostPerPage;
     private final TupleDesc schema;
     private final int numTuples;
+    private final int[] nullStats;
 
     /**
      * Create a new TableStats object, that keeps track of statistics on each
@@ -92,6 +93,7 @@ public class TableStats {
     	
     	intStats = new IntHistogram[numFields];
     	stringStats = new StringHistogram[numFields];
+    	nullStats = new int[numFields];
     	
 		final int[] min = new int[numFields], max = new int[numFields];
 		int nt = 0;
@@ -101,10 +103,10 @@ public class TableStats {
     	try {
     		iter.open();
     		
+    		// Get min/max values for integer columns.
 			while (iter.hasNext()) {
 				Tuple tup = iter.next();
 				for (int i = 0; i < numFields; i++) {
-                    // TODO: missing value stuff
 					if (tup.getTupleDesc().getFieldType(i) == Type.INT_TYPE && !tup.getField(i).isMissing()) {
 						int value = ((IntField)tup.getField(i)).getValue();
 						min[i] = Math.min(min[i], value);
@@ -116,27 +118,32 @@ public class TableStats {
 
 	    	iter.rewind();
 
+	    	// Fill in histograms.
 			while (iter.hasNext()) {
 				Tuple tup = iter.next();
 				for (int i = 0; i < tup.getTupleDesc().numFields(); i++) {
-                    switch (tup.getTupleDesc().getFieldType(i)) {
-                        case INT_TYPE:
-                            if (intStats[i] == null) {
-                                intStats[i] = new IntHistogram(NUM_HIST_BINS, min[i], max[i]);
-                            }
-                            intStats[i].addValue(tup, i);
-                            break;
-                        case STRING_TYPE:
-                            if (stringStats[i] == null) {
-                                stringStats[i] = new StringHistogram(NUM_HIST_BINS);
-                            }
-                            stringStats[i].addValue(tup, i);
-                            break;
-                        case DOUBLE_TYPE:
-                        	break;
-                        default:
-                            throw new RuntimeException("Unexpected type.");
-                    }
+					if (tup.getField(i).isMissing()) {
+						nullStats[i]++;
+					} else {
+						switch (tup.getTupleDesc().getFieldType(i)) {
+						case INT_TYPE:
+							if (intStats[i] == null) {
+								intStats[i] = new IntHistogram(NUM_HIST_BINS, min[i], max[i]);
+							}
+							intStats[i].addValue(tup, i);
+							break;
+						case STRING_TYPE:
+							if (stringStats[i] == null) {
+								stringStats[i] = new StringHistogram(NUM_HIST_BINS);
+							}
+							stringStats[i].addValue(tup, i);
+							break;
+						case DOUBLE_TYPE:
+							break;
+						default:
+							throw new RuntimeException("Unexpected type.");
+						}
+					}
 				}
 			}
 		} catch (NoSuchElementException | DbException | TransactionAbortedException e) {
