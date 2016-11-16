@@ -325,19 +325,20 @@ public class LogicalPlan {
             }
             // treat comparisons to null as comparisons to missing
             boolean isNull = lf.c.equalsIgnoreCase("NULL");
+            
             // create an appropriate constant field value to compare against
-            if (ftyp == Type.INT_TYPE) {
-                if (isNull) {
-                    f = new IntField();
-                } else {
-                    f = new IntField(new Integer(lf.c).intValue());
-                }
-            } else {
-                if (isNull) {
-                    f = new StringField(Type.STRING_LEN);
-                } else {
-                    f = new StringField(lf.c, Type.STRING_LEN);
-                }
+            switch(ftyp) {
+			case DOUBLE_TYPE:
+                f = isNull ? new DoubleField() : new DoubleField(Double.valueOf(lf.c));
+				break;
+			case INT_TYPE:
+				f = isNull ? new IntField() : new IntField(Integer.valueOf(lf.c));
+				break;
+			case STRING_TYPE:
+				f = isNull ? new StringField(Type.STRING_LEN) : new StringField(lf.c, Type.STRING_LEN);
+				break;
+			default:
+				throw new RuntimeException("Unexpected type.");
             }
 
             Predicate p = null;

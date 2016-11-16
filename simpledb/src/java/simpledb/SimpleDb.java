@@ -1,6 +1,7 @@
 package simpledb;
 
 import java.io.*;
+import java.text.ParseException;
 
 public class SimpleDb {
 	public static void main(String args[]) throws DbException, TransactionAbortedException, IOException {
@@ -40,12 +41,10 @@ public class SimpleDb {
 					}
 					int index = 0;
 					for (String s : typeStringAr) {
-						if (s.toLowerCase().equals("int"))
-							ts[index++] = Type.INT_TYPE;
-						else if (s.toLowerCase().equals("string"))
-							ts[index++] = Type.STRING_TYPE;
-						else {
-							System.err.println("Unknown type " + s);
+						try {
+							ts[index++] = Type.ofString(s);
+						} catch (ParseException ex) {
+							System.err.println(ex.getMessage());
 							return;
 						}
 					}

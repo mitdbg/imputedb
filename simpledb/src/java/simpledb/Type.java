@@ -28,7 +28,6 @@ public enum Type implements Serializable {
                 throw new ParseException("couldn't parse", 0);
             }
         }
-
     }, STRING_TYPE() {
         @Override
         public int getLen() {
@@ -52,6 +51,26 @@ public enum Type implements Serializable {
                 throw new ParseException("couldn't parse", 0);
             }
         }
+    }, DOUBLE_TYPE() {
+		@Override
+		public int getLen() {
+			return 8;
+		}
+
+		@Override
+		public Field parse(DataInputStream dis) throws ParseException {
+			try {
+				double val = dis.readDouble();
+				if (val == MISSING_DOUBLE) {
+					return new DoubleField();
+				} else {
+					return new DoubleField(val);
+				}
+            }  catch (IOException e) {
+                throw new ParseException("couldn't parse", 0);
+            }
+		}
+    	
     };
     
     public static final int STRING_LEN = 128;
@@ -74,4 +93,22 @@ public enum Type implements Serializable {
     public static final int MISSING_INTEGER = Integer.MIN_VALUE;
     // dummy string for missing strings
     public static final String MISSING_STRING = new String(new char[STRING_LEN]).replace('\0', 'Z');
+    public static final double MISSING_DOUBLE = Double.MIN_VALUE;
+    
+    /**
+     * Parse a Type object from a string.
+     */
+    public static Type ofString(String typeStr) throws ParseException {
+    	typeStr = typeStr.toLowerCase();
+    	
+    	if (typeStr.equals("int")) {
+    		return Type.INT_TYPE;
+    	} else if (typeStr.equals("string")) {
+    		return Type.STRING_TYPE;
+    	} else if (typeStr.equals("double")) {
+    		return Type.DOUBLE_TYPE;
+    	} else {
+    		throw new ParseException("Unexpected type: " + typeStr, 0);
+    	}
+    }
 }

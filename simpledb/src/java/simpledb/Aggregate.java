@@ -46,6 +46,8 @@ public class Aggregate extends Operator {
 		case INT_TYPE:
 			agg = new IntegerAggregator(grpField, grpFieldType, aggField, op);
 			break;
+		case DOUBLE_TYPE:
+			throw new RuntimeException("Aggregating doubles is not supported.");
 		case STRING_TYPE:
 			agg = new StringAggregator(grpField, grpFieldType, aggField, op);
 			break;

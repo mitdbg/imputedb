@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -148,20 +149,19 @@ public class Catalog {
                 for (String e : els) {
                     String[] els2 = e.trim().split(" ");
                     names.add(els2[0].trim());
-                    if (els2[1].trim().toLowerCase().equals("int"))
-                        types.add(Type.INT_TYPE);
-                    else if (els2[1].trim().toLowerCase().equals("string"))
-                        types.add(Type.STRING_TYPE);
-                    else {
-                        System.out.println("Unknown type " + els2[1]);
-                        System.exit(0);
+                    try {
+                    	types.add(Type.ofString(els2[1].trim()));
+                    } catch (ParseException ex) {
+                    	System.err.println(ex.getMessage());
+                    	System.exit(-1);
                     }
                     if (els2.length == 3) {
-                        if (els2[2].trim().equals("pk"))
+                        if (els2[2].trim().equals("pk")) {
                             primaryKey = els2[0].trim();
+                        }
                         else {
-                            System.out.println("Unknown annotation " + els2[2]);
-                            System.exit(0);
+                            System.err.println("Unknown annotation " + els2[2]);
+                            System.exit(-1);
                         }
                     }
                 }
@@ -174,10 +174,10 @@ public class Catalog {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            System.exit(0);
+            System.exit(-1);
         } catch (IndexOutOfBoundsException e) {
             System.out.println ("Invalid catalog entry : " + line);
-            System.exit(0);
+            System.exit(-1);
         }
     }
 }
