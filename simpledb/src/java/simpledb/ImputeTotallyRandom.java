@@ -37,21 +37,21 @@ public class ImputeTotallyRandom extends Impute {
 	protected Tuple fetchNext() throws DbException, TransactionAbortedException {
 		if (child.hasNext()){
 			Tuple t = child.next();
-
+			
 			// Populate "complete" tuple.
 			if (t.hasMissingFields()){
 				Tuple tc = new Tuple(t);
 				List<Integer> missingFieldIndices = t.missingFieldsIndices();
 				for (int i : missingFieldIndices){
-					if (t.getField(i).getType().equals(Type.MISSING_INTEGER)){
+					if (t.getField(i).getType().equals(Type.INT_TYPE)){
 						int randomInt = random.nextInt();
 						tc.setField(i, new IntField(randomInt));
-					} else if (t.getField(i).getType().equals(Type.MISSING_STRING)){
+					} else if (t.getField(i).getType().equals(Type.STRING_TYPE)){
 						int size = ((StringField) t.getField(i)).getSize();
 						String randomString = drawRandomString(size);
 						tc.setField(i, new StringField(randomString, size));
 	 				} else {
-	 					// something went wrong
+	 					throw new DbException("Something went wrong.");
 	 				}
 				}
 				

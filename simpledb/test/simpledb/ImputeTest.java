@@ -33,7 +33,7 @@ public class ImputeTest extends SimpleDbTestBase {
    */
   @Test public void rewind() throws Exception {
   }
-
+  
   @Test public void imputeTotallyRandom() throws Exception {
 	  Impute op= new ImputeTotallyRandom(scan);
 	  op.open();

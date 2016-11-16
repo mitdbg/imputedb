@@ -247,7 +247,7 @@ public class TestUtil {
      */
     public static class MockScan implements DbIterator {
 		private static final long serialVersionUID = -9047494995901857958L;
-		private int cur, low, high, width;
+		protected int cur, low, high, width;
 
         /**
          * Creates a fake SeqScan that returns tuples sequentially with 'width'
@@ -306,10 +306,9 @@ public class TestUtil {
      * Mock SeqScan class for unit testing, *with missing values*.
      */
     public static class MockScanWithMissing extends MockScan {
-		private static final long serialVersionUID = -9047494995901857958L;
-		private int cur, low, high, width;
+		private static final long serialVersionUID = 904384087921778944L;
 
-        /**
+		/**
          * Creates a fake SeqScan that returns tuples sequentially with 'width'
          * fields, each with the same value, that increases from low (inclusive)
          * and high (exclusive) over getNext calls. The first tuple returned has
@@ -317,7 +316,7 @@ public class TestUtil {
          * missing value in the field at index 'n % width'.
          */
         public MockScanWithMissing(int low, int high, int width) {
-		super(low, high, width);
+			super(low, high, width);
         }
 
         @Override
@@ -326,13 +325,14 @@ public class TestUtil {
 
             Tuple tup = new Tuple(getTupleDesc());
             int missingIndex = Math.floorMod(cur, width);
-            for (int i = 0; i < width; ++i)
-		if (i == missingIndex){
-			// Missing field
+            for (int i = 0; i < width; ++i){
+				if (i == missingIndex){
+					// Missing field
 					tup.setField(i, new IntField());
-		} else {
+				} else {
 					tup.setField(i, new IntField(cur));
-		}
+				}
+            }
             cur++;
             return tup;
         }
