@@ -41,6 +41,14 @@ public class Tuple implements Serializable {
     }
     
     /**
+     * Copy constructor
+     * @param t
+     */
+    public Tuple(Tuple t){
+    	this(t.schema, Arrays.copyOf(t.fields, t.fields.length));
+    }
+    
+    /**
      * Create a new tuple which is the concatenation of two existing tuples.
      */
     public Tuple(Tuple t1, Tuple t2) {
