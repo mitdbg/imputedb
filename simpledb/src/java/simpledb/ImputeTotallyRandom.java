@@ -45,21 +45,7 @@ public class ImputeTotallyRandom extends Impute {
 			
 			// Populate "complete" tuple.
 			if (t.hasMissingFields()){
-				Tuple tc = new Tuple(t);
-				List<Integer> missingFieldIndices = t.missingFieldsIndices();
-				for (int i : missingFieldIndices){
-					if (t.getField(i).getType().equals(Type.INT_TYPE)){
-						int randomInt = random.nextInt();
-						tc.setField(i, new IntField(randomInt));
-					} else if (t.getField(i).getType().equals(Type.STRING_TYPE)){
-						int size = ((StringField) t.getField(i)).getSize();
-						String randomString = drawRandomString(size);
-						tc.setField(i, new StringField(randomString, size));
-	 				} else {
-	 					throw new DbException("Something went wrong.");
-	 				}
-				}
-				
+				Tuple tc = impute(t);
 				return tc;
 			}
 			
@@ -67,6 +53,26 @@ public class ImputeTotallyRandom extends Impute {
 		}
 			
 		return null;
+	}
+	
+	private Tuple impute(Tuple t) throws DbException {
+		Tuple tc = new Tuple(t);
+		List<Integer> missingFieldIndices = t.missingFieldsIndices();
+		for (int i : missingFieldIndices){
+			if (t.getField(i).getType().equals(Type.INT_TYPE)){
+				int randomInt = random.nextInt();
+				tc.setField(i, new IntField(randomInt));
+			} else if (t.getField(i).getType().equals(Type.STRING_TYPE)){
+				int size = ((StringField) t.getField(i)).getSize();
+				String randomString = drawRandomString(size);
+				tc.setField(i, new StringField(randomString, size));
+				} else {
+					throw new DbException("Something went wrong.");
+				}
+		}
+		
+		return tc;
+		
 	}
 
 	/**
