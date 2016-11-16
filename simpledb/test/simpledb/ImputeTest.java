@@ -23,59 +23,61 @@ public class ImputeTest extends SimpleDbTestBase {
   }
 
   /**
-   * Unit test for Impute.getTupleDesc(). TupleDesc should be identical as before.
+   * Unit test for Impute#getTupleDesc(). TupleDesc should be identical as before.
    */
-  @Test public void getTupleDesc() {
-	  Impute op = new ImputeTotallyRandom(scan);
+  @Test public void getTupleDescTotallyRandom() {
+	  getTupleDescDriver(new ImputeTotallyRandom(scan));
+  }
+  @Test public void getTupleDescRandom() {
+	  getTupleDescDriver(new ImputeRandom(scan));
+  }
+  
+  public void getTupleDescDriver(Impute op){
 	  TupleDesc expected = Utility.getTupleDesc(testWidth);
 	  TupleDesc actual = op.getTupleDesc();
 	  assertEquals(expected, actual);
   }
 
   /**
-   * Unit tests for Impute.rewind(). This doesn't do much. We get the first tuple
+   * Unit tests for Impute#rewind(). This doesn't do much. We get the first tuple
    * and after a rewind, confirm that we get the same first tuple.
    */
   @Test public void rewindTotallyRandom() throws Exception {
-	  Impute op = new ImputeTotallyRandom(scan);
-	  op.open();
-	  assertTrue(op.hasNext());
-	  Tuple expected = op.next();
-	  assertNotNull(expected);
-	  
-	  op.rewind();
-	  assertTrue(op.hasNext());
-	  Tuple actual = op.next();
-	  assertTrue(TestUtil.compareTuples(expected, actual));
-	  op.close();
+	  rewindDriver(new ImputeTotallyRandom(scan));
   }
-
   @Test public void rewindRandom() throws Exception {
-	  Impute op = new ImputeRandom(scan);
-	  op.open();
-	  assertTrue(op.hasNext());
-	  Tuple expected = op.next();
-	  assertNotNull(expected);
-	  
-	  op.rewind();
-	  assertTrue(op.hasNext());
-	  Tuple actual = op.next();
-	  assertTrue(TestUtil.compareTuples(expected, actual));
-	  op.close();
+	  rewindDriver(new ImputeRandom(scan));
   }
   
-  @Test public void imputeTotallyRandom() throws Exception {
-	  Impute op = new ImputeTotallyRandom(scan);
+  public void rewindDriver(Impute op) throws Exception {
 	  op.open();
-	  while (op.hasNext()){
-		  Tuple t = op.next();
-		  assertTrue(!t.hasMissingFields());
-	  }
+	  assertTrue(op.hasNext());
+	  Tuple expected = op.next();
+	  assertNotNull(expected);
+	  
+	  op.rewind();
+	  assertTrue(op.hasNext());
+	  Tuple actual = op.next();
+	  assertTrue(TestUtil.compareTuples(expected, actual));
 	  op.close();
+	  
   }
-
+  
+  /**
+   * Unit tests for Impute#fetchNext(). We iterate through the tuples, some of
+   * which have missing values. We confirm that the imputed tuples do not have
+   * any missing values.
+   * @throws Exception
+   */
+  @Test public void imputeTotallyRandom() throws Exception {
+	  imputeDriver(new ImputeTotallyRandom(scan));
+  }
   @Test public void imputeRandom() throws Exception {
-	  Impute op = new ImputeRandom(scan);
+	  imputeDriver(new ImputeRandom(scan));
+  }
+  
+  // TODO: Confirm that the fields that were not imputed are identical.
+  public void imputeDriver(Impute op) throws Exception {
 	  op.open();
 	  while (op.hasNext()){
 		  Tuple t = op.next();
