@@ -19,6 +19,7 @@ public class ImputeTest extends SimpleDbTestBase {
    * Initialize each unit test
    */
   @Before public void setUp() {
+	  this.scan = new TestUtil.MockScanWithMissing(-5, 5, testWidth);
   }
 
   /**
@@ -31,6 +32,16 @@ public class ImputeTest extends SimpleDbTestBase {
    * Unit test for Impute.rewind()
    */
   @Test public void rewind() throws Exception {
+  }
+
+  @Test public void imputeTotallyRandom() throws Exception {
+	  Impute op= new ImputeTotallyRandom(scan);
+	  op.open();
+	  while (op.hasNext()){
+		  Tuple t = op.next();
+		  assertTrue(!t.hasMissingFields());
+	  }
+	  op.close();
   }
 
   /**

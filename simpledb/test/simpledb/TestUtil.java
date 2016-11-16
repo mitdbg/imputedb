@@ -293,11 +293,55 @@ public class TestUtil {
 
 		public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
 			if(cur >= high) throw new NoSuchElementException();
+
             Tuple tup = new Tuple(getTupleDesc());
             for (int i = 0; i < width; ++i)
                 tup.setField(i, new IntField(cur));
             cur++;
             return tup;
+		}
+    }
+
+    /**
+     * Mock SeqScan class for unit testing, *with missing values*.
+     */
+    public static class MockScanWithMissing extends MockScan {
+		private static final long serialVersionUID = -9047494995901857958L;
+		private int cur, low, high, width;
+
+        /**
+         * Creates a fake SeqScan that returns tuples sequentially with 'width'
+         * fields, each with the same value, that increases from low (inclusive)
+         * and high (exclusive) over getNext calls. The first tuple returned has
+         * a missing value in the first field, and the nth tuple returned has a
+         * missing value in the field at index 'n % width'.
+         */
+        public MockScanWithMissing(int low, int high, int width) {
+		super(low, high, width);
+        }
+
+        @Override
+        protected Tuple readNext() {
+            if (cur >= high) return null;
+
+            Tuple tup = new Tuple(getTupleDesc());
+            int missingIndex = Math.floorMod(cur, width);
+            for (int i = 0; i < width; ++i)
+		if (i == missingIndex){
+			// Missing field
+					tup.setField(i, new IntField());
+		} else {
+					tup.setField(i, new IntField(cur));
+		}
+            cur++;
+            return tup;
+        }
+
+        @Override
+		public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+			Tuple next = readNext();
+			if (next == null) throw new NoSuchElementException();
+			return next;
 		}
     }
 

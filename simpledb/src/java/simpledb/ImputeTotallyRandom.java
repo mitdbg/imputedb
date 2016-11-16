@@ -28,27 +28,34 @@ public class ImputeTotallyRandom extends Impute {
 		child.rewind();
 	}
 
+	/**
+	 * Fetch next tuple, imputing if necessary. We can do this in a streaming
+	 * fashion as we simply impute totally random values given any constraints
+	 * on the column.
+	 */
 	@Override
 	protected Tuple fetchNext() throws DbException, TransactionAbortedException {
 		if (child.hasNext()){
 			Tuple t = child.next();
+
+			// Populate "complete" tuple.
 			if (t.hasMissingFields()){
-				Tuple tNoMissing = new Tuple(t);
+				Tuple tc = new Tuple(t);
 				List<Integer> missingFieldIndices = t.missingFieldsIndices();
 				for (int i : missingFieldIndices){
 					if (t.getField(i).getType().equals(Type.MISSING_INTEGER)){
 						int randomInt = random.nextInt();
-						tNoMissing.setField(i, new IntField(randomInt));
+						tc.setField(i, new IntField(randomInt));
 					} else if (t.getField(i).getType().equals(Type.MISSING_STRING)){
 						int size = ((StringField) t.getField(i)).getSize();
 						String randomString = drawRandomString(size);
-						tNoMissing.setField(i, new StringField(randomString, size));
+						tc.setField(i, new StringField(randomString, size));
 	 				} else {
 	 					// something went wrong
 	 				}
 				}
 				
-				return tNoMissing;
+				return tc;
 			}
 			
 			return t;
