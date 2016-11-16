@@ -20,12 +20,17 @@ public class ImputeTotallyRandom extends Impute {
 	 */
     public ImputeTotallyRandom(DbIterator child){
     	super(child);
-    	random = new Random(GENERATOR_SEED);
+    	initRng();
 	}
+    
+    private void initRng(){
+    	random = new Random(GENERATOR_SEED);
+    }
 
 	@Override
 	public void rewind() throws DbException, TransactionAbortedException {
 		child.rewind();
+		initRng();
 	}
 
 	/**

@@ -33,9 +33,21 @@ public class ImputeTest extends SimpleDbTestBase {
   }
 
   /**
-   * Unit test for Impute.rewind()
+   * Unit test for Impute.rewind(). This doesn't do much. We get the first tuple
+   * and after a rewind, confirm that we get the same first tuple.
    */
   @Test public void rewind() throws Exception {
+	  Impute op = new ImputeTotallyRandom(scan);
+	  op.open();
+	  assertTrue(op.hasNext());
+	  Tuple expected = op.next();
+	  assertNotNull(expected);
+	  
+	  op.rewind();
+	  assertTrue(op.hasNext());
+	  Tuple actual = op.next();
+	  assertTrue(TestUtil.compareTuples(expected, actual));
+	  op.close();
   }
   
   @Test public void imputeTotallyRandom() throws Exception {
