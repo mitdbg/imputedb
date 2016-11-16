@@ -23,9 +23,13 @@ public class ImputeTest extends SimpleDbTestBase {
   }
 
   /**
-   * Unit test for Impute.getTupleDesc()
+   * Unit test for Impute.getTupleDesc(). TupleDesc should be identical as before.
    */
   @Test public void getTupleDesc() {
+	  Impute op = new ImputeTotallyRandom(scan);
+	  TupleDesc expected = Utility.getTupleDesc(testWidth);
+	  TupleDesc actual = op.getTupleDesc();
+	  assertEquals(expected, actual);
   }
 
   /**
@@ -35,7 +39,7 @@ public class ImputeTest extends SimpleDbTestBase {
   }
   
   @Test public void imputeTotallyRandom() throws Exception {
-	  Impute op= new ImputeTotallyRandom(scan);
+	  Impute op = new ImputeTotallyRandom(scan);
 	  op.open();
 	  while (op.hasNext()){
 		  Tuple t = op.next();
