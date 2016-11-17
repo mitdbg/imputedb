@@ -256,4 +256,13 @@ public class TupleDesc implements Serializable {
     	}
     	return sb.toString();
     }
+
+	public boolean containsField(String fname) {
+		for (TDItem td : schema) {
+			if (td.fieldName.equals(fname)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

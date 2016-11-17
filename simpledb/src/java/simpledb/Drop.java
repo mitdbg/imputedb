@@ -1,17 +1,24 @@
 package simpledb;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
 public class Drop extends Operator {
-	private final Collection<String> dropFields;
+	private static final long serialVersionUID = 7072651197398454951L;
+	
+	private final Collection<Integer> dropFields;
 	private final DbIterator child;
-
-	public Drop(Collection<String> dropFields, DbIterator child) {
-		this.dropFields = dropFields;
+	
+	public Drop(DbIterator child, Collection<String> dropFields) {
+		this.dropFields = new ArrayList<Integer>(dropFields.size());
+		TupleDesc td = child.getTupleDesc();
+		for (String field : dropFields) {
+			this.dropFields.add(td.fieldNameToIndex(field));
+		}
 		this.child = child;
 	}
-
+	
 	@Override
 	public void open() throws DbException, NoSuchElementException, TransactionAbortedException {
 		super.open();
@@ -35,8 +42,8 @@ public class Drop extends Operator {
 		while (child.hasNext()) {
         	Tuple t = child.next();
         	boolean drop = false;
-        	for (String field : dropFields) {
-        		if (t.getField(td.fieldNameToIndex(field)).isMissing()) {
+        	for (int fieldIdx : dropFields) {
+        		if (t.getField(fieldIdx).isMissing()) {
         			drop = true;
         			break;
         		}

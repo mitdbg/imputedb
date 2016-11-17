@@ -1,12 +1,12 @@
 package simpledb;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
 
 public class ImputeRandom extends Impute {
-
 	private static final long serialVersionUID = 1L;
 	private static final long GENERATOR_SEED = 6831L;
 
@@ -14,6 +14,8 @@ public class ImputeRandom extends Impute {
 
 	private ArrayList<Tuple> buffer;
 	private int i; // position of next tuple to return
+	private final Collection<String> attrs;
+	private final TupleDesc schema;
 	
 	/**
 	 * Impute missing data for a column by selecting a value at random from the
@@ -22,13 +24,19 @@ public class ImputeRandom extends Impute {
 	 * exhausted.
 	 * @param child
 	 */
-    public ImputeRandom(DbIterator child){
+    public ImputeRandom(DbIterator child, Collection<String> attrs) {
     	super(child);
     	initRng();
     	
+    	this.attrs = attrs;
+    	schema = child.getTupleDesc();
     	buffer = new ArrayList<>();
     	i = 0;
 	}
+    
+    public ImputeRandom(DbIterator child) {
+    	this(child, null);
+    }
     
     private void initRng(){
     	random = new Random(GENERATOR_SEED);
@@ -74,7 +82,13 @@ public class ImputeRandom extends Impute {
 		Tuple tc = new Tuple(t);
 		
 		List<Integer> missingFieldIndices = t.missingFieldsIndices();
-		for (int j : missingFieldIndices){
+		for (int j : missingFieldIndices) {
+			// If this impute operator was created with a list of attributes to impute,
+			// skip those that are not on the list.
+			if (attrs != null && !attrs.contains(schema.getFieldName(j))) {
+				continue;
+			}
+			
 			// Select non-missing field at random.
 			int index0 = random.nextInt(buffer.size());
 			int index = index0;

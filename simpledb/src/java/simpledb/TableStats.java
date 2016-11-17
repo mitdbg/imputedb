@@ -1,10 +1,13 @@
 package simpledb;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -233,6 +236,22 @@ public class TableStats {
     		throw new RuntimeException("Unexpected type.");
     	}
     }
+    
+    public double estimateTotalNull(Collection<Integer> fields) {
+    	double ret = 0.0;
+    	for (int field : fields) {
+    		ret += nullStats[field];
+    	}
+    	return ret;
+    }
+    
+    public double estimateTotalNull() {
+    	double ret = 0.0;
+    	for (int n : nullStats) {
+    		ret += n;
+    	}
+    	return ret;
+    }
 
     /**
      * return the total number of tuples in this table
@@ -240,4 +259,18 @@ public class TableStats {
     public int totalTuples() {
         return numTuples;
     }
+
+	public Set<String> dirtyAttrs() {
+		Set<String> ret = new HashSet<String>();
+		for (int i = 0; i < schema.numFields(); i++) {
+			if (nullStats[i] > 0) {
+				ret.add(schema.getFieldName(i));
+			}
+		}
+		return ret;
+	}
+	
+	public double estimateImputeCost() {
+		return numTuples * schema.numFields();
+	}
 }
