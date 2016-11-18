@@ -312,11 +312,18 @@ public class TestUtil {
          * Creates a fake SeqScan that returns tuples sequentially with 'width'
          * fields, each with the same value, that increases from low (inclusive)
          * and high (exclusive) over getNext calls. The first tuple returned has
-         * a missing value in the first field, and the nth tuple returned has a
-         * missing value in the field at index 'n % width'.
+         * a missing value in the first field, and the nth tuple returned has
+         * a missing value in the field at index 'n % (width+1)', unless
+         * this index is greater than width, in which case the tuple has no
+         * missing values.
          */
         public MockScanWithMissing(int low, int high, int width) {
 			super(low, high, width);
+        }
+        
+        @Override
+        public TupleDesc getTupleDesc() {
+            return Utility.getTupleDesc(width, "test");
         }
 
         @Override
@@ -324,7 +331,7 @@ public class TestUtil {
             if (cur >= high) return null;
 
             Tuple tup = new Tuple(getTupleDesc());
-            int missingIndex = Math.floorMod(cur, width);
+            int missingIndex = Math.floorMod(cur, width+1);
             for (int i = 0; i < width; ++i){
 				if (i == missingIndex){
 					// Missing field

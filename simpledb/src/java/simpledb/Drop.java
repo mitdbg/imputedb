@@ -16,7 +16,35 @@ public class Drop extends Impute {
 	 */
 	public Drop(Collection<String> dropFields, DbIterator child) {
 		super(child);
-		this.dropFields = dropFields;
+		if (validateDropFields(dropFields)){
+			this.dropFields = dropFields;
+		} else {
+			throw new RuntimeException("Could not validate dropFields.");
+		}
+	}
+
+	/**
+	 * Validate that each field in dropFields corresponds to a fieldName in
+	 * child's TupleDesc.
+	 * @param dropFields
+	 */
+	private boolean validateDropFields(Collection<String> dropFields) {
+		for (String field : dropFields){
+			if (field == null){
+				System.err.println("Could not validate null field.");
+				return false;
+			}
+
+			try{
+				td.fieldNameToIndex(field);
+			} catch (Exception e){
+				System.err.println("Could not validate field: "+field);
+				return false;
+			}
+		}
+		
+		return true;
+		
 	}
 
 	@Override
@@ -26,7 +54,6 @@ public class Drop extends Impute {
 
 	@Override
 	protected Tuple fetchNext() throws DbException, TransactionAbortedException {
-		TupleDesc td = getTupleDesc();
 		while (child.hasNext()) {
         	Tuple t = child.next();
         	boolean drop = false;
