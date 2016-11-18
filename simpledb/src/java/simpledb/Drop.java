@@ -1,27 +1,22 @@
 package simpledb;
 
 import java.util.Collection;
-import java.util.NoSuchElementException;
 
-public class Drop extends Operator {
+public class Drop extends Impute {
+
+	private static final long serialVersionUID = 1L;
+
 	private final Collection<String> dropFields;
-	private final DbIterator child;
 
+	/**
+	 * Deal with missing data on a set of column by simply dropping the rows
+	 * with missing data.
+	 * @param dropFields set of columns to consider
+	 * @param child
+	 */
 	public Drop(Collection<String> dropFields, DbIterator child) {
+		super(child);
 		this.dropFields = dropFields;
-		this.child = child;
-	}
-
-	@Override
-	public void open() throws DbException, NoSuchElementException, TransactionAbortedException {
-		super.open();
-		child.open();
-	}
-
-	@Override
-	public void close() {
-		super.close();
-		child.close();
 	}
 
 	@Override
@@ -31,7 +26,7 @@ public class Drop extends Operator {
 
 	@Override
 	protected Tuple fetchNext() throws DbException, TransactionAbortedException {
-		TupleDesc td = child.getTupleDesc();
+		TupleDesc td = getTupleDesc();
 		while (child.hasNext()) {
         	Tuple t = child.next();
         	boolean drop = false;
@@ -46,20 +41,5 @@ public class Drop extends Operator {
         	}
         }
         return null;
-	}
-
-	@Override
-	public DbIterator[] getChildren() {
-		return new DbIterator[] { child };
-	}
-
-	@Override
-	public void setChildren(DbIterator[] children) {
-		throw new RuntimeException("Not implemented.");
-	}
-
-	@Override
-	public TupleDesc getTupleDesc() {
-		return child.getTupleDesc();
 	}
 }
