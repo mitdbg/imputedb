@@ -440,4 +440,20 @@ public class TestUtil {
         protected HeapFile empty;
         private final File emptyFile;
     }
+
+    /**
+     * Return a collection of field names, one for each element in the TupleDesc
+     * corresponding to scan.
+     * @param scan
+     * @return
+     */
+	public static Collection<String> getAllFieldNames(DbIterator scan) {
+		TupleDesc td = scan.getTupleDesc();
+		Collection<String> fieldNames = new ArrayList<>(td.numFields());
+		for (int i = 0; i<td.numFields(); i++){
+			fieldNames.add(td.getFieldName(i));
+		}
+		
+		return fieldNames;
+	}
 }

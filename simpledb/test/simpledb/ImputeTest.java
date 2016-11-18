@@ -3,6 +3,9 @@ package simpledb;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
+
 import junit.framework.JUnit4TestAdapter;
 
 import org.junit.Before;
@@ -14,17 +17,22 @@ public class ImputeTest extends SimpleDbTestBase {
 
   int testWidth = 3;
   DbIterator scan;
+  Collection<String> dropFields;
 
   /**
    * Initialize each unit test
    */
   @Before public void setUp() {
 	  this.scan = new TestUtil.MockScanWithMissing(-5, 5, testWidth);
+	  this.dropFields = TestUtil.getAllFieldNames(scan);
   }
 
   /**
    * Unit test for Impute#getTupleDesc(). TupleDesc should be identical as before.
    */
+  @Test public void getTupleDescDrop() {
+	  getTupleDescDriver(new Drop(dropFields, scan));
+  }
   @Test public void getTupleDescTotallyRandom() {
 	  getTupleDescDriver(new ImputeTotallyRandom(scan));
   }
@@ -42,6 +50,9 @@ public class ImputeTest extends SimpleDbTestBase {
    * Unit tests for Impute#rewind(). This doesn't do much. We get the first tuple
    * and after a rewind, confirm that we get the same first tuple.
    */
+  @Test public void rewindDrop() throws Exception {
+	  rewindDriver(new Drop(dropFields, scan));
+  }
   @Test public void rewindTotallyRandom() throws Exception {
 	  rewindDriver(new ImputeTotallyRandom(scan));
   }
@@ -69,6 +80,9 @@ public class ImputeTest extends SimpleDbTestBase {
    * any missing values.
    * @throws Exception
    */
+  @Test public void imputeDrop() throws Exception {
+	  imputeDriver(new Drop(dropFields, scan));
+  }
   @Test public void imputeTotallyRandom() throws Exception {
 	  imputeDriver(new ImputeTotallyRandom(scan));
   }
