@@ -1,6 +1,7 @@
 package simpledb;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -22,8 +23,8 @@ public class ImputeRandom extends Impute {
 	 * exhausted.
 	 * @param child
 	 */
-    public ImputeRandom(DbIterator child){
-    	super(child);
+    public ImputeRandom(Collection<String> dropFields, DbIterator child){
+    	super(dropFields, child);
     	initRng();
     	
     	buffer = new ArrayList<>();

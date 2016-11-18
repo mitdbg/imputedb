@@ -34,10 +34,10 @@ public class ImputeTest extends SimpleDbTestBase {
 	  getTupleDescDriver(new Drop(dropFields, scan));
   }
   @Test public void getTupleDescTotallyRandom() {
-	  getTupleDescDriver(new ImputeTotallyRandom(scan));
+	  getTupleDescDriver(new ImputeTotallyRandom(dropFields, scan));
   }
   @Test public void getTupleDescRandom() {
-	  getTupleDescDriver(new ImputeRandom(scan));
+	  getTupleDescDriver(new ImputeRandom(dropFields, scan));
   }
   
   public void getTupleDescDriver(Impute op){
@@ -54,10 +54,10 @@ public class ImputeTest extends SimpleDbTestBase {
 	  rewindDriver(new Drop(dropFields, scan));
   }
   @Test public void rewindTotallyRandom() throws Exception {
-	  rewindDriver(new ImputeTotallyRandom(scan));
+	  rewindDriver(new ImputeTotallyRandom(dropFields, scan));
   }
   @Test public void rewindRandom() throws Exception {
-	  rewindDriver(new ImputeRandom(scan));
+	  rewindDriver(new ImputeRandom(dropFields, scan));
   }
   
   public void rewindDriver(Impute op) throws Exception {
@@ -84,10 +84,10 @@ public class ImputeTest extends SimpleDbTestBase {
 	  imputeDriver(new Drop(dropFields, scan));
   }
   @Test public void imputeTotallyRandom() throws Exception {
-	  imputeDriver(new ImputeTotallyRandom(scan));
+	  imputeDriver(new ImputeTotallyRandom(dropFields, scan));
   }
   @Test public void imputeRandom() throws Exception {
-	  imputeDriver(new ImputeRandom(scan));
+	  imputeDriver(new ImputeRandom(dropFields, scan));
   }
   
   // TODO: Confirm that the fields that were not imputed are identical.

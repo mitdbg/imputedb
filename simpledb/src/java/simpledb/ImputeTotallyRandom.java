@@ -1,5 +1,6 @@
 package simpledb;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -18,8 +19,8 @@ public class ImputeTotallyRandom extends Impute {
 	 * distribution on ["a"*maxSize, "z"*maxSize].
 	 * @param child
 	 */
-    public ImputeTotallyRandom(DbIterator child){
-    	super(child);
+    public ImputeTotallyRandom(Collection<String> dropFields, DbIterator child){
+    	super(dropFields, child);
     	initRng();
 	}
     
