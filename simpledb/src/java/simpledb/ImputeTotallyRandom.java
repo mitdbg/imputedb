@@ -1,7 +1,6 @@
 package simpledb;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Random;
 
 public class ImputeTotallyRandom extends Impute {
@@ -45,6 +44,9 @@ public class ImputeTotallyRandom extends Impute {
 			Tuple t = child.next();
 			
 			// Populate "complete" tuple.
+			// TODO should skip creation of new tuple if, regardless of
+			// hasMissingFields, none of the missing fields are in dropFields
+			// collection.
 			if (t.hasMissingFields()){
 				Tuple tc = impute(t);
 				return tc;
@@ -58,8 +60,8 @@ public class ImputeTotallyRandom extends Impute {
 	
 	private Tuple impute(Tuple t) throws DbException {
 		Tuple tc = new Tuple(t);
-		List<Integer> missingFieldIndices = t.missingFieldsIndices();
-		for (int i : missingFieldIndices){
+		for (String field : dropFields){
+			int i = td.fieldNameToIndex(field);
 			if (t.getField(i).getType().equals(Type.INT_TYPE)){
 				int randomInt = random.nextInt();
 				tc.setField(i, new IntField(randomInt));

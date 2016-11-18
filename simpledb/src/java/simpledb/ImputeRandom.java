@@ -2,7 +2,6 @@ package simpledb;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Random;
 
 
@@ -14,7 +13,7 @@ public class ImputeRandom extends Impute {
 	private Random random;
 
 	private ArrayList<Tuple> buffer;
-	private int i; // position of next tuple to return
+	private int nextTupleIndex; // position of next tuple to return
 	
 	/**
 	 * Impute missing data for a column by selecting a value at random from the
@@ -28,7 +27,7 @@ public class ImputeRandom extends Impute {
     	initRng();
     	
     	buffer = new ArrayList<>();
-    	i = 0;
+    	nextTupleIndex = 0;
 	}
     
     private void initRng(){
@@ -41,7 +40,7 @@ public class ImputeRandom extends Impute {
 		initRng();
 		
 		buffer.clear();
-		i = 0;
+		nextTupleIndex = 0;
 	}
 
 	@Override
@@ -55,15 +54,15 @@ public class ImputeRandom extends Impute {
 		}
 		
 		// Get tuple if any are remaining in buffer.
-		if (i < buffer.size()){
+		if (nextTupleIndex < buffer.size()){
 			// Impute tuple i if necessary.
-			Tuple t = buffer.get(i);
+			Tuple t = buffer.get(nextTupleIndex);
 			if (t.hasMissingFields()){
 				Tuple tc = impute(t);
-				i++;
+				nextTupleIndex++;
 				return tc;
 			} else {
-				i++;
+				nextTupleIndex++;
 				return t;
 			}
 		} else {
@@ -74,8 +73,8 @@ public class ImputeRandom extends Impute {
 	private Tuple impute(Tuple t) throws DbException {
 		Tuple tc = new Tuple(t);
 		
-		List<Integer> missingFieldIndices = t.missingFieldsIndices();
-		for (int j : missingFieldIndices){
+		for (String field : dropFields){
+			int j = td.fieldNameToIndex(field);
 			// Select non-missing field at random.
 			int index0 = random.nextInt(buffer.size());
 			int index = index0;
