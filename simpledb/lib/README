@@ -39,3 +39,7 @@ log4j-1.2.17.jar
 commons-csv-1.4.jar
 * http://commons.apache.org/proper/commons-csv/
 * Apache License 2.0
+
+weka-3.8.0.jar
+* http://www.cs.waikato.ac.nz/ml/weka/
+* GNU General Public License 3.0 
