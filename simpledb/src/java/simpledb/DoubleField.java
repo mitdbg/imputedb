@@ -9,6 +9,14 @@ public class DoubleField implements Field {
 	private static final long serialVersionUID = -7652884565222581467L;
 	
 	private final Double value;
+
+    public double getValue() {
+        if (isMissing()) {
+            throw new UnsupportedOperationException("cannot get value on missing");
+        }
+        return value;
+    }
+
 	
 	public DoubleField(double value) {
 		if (value == Type.MISSING_DOUBLE) {
