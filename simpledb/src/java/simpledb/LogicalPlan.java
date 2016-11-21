@@ -26,7 +26,7 @@ public class LogicalPlan {
     private Vector<LogicalScanNode> tables;
     private Vector<LogicalFilterNode> filters;
     private HashMap<String,DbIterator> subplanMap;
-    private HashMap<String,Integer> tableMap;
+    public HashMap<String,Integer> tableMap;
 
     private Vector<LogicalSelectListNode> selectList;
     private String groupByField = null;

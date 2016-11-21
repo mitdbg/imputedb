@@ -30,6 +30,7 @@ public class FilterOptimizer {
 		this.lossWeight = lossWeight;
 	}
 
+	// TODO: would be great if just outputs an ImputedPlanCache for consistency, as it is fed directly into join optimizer
 	public HashMap<HashSet<QuantifiedName>, LogicalAccessNode> getBest(String tableAlias) throws ParsingException {
 		LogicalScanNode scan = scans.get(tableAlias);
 		LogicalFilterNode filter = filters.get(tableAlias);
@@ -56,4 +57,5 @@ public class FilterOptimizer {
 		}
 		return best;
 	}
+	// TODO: need to know the underlying table was well, for purposes of joins (addressed if getBest returns ImputedPlanCache)
 }

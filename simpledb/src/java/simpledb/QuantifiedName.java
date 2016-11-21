@@ -45,4 +45,8 @@ public class QuantifiedName {
 		}
 		return true;
 	}
+	@Override
+	public String toString() {
+		return tableAlias + "." + attrName;
+	}
 }

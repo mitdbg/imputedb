@@ -6,11 +6,13 @@ import java.util.NoSuchElementException;
 
 import simpledb.FilterOptimizer.ImputationType;
 
-public class LogicalAccessNode {
+public class LogicalAccessNode extends ImputedPlan {
 	private final DbIterator physicalPlan;
 	private final HashSet<QuantifiedName> dirtySet;
 	private final double loss;
 	private final double time;
+	// TODO: hackish way of getting table alias name for join optimization (better way?)
+	public final String alias;
 
 	private static final double LOSS_FACTOR = 1.01;
 
@@ -21,6 +23,7 @@ public class LogicalAccessNode {
 		/* Create a physical plan for the scan. */
 		try {
 			pp = new SeqScan(tid, scan.t, scan.alias);
+			alias = scan.alias;
 		} catch (NoSuchElementException e) {
 			throw new ParsingException("Unknown table " + scan.alias);
 		}
@@ -138,4 +141,10 @@ public class LogicalAccessNode {
 	public double cost(double lossWeight) {
 		return lossWeight * loss + (1 - lossWeight) * time;
 	}
+
+	// TODO: we need to be able to get cardinality, and cardinality will directly depend on imputation used (MIN/MAX/DROP/NONE)
+	public double cardinality() {
+		return -1;
+	}
+
 }
