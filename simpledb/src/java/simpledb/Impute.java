@@ -16,6 +16,8 @@ public abstract class Impute extends Operator {
 		if (validateDropFields(dropFields)){
 			this.dropFields = dropFields;
 		} else {
+			// Error. Check that all field names are non-null and all fields in
+			// dropFields are present in child's TupleDesc.
 			throw new RuntimeException("Could not validate dropFields.");
 		}
     }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.classifiers.Classifier;
 import weka.classifiers.evaluation.Evaluation;
@@ -41,15 +42,19 @@ public class ImputeRegressionTree extends Impute {
 			buffer.add(child.next());
 		}
 
-		Instances train = WekaUtil.relationToInstances("", buffer, getTupleDesc());
-		
-		// Make the last attribute be the class
-		train.setClassIndex(train.numAttributes() - 1);
+		//TODO
+		int imputationColumn = td.numFields() - 1;
+
+		Instances train = WekaUtil.relationToInstances("", buffer, td);
+		train.setClassIndex(imputationColumn);
 		
 		// Print header and instances.
 		System.out.println("\nDataset:\n");
 		System.out.println(train);	
 		
+		// Create and train tree. Note that use of "Class"/"Classifier" everywhere is a
+		// misnomer; the REPTree will produce numerical outputs if the "Class"
+		// column is numerical.
 		Classifier tree = new REPTree();
 		try {
 			tree.buildClassifier(train);
@@ -57,6 +62,25 @@ public class ImputeRegressionTree extends Impute {
 			e.printStackTrace();
 			throw new DbException("Failed to train classifier.");
 		}
+		
+		// Replace all the values in imputationColumn with predicted values.
+		ArrayList<Double> predictions = new ArrayList<>();
+		for (int i=0; i<train.size(); i++){
+			Instance testInstance = train.get(i);
+			try {
+				double pred = tree.classifyInstance(testInstance);
+				predictions.add(pred);
+				System.out.println("Predicted value: "+pred);
+
+				//train.get(i).setValue(imputationColumn, pred);
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new DbException("Failed to classify instance.");
+			}
+			
+		}
+		
+		
 		
 		return null;
 	}
