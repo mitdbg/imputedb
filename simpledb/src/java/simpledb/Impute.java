@@ -1,5 +1,6 @@
 package simpledb;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 public abstract class Impute extends Operator {
@@ -9,39 +10,28 @@ public abstract class Impute extends Operator {
     protected DbIterator child;
     protected TupleDesc td;
 	protected final Collection<String> dropFields;
+	protected final Collection<Integer> dropFieldsIndices;
 
     public Impute(Collection<String> dropFields, DbIterator child){
     	this.child = child;
     	this.td = child.getTupleDesc();
-		if (validateDropFields(dropFields)){
-			this.dropFields = dropFields;
-		} else {
-			// Error. Check that all field names are non-null and all fields in
-			// dropFields are present in child's TupleDesc.
-			throw new RuntimeException("Could not validate dropFields.");
-		}
-    }
-
-	/**
-	 * Validate that each field in dropFields corresponds to a fieldName in
-	 * child's TupleDesc. Disallows null (anonymous) fields.
-	 * @param dropFields
-	 */
-	private boolean validateDropFields(Collection<String> dropFields) {
+    	
+    	// Validate drop fields and convert to indices.
+        this.dropFields        = dropFields;
+		this.dropFieldsIndices = new ArrayList<Integer>();
 		for (String field : dropFields){
 			if (field == null){
-				return false;
+				throw new RuntimeException("All field names must be non-null.");
 			}
 
 			try{
-				td.fieldNameToIndex(field);
+				int j = td.fieldNameToIndex(field);
+				dropFieldsIndices.add(j);
 			} catch (Exception e){
-				return false;
+				throw new RuntimeException("Field not present in TupleDesc.");
 			}
 		}
-		
-		return true;
-	}
+    }
 
 	@Override
 	public DbIterator[] getChildren() {

@@ -73,8 +73,7 @@ public class ImputeRandom extends Impute {
 	private Tuple impute(Tuple t) throws DbException {
 		Tuple tc = new Tuple(t);
 		
-		for (String field : dropFields){
-			int j = td.fieldNameToIndex(field);
+        for (int j : dropFieldsIndices){
 			// Select non-missing field at random.
 			int index0 = random.nextInt(buffer.size());
 			int index = index0;

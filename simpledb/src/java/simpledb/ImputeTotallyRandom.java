@@ -60,8 +60,7 @@ public class ImputeTotallyRandom extends Impute {
 	
 	private Tuple impute(Tuple t) throws DbException {
 		Tuple tc = new Tuple(t);
-		for (String field : dropFields){
-			int i = td.fieldNameToIndex(field);
+        for (int i : dropFieldsIndices){
 			if (t.getField(i).getType().equals(Type.INT_TYPE)){
 				int randomInt = random.nextInt();
 				tc.setField(i, new IntField(randomInt));
