@@ -78,6 +78,7 @@ public class AcsTest {
 		}
 		TupleDesc schema = new TupleDesc(types, fields);
 		Database.getCatalog().addTable(new HeapFile(new File("acs.dat"), schema), "acs");
+		TableStats.computeStatistics();
 	}
 	
 	@Test
