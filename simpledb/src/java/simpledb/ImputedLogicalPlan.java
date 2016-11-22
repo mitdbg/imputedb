@@ -88,9 +88,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		};
 	}
 	
-	private ImputedPlanCache optimizeFilters(TransactionId tid) throws ParsingException {	
-		ImputedPlanCache cache = new ImputedPlanCache();
-		
+	private void optimizeFilters(TransactionId tid, ImputedPlanCache cache) throws ParsingException {			
 		HashMap<String, LogicalFilterNode> filterMap = new HashMap<>();
 		for (LogicalFilterNode filter : filters) {
 			filterMap.put(filter.tableAlias, filter);
@@ -116,7 +114,6 @@ public class ImputedLogicalPlan extends LogicalPlan {
 				cache.addPlan(tables, node.getDirtySet(), node, lossWeight);
 			}
 		}
-		return cache;
 	}
 
 	/**
@@ -128,18 +125,15 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	 * @param imputedFilters
 	 *            cache with best plans for each dirty set for filter
 	 *            applications
-	 * @param explain
-	 *            Indicates whether your code should explain its query plan or
-	 *            simply execute it
 	 * @return A Vector<LogicalJoinNode> that stores joins in the left-deep
 	 *         order in which they should be executed.
 	 * @throws ParsingException
 	 *             when stats or filter selectivities is missing a table in the
 	 *             join, or or when another internal error occurs
 	 */
-	private Map<Set<QuantifiedName>, ImputedPlan> optimizeJoins(TransactionId tid, ImputedPlanCache cache, boolean explain) throws ParsingException {
+	private void optimizeJoins(TransactionId tid, ImputedPlanCache cache) throws ParsingException {
 		if (joins.isEmpty()) {
-			return new HashMap<>();
+			return;
 		}
 
 		// dynamic programming algo from selinger
@@ -152,19 +146,6 @@ public class ImputedLogicalPlan extends LogicalPlan {
 				}
 			}
 		}
-
-		// return all imputed plans that contain all tables, indexed by dirty
-		// set
-		// aggregates can then decide to impute if necessary any of the
-		// remaining dirty cols
-		BitSet allJoins = new BitSet(joins.size());
-		allJoins.set(0, joins.size());
-		Set<String> allTables = getTableAliases(allJoins);
-		Map<Set<QuantifiedName>, ImputedPlan> bestPlans = cache.getBestPlans(allTables);
-		if (explain) {
-			// TODO: visualize
-		}
-		return bestPlans;
 	}
 
 	/**
@@ -305,12 +286,22 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	@Override
 	public DbIterator physicalPlan(TransactionId tid, Map<String, TableStats> baseTableStats, boolean explain)
 			throws ParsingException {
-		ImputedPlanCache cache = optimizeFilters(tid);
-		Map<Set<QuantifiedName>, ImputedPlan> bestPlans = optimizeJoins(tid, cache, explain);
+		final ImputedPlanCache cache = new ImputedPlanCache();
+		optimizeFilters(tid, cache);
+		optimizeJoins(tid, cache);
+		
+		final Set<String> allTables = new HashSet<>();
+		for (LogicalScanNode scan : tables) {
+			allTables.add(scan.alias);
+		}
+		final Map<Set<QuantifiedName>, ImputedPlan> bestPlans = cache.getBestPlans(allTables);
 
 		// The a tuple description for the output of the join. (all the plans
 		// should
 		// have the same schema, so it doesn't matter which we use)
+		if (bestPlans.size() == 0) {
+			throw new RuntimeException("BUG: No plans available that cover all tables.");
+		}
 		TupleDesc td = bestPlans.values().iterator().next().getPlan().getTupleDesc();
 
 		// walk the select list, to determine order in which to project output
