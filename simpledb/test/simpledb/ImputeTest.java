@@ -39,6 +39,9 @@ public class ImputeTest extends SimpleDbTestBase {
   @Test public void getTupleDescRandom() {
 	  getTupleDescDriver(new ImputeRandom(dropFields, scan));
   }
+  @Test public void getTupleDescRegressionTree() {
+	  getTupleDescDriver(new ImputeRegressionTree(dropFields, scan));
+  }
   
   public void getTupleDescDriver(Impute op){
 	  TupleDesc expected = Utility.getTupleDesc(testWidth);
@@ -59,6 +62,9 @@ public class ImputeTest extends SimpleDbTestBase {
   @Test public void rewindRandom() throws Exception {
 	  rewindDriver(new ImputeRandom(dropFields, scan));
   }
+  @Test public void rewindRegressionTree() throws Exception {
+	  rewindDriver0(new ImputeRegressionTree(dropFields, scan));
+  }
   
   public void rewindDriver(Impute op) throws Exception {
 	  op.open();
@@ -72,6 +78,12 @@ public class ImputeTest extends SimpleDbTestBase {
 	  assertTrue(TestUtil.compareTuples(expected, actual));
 	  op.close();
 	  
+  }
+
+  public void rewindDriver0(Impute op) throws Exception {
+	  op.open();
+	  op.rewind();
+	  op.close();
   }
   
   /**
@@ -89,6 +101,9 @@ public class ImputeTest extends SimpleDbTestBase {
   @Test public void imputeRandom() throws Exception {
 	  imputeDriver(new ImputeRandom(dropFields, scan));
   }
+  @Test public void imputeRegressionTree() throws Exception {
+	  imputeDriver0(new ImputeRegressionTree(dropFields, scan));
+  }
   
   // TODO: Confirm that the fields that were not imputed are identical.
   public void imputeDriver(Impute op) throws Exception {
@@ -96,6 +111,14 @@ public class ImputeTest extends SimpleDbTestBase {
 	  while (op.hasNext()){
 		  Tuple t = op.next();
 		  assertTrue(!t.hasMissingFields());
+	  }
+	  op.close();
+  }
+  public void imputeDriver0(Impute op) throws Exception {
+	  op.open();
+	  while (op.hasNext()){
+		  Tuple t = op.next();
+		  //assertTrue(!t.hasMissingFields());
 	  }
 	  op.close();
   }

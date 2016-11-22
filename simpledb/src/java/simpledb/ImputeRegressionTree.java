@@ -8,6 +8,7 @@ import weka.core.Instances;
 import weka.classifiers.Classifier;
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.trees.J48;
+import weka.classifiers.trees.REPTree;
 
 public class ImputeRegressionTree extends Impute {
 
@@ -18,28 +19,46 @@ public class ImputeRegressionTree extends Impute {
 
 	public ImputeRegressionTree(Collection<String> dropFields, DbIterator child) {
 		super(dropFields, child);
+		initRng();
+		buffer = new ArrayList<>();
+	}
+	
+	private void initRng(){
+		random = new Random(GENERATOR_SEED);
 	}
 
 	@Override
 	public void rewind() throws DbException, TransactionAbortedException {
 		child.rewind();
-		
+		initRng();
+		buffer.clear();
 	}
 
 	@Override
 	protected Tuple fetchNext() throws DbException, TransactionAbortedException {
-		Instances train = null;
-		Classifier cls = new J48();
-		try {
-			cls.buildClassifier(train);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		// First, we must add all of the child tuples to the buffer.
+		while (child.hasNext()){
+			buffer.add(child.next());
 		}
-		Evaluation eval;
 
-		return null;
+		Instances train = WekaUtil.relationToInstances("", buffer, getTupleDesc());
 		
+		// Make the last attribute be the class
+		train.setClassIndex(train.numAttributes() - 1);
+		
+		// Print header and instances.
+		System.out.println("\nDataset:\n");
+		System.out.println(train);	
+		
+		Classifier tree = new REPTree();
+		try {
+			tree.buildClassifier(train);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new DbException("Failed to train classifier.");
+		}
+		
+		return null;
 	}
 
 }
