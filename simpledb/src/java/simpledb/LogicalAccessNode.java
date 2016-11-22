@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 
-import simpledb.FilterOptimizer.ImputationType;
-
 public class LogicalAccessNode extends ImputedPlan {
 	private final DbIterator physicalPlan;
 	private final HashSet<QuantifiedName> dirtySet;
 	private final double loss;
 	private final double time;
+	
 	// TODO: hackish way of getting table alias name for join optimization (better way?)
 	public final String alias;
+	public final int tableId;
 
 	private static final double LOSS_FACTOR = 1.01;
 
@@ -20,10 +20,12 @@ public class LogicalAccessNode extends ImputedPlan {
 			throws ParsingException {
 		DbIterator pp;
 
+		tableId = scan.t;
+		alias = scan.alias;
+		
 		/* Create a physical plan for the scan. */
 		try {
 			pp = new SeqScan(tid, scan.t, scan.alias);
-			alias = scan.alias;
 		} catch (NoSuchElementException e) {
 			throw new ParsingException("Unknown table " + scan.alias);
 		}

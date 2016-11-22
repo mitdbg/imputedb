@@ -1,14 +1,16 @@
 package simpledb;
 
+import java.util.*;
+
 public class QuantifiedName {
 	public final String tableAlias;
 	public final String attrName;
-	
+
 	public QuantifiedName(String tableAlias, String attrName) {
 		this.tableAlias = tableAlias;
 		this.attrName = attrName;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -17,6 +19,7 @@ public class QuantifiedName {
 		result = prime * result + ((tableAlias == null) ? 0 : tableAlias.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -45,8 +48,17 @@ public class QuantifiedName {
 		}
 		return true;
 	}
+
 	@Override
 	public String toString() {
 		return tableAlias + "." + attrName;
+	}
+
+	public static Collection<String> toNames(Collection<QuantifiedName> attrs) {
+		ArrayList<String> names = new ArrayList<>();
+		for(QuantifiedName attr : attrs) {
+			names.add(attr.toString());
+		}
+		return names;
 	}
 }

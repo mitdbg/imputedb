@@ -1,6 +1,9 @@
 package simpledb;
 import java.util.Map;
 import java.util.Vector;
+
+import simpledb.Aggregator.Op;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.io.File;
@@ -11,7 +14,7 @@ import java.util.NoSuchElementException;
  * LogicalPlan represents a logical query plan that has been through
  * the parser and is ready to be processed by the optimizer.
  * <p>
- * A LogicalPlan consits of a collection of table scan nodes, join
+ * A LogicalPlan consists of a collection of table scan nodes, join
  * nodes, filter nodes, a select list, and a group by field.
  * LogicalPlans can only represent queries with one aggregation field
  * and one group by field.
@@ -22,21 +25,24 @@ import java.util.NoSuchElementException;
  * best implementations for joins.
  */
 public class LogicalPlan {
-    private Vector<LogicalJoinNode> joins;
-    private Vector<LogicalScanNode> tables;
-    private Vector<LogicalFilterNode> filters;
-    private HashMap<String,DbIterator> subplanMap;
-    public HashMap<String,Integer> tableMap;
-
-    private Vector<LogicalSelectListNode> selectList;
-    private String groupByField = null;
-    private boolean hasAgg = false;
-    private String aggOp;
-    private String aggField;
-    private boolean oByAsc, hasOrderBy = false;
-    private String oByField;
+	protected Vector<LogicalJoinNode> joins;
+	protected Vector<LogicalScanNode> tables;
+	protected Vector<LogicalFilterNode> filters;
+    protected Vector<LogicalSelectListNode> selectList;
+    
+    /**
+     * Maps table ids to table aliases.
+     */
+    protected HashMap<String,Integer> tableMap;
+    
+    protected QuantifiedName groupByField;
+    protected Op aggOp;
+    protected QuantifiedName aggField;
+    protected boolean oByAsc;
+    protected QuantifiedName oByField;
+    
     private String query;
-//    private Query owner;
+    private HashMap<String,DbIterator> subplanMap;
 
     /** Constructor -- generate an empty logical plan */
     public LogicalPlan() {
@@ -97,11 +103,8 @@ public class LogicalPlan {
      */
     public void addFilter(String field, Predicate.Op p, String
         constantValue) throws ParsingException{ 
-
-        field = disambiguateName(field); 
-        String table = field.split("[.]")[0];
-        
-        LogicalFilterNode lf = new LogicalFilterNode(table, field.split("[.]")[1], p, constantValue);
+        QuantifiedName f = disambiguateName(field);
+        LogicalFilterNode lf = new LogicalFilterNode(f.tableAlias, f.attrName, p, constantValue);
         filters.addElement(lf);
     }
 
@@ -116,21 +119,13 @@ public class LogicalPlan {
      *  @throws ParsingException if either of the fields is ambiguous,
      *      or is not in one of the tables added via {@link #addScan}
     */
-
-    public void addJoin( String joinField1, String joinField2, Predicate.Op pred) throws ParsingException {
-        joinField1 = disambiguateName(joinField1);
-        joinField2 = disambiguateName(joinField2);
-        String table1Alias = joinField1.split("[.]")[0];
-        String table2Alias = joinField2.split("[.]")[0];
-        String pureField1 = joinField1.split("[.]")[1];
-        String pureField2 = joinField2.split("[.]")[1];
-
-        if (table1Alias.equals(table2Alias))
+    public void addJoin(String joinField1, String joinField2, Predicate.Op pred) throws ParsingException {
+    	QuantifiedName j1 = disambiguateName(joinField1), j2 = disambiguateName(joinField2);
+        if (j1.tableAlias.equals(j2.tableAlias))
             throw new ParsingException("Cannot join on two fields from same table");
-        LogicalJoinNode lj = new LogicalJoinNode(table1Alias,table2Alias,pureField1, pureField2, pred);
+        LogicalJoinNode lj = new LogicalJoinNode(j1.tableAlias, j2.tableAlias, j1.attrName, j2.attrName, pred);
         System.out.println("Added join between " + joinField1 + " and " + joinField2);
         joins.addElement(lj);
-
     }
 
     /** Add a join between a field and a subquery.
@@ -146,12 +141,8 @@ public class LogicalPlan {
      *      or is not in one of the tables added via {@link #addScan}
      */
     public void addJoin( String joinField1, DbIterator joinField2, Predicate.Op pred) throws ParsingException {
-        joinField1 = disambiguateName(joinField1);
-
-        String table1 = joinField1.split("[.]")[0];
-        String pureField = joinField1.split("[.]")[1];
-
-        LogicalSubplanJoinNode lj = new LogicalSubplanJoinNode(table1,pureField, joinField2, pred);
+        QuantifiedName j = disambiguateName(joinField1);
+        LogicalSubplanJoinNode lj = new LogicalSubplanJoinNode(j.tableAlias, j.attrName, joinField2, pred);
         System.out.println("Added subplan join on " + joinField1);
         joins.addElement(lj);
     }
@@ -175,14 +166,12 @@ public class LogicalPlan {
      * @throws ParsingException 
     */
     public void addProjectField(String fname, String aggOp) throws ParsingException {
-        fname=disambiguateName(fname);
-        if (fname.equals("*"))
-            fname="null.*";
+        QuantifiedName f = disambiguateName(fname);
         System.out.println("Added select list field " + fname);
         if (aggOp != null) {
             System.out.println("\t with aggregator " + aggOp);
         }
-        selectList.addElement(new LogicalSelectListNode(aggOp, fname));
+        selectList.addElement(new LogicalSelectListNode(aggOp, f.toString()));
     }
     
     /** Add an aggregate over the field with the specified grouping to
@@ -194,13 +183,9 @@ public class LogicalPlan {
      * @throws ParsingException 
     */
     public void addAggregate(String op, String afield, String gfield) throws ParsingException {
-        afield=disambiguateName(afield);
-        if (gfield!=null)
-            gfield=disambiguateName(gfield);
-        aggOp = op;
-        aggField = afield;
-        groupByField = gfield;
-        hasAgg = true;
+        aggOp = getAggOp(op);
+        aggField = disambiguateName(afield);
+        groupByField = gfield == null ? null : disambiguateName(gfield);
     }
 
     /** Add an ORDER BY expression in the specified order on the specified field.  SimpleDb only supports
@@ -210,10 +195,8 @@ public class LogicalPlan {
      * @throws ParsingException 
     */
     public void addOrderBy(String field, boolean asc) throws ParsingException {
-        field=disambiguateName(field);
-        oByField = field;
+        oByField = disambiguateName(field);
         oByAsc = asc;
-        hasOrderBy = true;
     }
 
     /** Given a name of a field, try to figure out what table it belongs to by looking
@@ -223,16 +206,15 @@ public class LogicalPlan {
      *  @throws ParsingException if the field cannot be found in any of the tables, or if the
      *   field is ambiguous (appears in multiple tables)
      */
-    String disambiguateName(String name) throws ParsingException {
-
+    private QuantifiedName disambiguateName(String name) throws ParsingException {
         String[] fields = name.split("[.]");
         if (fields.length == 2 && (!fields[0].equals("null")))
-            return name;
+            return new QuantifiedName(fields[0], fields[1]);
         if (fields.length > 2) 
             throw new ParsingException("Field " + name + " is not a valid field reference.");
         if (fields.length == 2)
             name = fields[1];
-        if (name.equals("*")) return name;
+        if (name.equals("*")) return new QuantifiedName("null", name);
         //now look for occurrences of name in all of the tables
         Iterator<LogicalScanNode> tableIt = tables.iterator();
         String tableName = null;
@@ -252,7 +234,7 @@ public class LogicalPlan {
             }
         }
         if (tableName != null)
-            return tableName + "." + name;
+            return new QuantifiedName(tableName, name);
         else
             throw new ParsingException("Field " + name + " does not appear in any tables.");
 
@@ -438,7 +420,7 @@ public class LogicalPlan {
                 }
                 outTypes.add(Type.INT_TYPE);  //the type of all aggregate functions is INT
 
-            } else if (hasAgg) {
+            } else if (aggField != null) {
                     if (groupByField == null) {
                         throw new ParsingException("Field " + si.fname + " does not appear in GROUP BY list");
                     }
@@ -446,7 +428,7 @@ public class LogicalPlan {
                     TupleDesc td = node.getTupleDesc();
                     int  id;
                     try {
-                        id = td.fieldNameToIndex(groupByField);
+                        id = td.fieldNameToIndex(groupByField.attrName);
                     } catch (NoSuchElementException e) {
                         throw new ParsingException("Unknown field " +  groupByField + " in GROUP BY statement");
                     }
@@ -471,14 +453,14 @@ public class LogicalPlan {
                 }
         }
 
-        if (hasAgg) {
+        if (aggField != null) {
             TupleDesc td = node.getTupleDesc();
             Aggregate aggNode;
             try {
                 aggNode = new Aggregate(node,
-                                        td.fieldNameToIndex(aggField),
-                                        groupByField == null?Aggregator.NO_GROUPING:td.fieldNameToIndex(groupByField),
-                                getAggOp(aggOp));
+                                        td.fieldNameToIndex(aggField.toString()),
+                                        groupByField == null ? Aggregator.NO_GROUPING : td.fieldNameToIndex(groupByField.toString()),
+                                        aggOp);
             } catch (NoSuchElementException e) {
                 throw new simpledb.ParsingException(e);
             } catch (IllegalArgumentException e) {
@@ -487,8 +469,8 @@ public class LogicalPlan {
             node = aggNode;
         }
 
-        if (hasOrderBy) {
-            node = new OrderBy(node.getTupleDesc().fieldNameToIndex(oByField), oByAsc, node);
+        if (oByField != null) {
+            node = new OrderBy(node.getTupleDesc().fieldNameToIndex(oByField.toString()), oByAsc, node);
         }
 
         return new Project(outFields, outTypes, node);
@@ -552,8 +534,6 @@ public class LogicalPlan {
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
-       
+        }  
     }
-
 }

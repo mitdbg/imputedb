@@ -7,37 +7,36 @@ import java.util.Map;
  * Performs a join between two plans that have imputations along their respective trees.
  * */
 public class LogicalImputedJoinNode extends ImputedPlan {
-
     /** The first table to join (may be null). It's the alias of the table (if no alias, the true table name) */
-    public String t1Alias;
+    public final String t1Alias;
 
     /** The second table to join (may be null).  It's the alias of the table, (if no alias, the true table name).*/
-    public String t2Alias;
+    public final String t2Alias;
 
     /** The name of the field in t1 to join with. It's the pure name of a field, rather that alias.field. */
-    public String f1PureName;
+    public final String f1PureName;
 
-    public QuantifiedName f1QuantifiedName;
+    public final QuantifiedName f1QuantifiedName;
 
     /** The name of the field in t2 to join with. It's the pure name of a field.*/
-    public String f2PureName;
+    public final String f2PureName;
 
-    public QuantifiedName f2QuantifiedName;
+    public final QuantifiedName f2QuantifiedName;
 
-    private TransactionId tid;
+    private final TransactionId tid;
 
     // Plans with imputation
-    private ImputedPlan table1;
-    private ImputedPlan table2;
+    private final ImputedPlan table1;
+    private final ImputedPlan table2;
 
     // dirty set
-    private HashSet<QuantifiedName> dirtySet;
+    private final HashSet<QuantifiedName> dirtySet;
 
     // physical plan
-    private DbIterator physicalPlan;
+    private final DbIterator physicalPlan;
 
     // need to able to lookup tableIds (usually this is in the LogicalPlan)
-    private Map<String, Integer> tableMap;
+    private final Map<String, Integer> tableMap;
 
     /** The join predicate */
     public Predicate.Op p;
@@ -87,6 +86,8 @@ public class LogicalImputedJoinNode extends ImputedPlan {
         if (dirtySet.contains(f1QuantifiedName) || dirtySet.contains(f2QuantifiedName)) {
             throw new IllegalArgumentException("Must impute all dirty attributes used by the join predicate");
         }
+        
+        this.tableMap = tableMap;
     }
     
     /** Return a new LogicalJoinNode with the inner and outer (t1.f1

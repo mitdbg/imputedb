@@ -136,7 +136,7 @@ public class Parser {
             throws IOException, Zql.ParseException, simpledb.ParsingException {
         @SuppressWarnings("unchecked")
         Vector<ZFromItem> from = q.getFrom();
-        LogicalPlan lp = new LogicalPlan();
+        LogicalPlan lp = new ImputedLogicalPlan(0.0);
         lp.setQuery(q.toString());
         // walk through tables in the FROM clause
         for (int i = 0; i < from.size(); i++) {

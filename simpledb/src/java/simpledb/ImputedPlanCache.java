@@ -6,10 +6,11 @@ import java.util.Map.Entry;
  * Keeps information on the best plan that includes a given set of tables and has a given set of dirty attributes
  * Insertions into the cache are handled directly to only overwrite if of lower cost.
  */
-public class ImputedPlanCache {
+public class ImputedPlanCache {	
     private class ImputeKey {
-        public Set<String> tables;
-        public Set<QuantifiedName> dirtySet;
+        public final Set<String> tables;
+        public final Set<QuantifiedName> dirtySet;
+        
         public ImputeKey(Set<String> tables, Set<QuantifiedName> dirtySet) {
             this.tables = tables;
             this.dirtySet = dirtySet;
@@ -36,10 +37,10 @@ public class ImputedPlanCache {
             result = prime * result + dirtySet.hashCode();
             return result;
         }
-
     }
 
-    private Map<ImputeKey, ImputedPlan> bestPlans;
+    private final Map<ImputeKey, ImputedPlan> bestPlans;
+    
     public ImputedPlanCache() {
         bestPlans = new HashMap<ImputeKey, ImputedPlan>();
     }
@@ -95,5 +96,16 @@ public class ImputedPlanCache {
             }
         }
         return best;
+    }
+    
+    @Override
+    public String toString() {
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("{ ");
+    	for (Entry<ImputeKey, ImputedPlan> entry : bestPlans.entrySet()) {
+    		sb.append(entry.getKey().toString() + " : " + entry.getValue().toString() + ", ");
+    	}
+    	sb.append("}");
+    	return sb.toString();
     }
 }

@@ -104,7 +104,8 @@ public class TupleDescTest extends SimpleDbTestBase {
             
             // Make sure you throw exception for null searches
             try {
-                td.fieldNameToIndex(null);
+            	String name = null;
+                td.fieldNameToIndex(name);
                 Assert.fail("null is not a valid field name");
             } catch (NoSuchElementException e) {
                 // expected to get here
