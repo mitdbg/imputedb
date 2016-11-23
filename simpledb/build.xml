@@ -33,7 +33,8 @@
     <path id="classpath.test">
         <path refid="classpath.base"/>
         <pathelement location="${build.test}"/>
-        <pathelement location="${lib}/junit-4.5.jar"/>
+        <pathelement location="${lib}/junit-4.12.jar"/>
+        <pathelement location="${lib}/hamcrest-core-1.3.jar"/>
         <pathelement location="${lib}/javassist-3.16.1-GA.jar"/>
     </path>
     <!-- Common macro for compiling Java source -->
@@ -101,9 +102,15 @@
     &lt;classpathentry kind=&quot;con&quot; path=&quot;org.eclipse.jdt.launching.JRE_CONTAINER&quot;/&gt;
     &lt;classpathentry kind=&quot;output&quot; path=&quot;bin/src&quot;/&gt;
     </echo>
-    <if> <available file="${lib}/junit-4.5.jar" /> <then>
+    <if> <available file="${lib}/junit-4.12.jar" /> <then>
             <echo file=".classpath" append="true">
-                &lt;classpathentry kind=&quot;lib&quot; path=&quot;lib/junit-4.5.jar&quot;/&gt;
+                &lt;classpathentry kind=&quot;lib&quot; path=&quot;lib/junit-4.12.jar&quot;/&gt;
+            </echo>
+        </then>
+    </if>
+    <if> <available file="${lib}/hamcrest-core-1.3.jar" /> <then>
+            <echo file=".classpath" append="true">
+                &lt;classpathentry kind=&quot;lib&quot; path=&quot;lib/hamcrest-core-1.3.jar&quot;/&gt;
             </echo>
         </then>
     </if>
