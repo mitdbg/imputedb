@@ -94,10 +94,12 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			filterMap.put(filter.tableAlias, filter);
 		}
 
+		// TODO: FIX: this doesn't seem to collapse all filters into 1, behavior result: select * from t where p1 and p2 => select * from t where p2
 		for (LogicalScanNode scan : tables) {
 			String tableAlias = scan.alias;
 			LogicalFilterNode filter = filterMap.get(tableAlias);
 
+			// TODO FIX: if table has no dirty columns, better to skip and just add None? as stands can end up with Drop(t, 0) etc
 			ArrayList<LogicalAccessNode> candidates = new ArrayList<LogicalAccessNode>();
 			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.DROP, filter));
 			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MINIMAL, filter));
@@ -249,9 +251,9 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			}
 		}
 
-		// TODO: do we need to consider swapping left/right nodes to join when
+		// TODO FIX: do we need to consider swapping left/right nodes to join when
 		// not base relations? don't think so if just doing left-deep
-		// TODO: this doesn't currently consider cross products...
+		// TODO FIX: this doesn't currently consider cross products...
 	}
 
 	/**

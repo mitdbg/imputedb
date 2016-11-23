@@ -124,7 +124,7 @@ public class LogicalImputedJoinNode extends ImputedPlan {
         }
     }
 
-    // TODO: should this be the same as before? I don't think so....
+    // TODO FIX: should this be the same as before? I don't think so....
     public double cost(double lossWeight) {
         return table1.cost(lossWeight) + table1.cardinality() * table2.cost(lossWeight) + table1.cardinality() * table2.cardinality();
     }

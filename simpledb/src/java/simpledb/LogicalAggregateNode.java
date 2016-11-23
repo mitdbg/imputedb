@@ -41,7 +41,7 @@ public class LogicalAggregateNode extends ImputedPlan {
 
 	@Override
 	public double cost(double lossWeight) {
-		// TODO: Add cost of aggregation?
+		// TODO FIX: Add cost of aggregation?
 		return plan.cost(lossWeight);
 	}
 

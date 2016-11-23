@@ -144,7 +144,7 @@ public class LogicalAccessNode extends ImputedPlan {
 		return lossWeight * loss + (1 - lossWeight) * time;
 	}
 
-	// TODO: we need to be able to get cardinality, and cardinality will directly depend on imputation used (MIN/MAX/DROP/NONE)
+	// TODO FIX: we need to be able to get cardinality, and cardinality will directly depend on imputation used (MIN/MAX/DROP/NONE)
 	public double cardinality() {
 		return -1;
 	}

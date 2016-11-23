@@ -30,6 +30,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 
 	public static ImputedPlan create(ImputedPlan subplan, ImputationType imp, Set<QuantifiedName> required,
 			Map<String, Integer> tableMap) {
+		// TODO FIX: if table has no dirty columns, better to simply return same plan? currently can end up with Drop(t, 0)
 		// which ones do we actually need to impute
 		Set<QuantifiedName> impute = new HashSet<>();
 		impute.addAll(subplan.getDirtySet());
@@ -48,7 +49,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 			dirtySet.removeAll(impute);
 			loss = estimateNumNulls(impute, subplan.cardinality(), tableMap);
 			time = subplan.cardinality();
-			// TODO: this needs to be changed as well, need to estimate rows
+			// TODO FIX: this needs to be changed as well, need to estimate rows
 			// with any null values
 			cardinality = subplan.cardinality();
 			return new LogicalComposeImputation(cardinality, physicalPlan, dirtySet, loss, time);
@@ -78,7 +79,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 	}
 
 	public static double estimateNumNulls(Set<QuantifiedName> attrs, double card, Map<String, Integer> tableMap) {
-		// TODO: need a good way to estimate number of nulls at this point..
+		// TODO FIX: need a good way to estimate number of nulls at this point..
 		return 1.0;
 	}
 
