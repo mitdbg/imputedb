@@ -274,7 +274,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			// with the existing plan
 			for (ImputationType imp : ImputationType.values()) {
 				try {
-					plans.add(new LogicalComposeImputation(plan, imp, required, tableMap));
+					plans.add(LogicalComposeImputation.create(plan, imp, required, tableMap));
 				} catch (IllegalArgumentException e) {
 					// pass
 				}

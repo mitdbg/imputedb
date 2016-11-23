@@ -12,7 +12,7 @@ public class LogicalAggregateNode extends ImputedPlan {
 		required.add(groupByField);
 		required.add(aggField);
 
-		plan = new LogicalComposeImputation(subplan, imp, required, tableMap);
+		plan = LogicalComposeImputation.create(subplan, imp, required, tableMap);
 		TupleDesc schema = plan.getPlan().getTupleDesc();
 		physicalPlan = new Aggregate(plan.getPlan(), schema.fieldNameToIndex(aggField), schema.fieldNameToIndex(groupByField), aggOp);
 	}
