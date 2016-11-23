@@ -9,12 +9,24 @@ public class LogicalAggregateNode extends ImputedPlan {
 	public LogicalAggregateNode(ImputedPlan subplan, ImputationType imp, QuantifiedName groupByField,
 			Aggregator.Op aggOp, QuantifiedName aggField, Map<String, Integer> tableMap) {
 		HashSet<QuantifiedName> required = new HashSet<>();
-		required.add(groupByField);
+
+		// group-by keys needs only to be imputed when its actually used
+		// e.g. select avg(c1) from t doesn't have a group-by key to impute
+		if (groupByField != null) {
+			required.add(groupByField);
+		}
 		required.add(aggField);
 
 		plan = LogicalComposeImputation.create(subplan, imp, required, tableMap);
 		TupleDesc schema = plan.getPlan().getTupleDesc();
-		physicalPlan = new Aggregate(plan.getPlan(), schema.fieldNameToIndex(aggField), schema.fieldNameToIndex(groupByField), aggOp);
+		// indices
+		int groupByKeyIndex = Aggregator.NO_GROUPING;
+		int aggFieldIndex = schema.fieldNameToIndex(aggField);
+
+		if (groupByField != null) {
+			groupByKeyIndex = schema.fieldNameToIndex(groupByField);
+		}
+		physicalPlan = new Aggregate(plan.getPlan(), aggFieldIndex, groupByKeyIndex, aggOp);
 	}
 
 	@Override

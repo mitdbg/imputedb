@@ -35,7 +35,8 @@ public class AcsTest {
 			{ "SELECT MIN(YBL) as earliest_built_bucket FROM acs WHERE ACR = 3;" },
 			{ "SELECT MIN(RMSP) as min_num_rooms FROM acs WHERE RWAT=2;" },
 			{ "SELECT * FROM acs WHERE REFR = 1 AND STOV = 1 AND TEL = 1 AND TOIL = 2;" },
-			{ "SELECT * FROM acs WHERE VEH >= 1 AND VEH <= 5 AND RMSP > VEH;" }
+			// simpledb cannot handle predicates vs other columns (only relative to constants)
+			{ "SELECT * FROM acs WHERE VEH >= 1 AND VEH <= 5 AND RMSP > 4;" }
 		});
 	}
 	
