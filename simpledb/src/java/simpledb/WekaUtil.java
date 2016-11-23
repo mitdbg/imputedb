@@ -46,8 +46,23 @@ public class WekaUtil {
 	 * @return the list of Attributes
 	 */
 	public static ArrayList<Attribute> tupleDescToAttributeList(TupleDesc td){
-		ArrayList<Attribute> attrs = new ArrayList<>(td.numFields());
+		List<Integer> fields = new ArrayList<>();
 		for (int i=0; i<td.numFields(); i++){
+			fields.add(i);
+		}
+		return tupleDescToAttributeList(td, fields);
+	}
+
+	/**
+	 * Create a list of Weka Attributes from a TupleDesc. The resulting list is
+	 * suitable to pass to an Instances object. This does no validation on `fields`.
+	 * @param td the TupleDesc
+	 * @param fields indices identifying which fields should be included
+	 * @return the list of Attributes
+	 */
+	public static ArrayList<Attribute> tupleDescToAttributeList(TupleDesc td, List<Integer> fields){
+		ArrayList<Attribute> attrs = new ArrayList<>(fields.size());
+		for (int i : fields){
 			if (!(td.getFieldType(i) == Type.INT_TYPE || 
 					td.getFieldType(i) == Type.DOUBLE_TYPE)){
 				throw new UnsupportedOperationException();
@@ -85,7 +100,35 @@ public class WekaUtil {
 		
 		return instances;
 	}
-	
+
+	/**
+	 * Create an Instances object from the tuples provided. The Instances has
+	 * name `name` and every value from every tuple. The TupleDesc is provided
+	 * separately just to validate that all of the provided Tuples share this
+	 * TupleDesc.
+	 * @param name the name of the resulting Instances object
+	 * @param ts list of Tuples
+	 * @param td TupleDesc
+	 * @param fields indices identifying which fields should be included in the new Instances object.
+	 * @return new Instances object containing the values from all the tuples.
+	 */
+	public static Instances relationToInstances(String name, List<Tuple> ts, TupleDesc td,
+			List<Integer> fields){
+		ArrayList<Attribute> attrs = tupleDescToAttributeList(td, fields);
+		int relationSize = ts.size();
+		Instances instances = new Instances(name, attrs, relationSize);
+		
+		for (int i=0; i<ts.size(); i++){
+			Tuple t = ts.get(i);
+			if (!t.getTupleDesc().equals(td)){
+				throw new RuntimeException("All TupleDescs must match.");
+			}
+			instances.add(i, tupleToInstance(t, attrs, fields));
+		}
+		
+		return instances;
+	}
+
 	/**
 	 * Create a new Instance from the values in Tuple t. We require that a list
 	 * of Attributes is also passed so that all of the instances have shared
@@ -95,31 +138,53 @@ public class WekaUtil {
 	 * @return new Instance with values from Tuple t
 	 */
 	public static Instance tupleToInstance(Tuple t, List<Attribute> attrs){
+		List<Integer> fields = new ArrayList<>();
+		for (int i=0; i<t.getTupleDesc().numFields(); i++)
+			fields.add(i);
+		return tupleToInstance(t, attrs, fields);
+	}
+	
+	/**
+	 * Create a new Instance from the values in Tuple t. We require that a list
+	 * of Attributes is also passed so that all of the instances have shared
+	 * references to the same Attributes. No validation is performed against `fields`.
+	 * @param t Tuple to convert
+	 * @param attrs Attributes corresponding to fields of Instance
+	 * @param fields indices identifying which fields should be included in the
+	 * new Instances object. The ith element of fields must correspond to the
+	 * ith element of attrs.
+	 * @return new Instance with values from Tuple t
+	 */
+	public static Instance tupleToInstance(Tuple t, List<Attribute> attrs, List<Integer> fields){
 		TupleDesc td = t.getTupleDesc();
-		int numFields = td.numFields();
+		int numFields = fields.size();
 
 		Instance inst = new DenseInstance(numFields);
 		
-		for (int i=0; i<numFields; i++){
+		int index = 0;
+		for (int i : fields){
 			Type type = td.getFieldType(i);
 
 			if (type == Type.INT_TYPE){
 				if (!t.getField(i).isMissing()){
 					int value = ((IntField) t.getField(i)).getValue();
-					inst.setValue(attrs.get(i), value);
+					// TODO see toDoubleArray
+					inst.setValue(attrs.get(index), value);
 				} else {
-					inst.setMissing(i);
+					inst.setMissing(index);
 				}
 			} else if (type == Type.DOUBLE_TYPE){
 				if (!t.getField(i).isMissing()){
 					double value = ((DoubleField) t.getField(i)).getValue();
-					inst.setValue(attrs.get(i), value);
+					inst.setValue(attrs.get(index), value);
 				} else {
-					inst.setMissing(i);
+					inst.setMissing(index);
 				}
 			} else {
 				throw new UnsupportedOperationException();
 			}
+			
+			index++;
 		}
 		
 		return inst;
