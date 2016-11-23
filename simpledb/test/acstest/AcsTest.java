@@ -87,15 +87,18 @@ public class AcsTest {
 			types[i] = Type.INT_TYPE;
 		}
 		TupleDesc schema = new TupleDesc(types, fields);
-		Database.getCatalog().addTable(new HeapFile(new File("acs.dat"), schema), "acs");
+		ClassLoader loader = AcsTest.class.getClassLoader();
+		File acsData = new File(loader.getResource("acstest/acs.dat").getFile());
+		Database.getCatalog().addTable(new HeapFile(acsData, schema), "acs", "");
 		TableStats.computeStatistics();
 	}
 	
 	@Test
 	public void runQuery() throws TransactionAbortedException, DbException, IOException, ParsingException, ParseException {
 		ZqlParser p = new ZqlParser(new ByteArrayInputStream(query.getBytes("UTF-8")));
-        ZStatement s = p.readStatement();
-        Parser pp = new Parser();
-        pp.handleQueryStatement((ZQuery)s, new TransactionId());
+		ZStatement s = p.readStatement();
+		Parser pp = new Parser();
+		Query query = pp.handleQueryStatement((ZQuery)s, new TransactionId());
+		query.execute();
 	}
 }
