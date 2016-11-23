@@ -24,8 +24,10 @@ public class AcsTest {
 	@Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> data() {
 		return Arrays.asList(new Object[][] {
-			{ "SELECT BLD as units_in_structure, COUNT(*) as estimate FROM acs GROUP BY BLD;" },
-			{ "SELECT BATH as has_bath, COUNT(*) as ct FROM acs GROUP BY BATH;" },
+			{ "SELECT BLD FROM acs;" },
+			{ "SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;" },
+			{ "SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;" },
+			{ "SELECT BATH as has_bath, COUNT(ST) as ct FROM acs GROUP BY BATH;" },
 			{ "SELECT ACR as lotsize, AVG(BDSP) as avg_num_bedrooms FROM acs GROUP BY ACR;" }
 		});
 	}
