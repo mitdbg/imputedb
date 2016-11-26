@@ -30,7 +30,11 @@ public class LogicalComposeImputation extends ImputedPlan {
 
 	public static ImputedPlan create(ImputedPlan subplan, ImputationType imp, Set<QuantifiedName> required,
 			Map<String, Integer> tableMap) {
-		// TODO FIX: if table has no dirty columns, better to simply return same plan? currently can end up with Drop(t, 0)
+		// don't add anything if there are no dirty columns
+		if (subplan.getDirtySet().isEmpty()) {
+			return subplan;
+		}
+
 		// which ones do we actually need to impute
 		Set<QuantifiedName> impute = new HashSet<>();
 		impute.addAll(subplan.getDirtySet());

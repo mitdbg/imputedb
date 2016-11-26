@@ -103,11 +103,13 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			String tableAlias = scan.alias;
 			Set<LogicalFilterNode> filters = filterMap.get(tableAlias);
 
-			// TODO FIX: if table has no dirty columns, better to skip and just add None? as stands can end up with Drop(t, 0) etc
 			ArrayList<LogicalAccessNode> candidates = new ArrayList<LogicalAccessNode>();
-			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.DROP, filters));
-			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MINIMAL, filters));
-			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MAXIMAL, filters));
+			if (!DirtySet.ofBaseTable(scan.t, scan.alias).isEmpty()) {
+				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.DROP, filters));
+				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MINIMAL, filters));
+				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MAXIMAL, filters));
+			}
+
 			try {
 				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.NONE, filters));
 			} catch (IllegalArgumentException e) {
