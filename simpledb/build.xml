@@ -61,7 +61,7 @@
         <element name="testspecification" implicit="yes" />
         <sequential>
             <!-- timeout at 10.5 minutes, since TransactionTest is limited to 10 minutes. -->
-            <junit printsummary="on" fork="yes" timeout="630000" haltonfailure="@{haltonfailure}" maxmemory="128M" failureproperty="junit.failed">
+            <junit printsummary="on" fork="yes" timeout="630000" haltonfailure="@{haltonfailure}" maxmemory="1024M" failureproperty="junit.failed">
                 <classpath refid="classpath.test" />
                 <formatter type="plain" usefile="false"/>
                 <assertions><enable/></assertions>
@@ -180,6 +180,12 @@
     <copy todir="${build}" flatten="true">
         <fileset dir="${src}">
             <include name="bin/*.sh"/>
+        </fileset>
+    </copy>
+    <!-- copy data in test folder too into src/ for running tests from command line -->
+    <copy todir="${build}/src">
+        <fileset dir="${testd}">
+            <include name="acstest/*"/>
         </fileset>
     </copy>
     </target>
