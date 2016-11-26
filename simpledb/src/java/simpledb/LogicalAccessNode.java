@@ -1,8 +1,6 @@
 package simpledb;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class LogicalAccessNode extends ImputedPlan {
 	private final DbIterator physicalPlan;
@@ -17,6 +15,15 @@ public class LogicalAccessNode extends ImputedPlan {
 	private static final double LOSS_FACTOR = 1.01;
 
 	public LogicalAccessNode(TransactionId tid, LogicalScanNode scan, ImputationType imp, LogicalFilterNode filter)
+	throws ParsingException {
+		this(tid, scan, imp, filterToSingletonSet(filter));
+	}
+
+	private static Set<LogicalFilterNode> filterToSingletonSet(LogicalFilterNode filter) {
+		return filter == null ? null : Collections.singleton(filter);
+	}
+
+	public LogicalAccessNode(TransactionId tid, LogicalScanNode scan, ImputationType imp, Set<LogicalFilterNode> filters)
 			throws ParsingException {
 		DbIterator pp;
 
@@ -35,8 +42,10 @@ public class LogicalAccessNode extends ImputedPlan {
 
 		/* Get the required set of the predicate. */
 		HashSet<QuantifiedName> required = new HashSet<QuantifiedName>();
-		if (filter != null) {
-			required.add(new QuantifiedName(filter.tableAlias, filter.fieldPureName));
+		if (filters != null) {
+			for(LogicalFilterNode filter : filters) {
+				required.add(new QuantifiedName(filter.tableAlias, filter.fieldPureName));
+			}
 		}
 
 		/* Compute the minimal impute/drop set. */
@@ -86,50 +95,56 @@ public class LogicalAccessNode extends ImputedPlan {
 			throw new RuntimeException("Unexpected ImputationType.");
 		}
 
-		/* If no filter, then we're done constructing the plan. */
-		if (filter == null) {
+		/* If no filters, then we're done constructing the plan. */
+		if (filters == null) {
 			physicalPlan = pp;
 			return;
 		}
 
-		/* Otherwise, construct a Filter operator. */
+		DbIterator subplan = pp;
 
+		/* Otherwise, construct a Filter operator for each filter, stacking on top of previous */
+		for(LogicalFilterNode filter : filters) {
 		/* First, get the type of the field in the predicate. */
-		Type ftyp;
-		TupleDesc td = pp.getTupleDesc();
-		try {
-			ftyp = td.getFieldType(td.fieldNameToIndex(filter.fieldQuantifiedName));
-		} catch (NoSuchElementException e) {
-			throw new ParsingException("Unknown field in filter expression " + filter.fieldQuantifiedName);
+			Type ftyp;
+			TupleDesc td = subplan.getTupleDesc();
+			try {
+				ftyp = td.getFieldType(td.fieldNameToIndex(filter.fieldQuantifiedName));
+			} catch (NoSuchElementException e) {
+				throw new ParsingException("Unknown field in filter expression " + filter.fieldQuantifiedName);
+			}
+
+			// treat comparisons to null as comparisons to missing
+			boolean isNull = filter.c.equalsIgnoreCase("NULL");
+
+			// create an appropriate constant field value to compare against
+			Field f;
+			switch (ftyp) {
+				case DOUBLE_TYPE:
+					f = isNull ? new DoubleField() : new DoubleField(Double.valueOf(filter.c));
+					break;
+				case INT_TYPE:
+					f = isNull ? new IntField() : new IntField(Integer.valueOf(filter.c));
+					break;
+				case STRING_TYPE:
+					f = isNull ? new StringField(Type.STRING_LEN) : new StringField(filter.c, Type.STRING_LEN);
+					break;
+				default:
+					throw new RuntimeException("Unexpected type.");
+			}
+
+			Predicate p = null;
+			try {
+				p = new Predicate(td.fieldNameToIndex(filter.fieldQuantifiedName), filter.p, f);
+			} catch (NoSuchElementException e) {
+				throw new ParsingException("Unknown field " + filter.fieldQuantifiedName);
+			}
+
+			subplan = new Filter(p, subplan);
 		}
+		// assign final subplan with all the filters
+		physicalPlan = subplan;
 
-		// treat comparisons to null as comparisons to missing
-		boolean isNull = filter.c.equalsIgnoreCase("NULL");
-
-		// create an appropriate constant field value to compare against
-		Field f;
-		switch (ftyp) {
-		case DOUBLE_TYPE:
-			f = isNull ? new DoubleField() : new DoubleField(Double.valueOf(filter.c));
-			break;
-		case INT_TYPE:
-			f = isNull ? new IntField() : new IntField(Integer.valueOf(filter.c));
-			break;
-		case STRING_TYPE:
-			f = isNull ? new StringField(Type.STRING_LEN) : new StringField(filter.c, Type.STRING_LEN);
-			break;
-		default:
-			throw new RuntimeException("Unexpected type.");
-		}
-
-		Predicate p = null;
-		try {
-			p = new Predicate(td.fieldNameToIndex(filter.fieldQuantifiedName), filter.p, f);
-		} catch (NoSuchElementException e) {
-			throw new ParsingException("Unknown field " + filter.fieldQuantifiedName);
-		}
-
-		physicalPlan = new Filter(p, pp);
 	}
 
 	public DbIterator getPlan() {

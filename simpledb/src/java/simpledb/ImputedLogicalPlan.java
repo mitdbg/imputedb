@@ -89,23 +89,27 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	}
 	
 	private void optimizeFilters(TransactionId tid, ImputedPlanCache cache) throws ParsingException {			
-		HashMap<String, LogicalFilterNode> filterMap = new HashMap<>();
+		HashMap<String, Set<LogicalFilterNode>> filterMap = new HashMap<>();
 		for (LogicalFilterNode filter : filters) {
-			filterMap.put(filter.tableAlias, filter);
+			Set<LogicalFilterNode> accFilters = filterMap.get(filter.tableAlias);
+			if (accFilters == null) {
+				accFilters = new HashSet<LogicalFilterNode>();
+			}
+			accFilters.add(filter);
+			filterMap.put(filter.tableAlias, accFilters);
 		}
 
-		// TODO: FIX: this doesn't seem to collapse all filters into 1, behavior result: select * from t where p1 and p2 => select * from t where p2
 		for (LogicalScanNode scan : tables) {
 			String tableAlias = scan.alias;
-			LogicalFilterNode filter = filterMap.get(tableAlias);
+			Set<LogicalFilterNode> filters = filterMap.get(tableAlias);
 
 			// TODO FIX: if table has no dirty columns, better to skip and just add None? as stands can end up with Drop(t, 0) etc
 			ArrayList<LogicalAccessNode> candidates = new ArrayList<LogicalAccessNode>();
-			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.DROP, filter));
-			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MINIMAL, filter));
-			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MAXIMAL, filter));
+			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.DROP, filters));
+			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MINIMAL, filters));
+			candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MAXIMAL, filters));
 			try {
-				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.NONE, filter));
+				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.NONE, filters));
 			} catch (IllegalArgumentException e) {
 			}
 
