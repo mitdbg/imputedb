@@ -234,6 +234,10 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			rightPlans = pc.getBestPlans(rightTables);
 		}
 
+		// add the top-level of tables after this join
+		allTables.addAll(leftTables);
+		allTables.addAll(rightTables);
+
 		// possible plans with imputations for the left-hand side
 		for (ImputedPlan lplan : leftPlans.values()) {
 			// extended with any imputations necessary for join

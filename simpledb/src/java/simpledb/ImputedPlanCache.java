@@ -37,6 +37,13 @@ public class ImputedPlanCache {
             result = prime * result + dirtySet.hashCode();
             return result;
         }
+
+        @Override
+        public String toString() {
+            String tableStr = "Tables(" + Arrays.toString(this.tables.toArray()) + ")";
+            String dirtyStr = "Dirty(" + Arrays.toString(this.dirtySet.toArray()) + ")";
+            return tableStr + "," + dirtyStr;
+        }
     }
 
     private final Map<ImputeKey, ImputedPlan> bestPlans;
