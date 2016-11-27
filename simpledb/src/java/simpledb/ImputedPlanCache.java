@@ -47,9 +47,12 @@ public class ImputedPlanCache {
     }
 
     private final Map<ImputeKey, ImputedPlan> bestPlans;
+    // joins necessary to get to this state
+    private final Map<ImputeKey, Set<LogicalJoinNode>> necessaryJoins;
     
     public ImputedPlanCache() {
         bestPlans = new HashMap<ImputeKey, ImputedPlan>();
+        necessaryJoins = new HashMap<ImputeKey, Set<LogicalJoinNode>>();
     }
 
     /**
@@ -64,26 +67,54 @@ public class ImputedPlanCache {
         if (!bestPlans.containsKey(key)) {
             // always insert if we don't have any info on this key combo
             bestPlans.put(key, newPlan);
+            necessaryJoins.put(key, new HashSet<>());
         } else {
             ImputedPlan currentBest = bestPlans.get(key);
             // otherwise insert if the new plan is less costly
             if (currentBest.cost(lossWeight) > newPlan.cost(lossWeight)) {
                 bestPlans.put(key, newPlan);
+                // do nothing for necessary joins
             }
         }
     }
 
     /**
-     * Add all entries in an existing ImputedPlanCache
-     * @param pc existing cache
-     * @param lossWeight
+     * Add a plan involving joins if it is of lower cost for the appropriate (tables, dirty set) key
+     * @param ts tables in the underlying plan
+     * @param dirtySet attributes that are still dirty in the underlying plan
+     * @param joins join predicates involved in the plan
+     * @param newPlan plan
+     * @param lossWeight weight loss used to estimate costs
      */
-    void addAll(ImputedPlanCache pc, double lossWeight) {
-        for (Entry<ImputeKey, ImputedPlan> entry : pc.bestPlans.entrySet()) {
-            Set<String> ts = entry.getKey().tables;
-            Set<QuantifiedName> ds = entry.getKey().dirtySet;
-            addPlan(ts, ds, entry.getValue(), lossWeight);
+    void addJoinPlan(Set<String> ts, Set<QuantifiedName> dirtySet, Set<LogicalJoinNode> joins, ImputedPlan newPlan, double lossWeight) {
+        ImputeKey key = new ImputeKey(ts, dirtySet);
+        if (!bestPlans.containsKey(key)) {
+            // always insert if we don't have any info on this key combo
+            bestPlans.put(key, newPlan);
+            necessaryJoins.put(key, joins);
+        } else {
+            ImputedPlan currentBest = bestPlans.get(key);
+            // otherwise insert if the new plan is less costly
+            if (currentBest.cost(lossWeight) > newPlan.cost(lossWeight)) {
+                bestPlans.put(key, newPlan);
+                necessaryJoins.put(key, joins);
+            }
         }
+    }
+
+    /**
+     * Return set of join predicates used in a plan
+     * @param ts tables in plan
+     * @param dirtySet dirty set of resulting plan
+     * @return
+     */
+    Set<LogicalJoinNode> getNecessaryJoins(Set<String> ts, Set<QuantifiedName> dirtySet) {
+        Set<LogicalJoinNode> set = new HashSet<>();
+        Set<LogicalJoinNode> found = necessaryJoins.get(new ImputeKey(ts, dirtySet));
+        if (found != null) {
+            set.addAll(found);
+        }
+        return set;
     }
     
     /** Find the best plan that contains a set of tables and ends up with a set of dirty attributes
