@@ -184,9 +184,6 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		if (getTableId(j.t2Alias) == null)
 			throw new ParsingException("Unknown table " + j.t2Alias);
 
-		String table1Alias = j.t1Alias;
-		String table2Alias = j.t2Alias;
-
 		BitSet news = (BitSet) joinSet.clone();
 		news.clear(joinToRemove);
 
@@ -204,30 +201,34 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		// alias for table to join in
 		Set<String> rightTables = new HashSet<>();
 		Set<String> allTables = new HashSet<>();
-
 		// just joining existing base relations
 		boolean isSimpleJoin;
 
 		if ((isSimpleJoin = news.isEmpty())) {
 			// base case -- both are base relations
-			leftTables.add(table1Alias);
-			rightTables.add(table2Alias);
+			leftTables.add(j.t1Alias);
+			rightTables.add(j.t2Alias);
 			// this retrieves results from FilterOptimizer
 			leftPlans = pc.getBestPlans(leftTables);
 			rightPlans = pc.getBestPlans(rightTables);
 		} else {
 			// news is not empty -- figure best way to join j to news
 			leftTables = getTableAliases(news);
-			if (!leftTables.contains(table1Alias) && !leftTables.contains(table2Alias)) {
+
+			if (!leftTables.contains(j.t1Alias) && !leftTables.contains(j.t2Alias)) {
 				// there is no join possible if existing tables joined and new
 				// join don't share any data
 				return;
 			}
 
-			if (leftTables.contains(table1Alias)) {
-				rightTables.add(table2Alias);
+			if (leftTables.contains(j.t1Alias)) {
+				// this is already a left-deep plan, so no need to change anything
+				rightTables.add(j.t2Alias);
 			} else {
-				rightTables.add(table1Alias);
+				rightTables.add(j.t1Alias);
+				// we need to swap the join predicate information to perform this as
+				// a left-deep join
+				j = j.swapInnerOuter();
 			}
 
 			leftPlans = pc.getBestPlans(leftTables);
@@ -240,30 +241,33 @@ public class ImputedLogicalPlan extends LogicalPlan {
 
 		// possible plans with imputations for the left-hand side
 		for (ImputedPlan lplan : leftPlans.values()) {
-			// extended with any imputations necessary for join
-			for (ImputedPlan lplanPrime : addImputes(lplan, required)) {
-				// possible plans with imputations for right-hand side
-				for (ImputedPlan rplan : rightPlans.values()) {
-					// extended with any imputations necessary for join
-					for (ImputedPlan rplanPrime : addImputes(rplan, required)) {
-						// create new join
-						LogicalImputedJoinNode joined = new LogicalImputedJoinNode(tid, table1Alias, table2Alias, lplanPrime,
-								rplanPrime, j.f1QuantifiedName, j.f2QuantifiedName, j.p, tableMap);
-						// add to cache as appropriate
-						pc.addPlan(allTables, joined.getDirtySet(), joined, lossWeight);
+			// joins necessary to obtain state of LHS
+			Set<LogicalJoinNode> necessaryJoins = pc.getNecessaryJoins(leftTables, lplan.getDirtySet());
+			if(!necessaryJoins.contains(j) && !necessaryJoins.contains(j.swapInnerOuter())) {
+				// we can only explore removing a given join, if the plan on the LHS doesn't use it
+				// extend information with new join
+				necessaryJoins.add(j);
+				// extended with any imputations necessary for join
+				for (ImputedPlan lplanPrime : addImputes(lplan, required)) {
+					// possible plans with imputations for right-hand side
+					for (ImputedPlan rplan : rightPlans.values()) {
+						// extended with any imputations necessary for join
+						for (ImputedPlan rplanPrime : addImputes(rplan, required)) {
+							// create new join
+							LogicalImputedJoinNode joined = new LogicalImputedJoinNode(tid, j.t1Alias, j.t2Alias, lplanPrime,
+									rplanPrime, j.f1QuantifiedName, j.f2QuantifiedName, j.p, tableMap);
+							// add to cache as appropriate
+							pc.addJoinPlan(allTables, joined.getDirtySet(), necessaryJoins, joined, lossWeight);
 
-						// if it was a simple join, consider swapping order
-						if (isSimpleJoin) {
-							pc.addPlan(allTables, joined.getDirtySet(), joined.swapInnerOuter(), lossWeight);
+							// if it was a simple join, consider swapping order
+							if (isSimpleJoin) {
+								pc.addJoinPlan(allTables, joined.getDirtySet(), necessaryJoins, joined.swapInnerOuter(), lossWeight);
+							}
 						}
 					}
 				}
 			}
 		}
-
-		// TODO FIX: do we need to consider swapping left/right nodes to join when
-		// not base relations? don't think so if just doing left-deep
-		// TODO FIX: this doesn't currently consider cross products...
 	}
 
 	/**
@@ -301,7 +305,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		final ImputedPlanCache cache = new ImputedPlanCache();
 		optimizeFilters(tid, cache);
 		optimizeJoins(tid, cache);
-		
+
 		final Set<String> allTables = new HashSet<>();
 		for (LogicalScanNode scan : tables) {
 			allTables.add(scan.alias);
