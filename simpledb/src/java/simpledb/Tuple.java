@@ -3,6 +3,7 @@ package simpledb;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,11 +34,11 @@ public class Tuple implements Serializable {
     }
     
     public Tuple(TupleDesc td, Field[] fields) {
-    	if (td.numFields() != fields.length) {
-    		throw new IllegalArgumentException("Schema does not match fields.");
-    	}
-    	schema = td;
-    	this.fields = fields;
+        if (td.numFields() != fields.length) {
+            throw new IllegalArgumentException("Schema does not match fields.");
+        }
+        schema = td;
+        this.fields = fields;
     }
     
     /**
@@ -45,17 +46,17 @@ public class Tuple implements Serializable {
      * @param t
      */
     public Tuple(Tuple t){
-    	this(t.schema, Arrays.copyOf(t.fields, t.fields.length));
+        this(t.schema, Arrays.copyOf(t.fields, t.fields.length));
     }
     
     /**
      * Create a new tuple which is the concatenation of two existing tuples.
      */
     public Tuple(Tuple t1, Tuple t2) {
-    	schema = TupleDesc.merge(t1.schema, t2.schema);
-    	fields = new Field[schema.numFields()];
-    	System.arraycopy(t1.fields, 0, fields, 0, t1.fields.length);
-    	System.arraycopy(t2.fields, 0, fields, t1.fields.length, t2.fields.length);
+        schema = TupleDesc.merge(t1.schema, t2.schema);
+        fields = new Field[schema.numFields()];
+        System.arraycopy(t1.fields, 0, fields, 0, t1.fields.length);
+        System.arraycopy(t2.fields, 0, fields, t1.fields.length, t2.fields.length);
     }
 
     /**
@@ -114,14 +115,14 @@ public class Tuple implements Serializable {
      * where \t is any whitespace, except newline, and \n is a newline
      */
     public String toString() {
-    	StringBuilder sb = new StringBuilder();
-    	for (int i = 0; i < fields.length; i++) {
-    		sb.append(fields[i].toString());
-    		if (i < fields.length - 1) {
-    			sb.append(",");
-    		}
-    	}
-    	return sb.toString();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < fields.length; i++) {
+            sb.append(fields[i].toString());
+            if (i < fields.length - 1) {
+                sb.append(",");
+            }
+        }
+        return sb.toString();
     }
 
     /**
@@ -149,6 +150,36 @@ public class Tuple implements Serializable {
                 return true;
             }
         }
+        return false;
+    }
+    
+    /**
+     * Check if any of the fields specified by `fields` are mising
+     * @param fields list of fields to check if missing
+     * @return
+     */
+    public boolean hasMissingFieldsIndices(Collection<Integer> fields){
+        for (int i : fields){
+            if (getField(i).isMissing()){
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Check if any of the fields specified by `fields` are mising
+     * @param dropFields list of fields to check if missing
+     * @return
+     */
+    public boolean hasMissingFields(Collection<String> dropFields){
+        for (String name : dropFields){
+            if (getField(getTupleDesc().fieldNameToIndex(name)).isMissing()){
+                return true;
+            }
+        }
+        
         return false;
     }
 

@@ -180,7 +180,7 @@ public class TestUtil {
                && (count = is.read(buf, offset, buf.length - offset)) >= 0) {
             offset += count;
         }
-    	is.close();
+        is.close();
 
         // check that we grabbed the entire file
         if (offset < buf.length) {
@@ -237,17 +237,17 @@ public class TestUtil {
             throw new RuntimeException("not implemented");
         }
 
-		public TupleDesc getTupleDesc() {			
-			return td;
-		}
+        public TupleDesc getTupleDesc() {            
+            return td;
+        }
     }
 
     /**
      * Mock SeqScan class for unit testing.
      */
     public static class MockScan implements DbIterator {
-		private static final long serialVersionUID = -9047494995901857958L;
-		protected int cur, low, high, width;
+        private static final long serialVersionUID = -9047494995901857958L;
+        protected int cur, low, high, width;
 
         /**
          * Creates a fake SeqScan that returns tuples sequentially with 'width'
@@ -286,29 +286,33 @@ public class TestUtil {
             return tup;
         }
 
-		public boolean hasNext() throws DbException, TransactionAbortedException {
-			if (cur >= high) return false;
-			return true;
-		}
+        public boolean hasNext() throws DbException, TransactionAbortedException {
+            if (cur >= high) return false;
+            return true;
+        }
 
-		public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-			if(cur >= high) throw new NoSuchElementException();
+        public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+            if(cur >= high) throw new NoSuchElementException();
 
             Tuple tup = new Tuple(getTupleDesc());
             for (int i = 0; i < width; ++i)
                 tup.setField(i, new IntField(cur));
             cur++;
             return tup;
-		}
+        }
     }
 
     /**
      * Mock SeqScan class for unit testing, *with missing values*.
      */
     public static class MockScanWithMissing extends MockScan {
-		private static final long serialVersionUID = 904384087921778944L;
+        private static final long serialVersionUID = 904384087921778944L;
+        
+        private int interval;
+        private int offset;
+        private int index = 0;
 
-		/**
+        /**
          * Creates a fake SeqScan that returns tuples sequentially with 'width'
          * fields, each with the same value, that increases from low (inclusive)
          * and high (exclusive) over getNext calls. The first tuple returned has
@@ -318,12 +322,37 @@ public class TestUtil {
          * missing values.
          */
         public MockScanWithMissing(int low, int high, int width) {
-			super(low, high, width);
+            super(low, high, width);
+            this.interval = width+1;
+            this.offset = 1;
+        }
+        
+        /**
+         * Creates a fake SeqScan that returns tuples sequentially with 'width'
+         * fields, each with the same value, that increases from low (inclusive)
+         * and high (exclusive) over getNext calls. If `interval` is positive,
+         * then each `interval` field is set to missing.
+         * 
+         * As an example, suppose that width=3 and interval=2. Then the 2nd
+         * field of tuple 1 will be missing, the 1st and 3rd field of tuple 2,
+         * and so on.
+         */
+        public MockScanWithMissing(int low, int high, int width, int interval){
+            super(low, high, width);
+            this.interval = interval;
+            this.offset = 0;
         }
         
         @Override
         public TupleDesc getTupleDesc() {
             return Utility.getTupleDesc(width, "test");
+        }
+        
+        @Override
+        public void rewind() {
+            super.rewind();
+            index = 0;
+            
         }
 
         @Override
@@ -331,25 +360,24 @@ public class TestUtil {
             if (cur >= high) return null;
 
             Tuple tup = new Tuple(getTupleDesc());
-            int missingIndex = Math.floorMod(cur, width+1);
             for (int i = 0; i < width; ++i){
-				if (i == missingIndex){
-					// Missing field
-					tup.setField(i, new IntField());
-				} else {
-					tup.setField(i, new IntField(cur));
-				}
+                if ((offset+index != 0) && Math.floorMod(offset+index, interval) == 0){
+                    tup.setField(i, new IntField());
+                } else {
+                    tup.setField(i, new IntField(cur));
+                }
+                index++;
             }
             cur++;
             return tup;
         }
 
         @Override
-		public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-			Tuple next = readNext();
-			if (next == null) throw new NoSuchElementException();
-			return next;
-		}
+        public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+            Tuple next = readNext();
+            if (next == null) throw new NoSuchElementException();
+            return next;
+        }
     }
 
     /**
@@ -437,7 +465,7 @@ public class TestUtil {
 
         protected void setUp() throws Exception {
             try{
-            	Database.reset();
+                Database.reset();
                 empty = Utility.createEmptyHeapFile(emptyFile.getAbsolutePath(), 2);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -454,13 +482,13 @@ public class TestUtil {
      * @param scan
      * @return
      */
-	public static Collection<String> getAllFieldNames(DbIterator scan) {
-		TupleDesc td = scan.getTupleDesc();
-		Collection<String> fieldNames = new ArrayList<>(td.numFields());
-		for (int i = 0; i<td.numFields(); i++){
-			fieldNames.add(td.getFieldName(i));
-		}
-		
-		return fieldNames;
-	}
+    public static Collection<String> getAllFieldNames(DbIterator scan) {
+        TupleDesc td = scan.getTupleDesc();
+        Collection<String> fieldNames = new ArrayList<>(td.numFields());
+        for (int i = 0; i<td.numFields(); i++){
+            fieldNames.add(td.getFieldName(i));
+        }
+        
+        return fieldNames;
+    }
 }
