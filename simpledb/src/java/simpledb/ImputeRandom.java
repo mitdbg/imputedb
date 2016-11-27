@@ -57,12 +57,11 @@ public class ImputeRandom extends Impute {
         if (nextTupleIndex < buffer.size()){
             // Impute tuple i if necessary.
             Tuple t = buffer.get(nextTupleIndex);
+            nextTupleIndex++;
             if (t.hasMissingFields()){
                 Tuple tc = impute(t);
-                nextTupleIndex++;
                 return tc;
             } else {
-                nextTupleIndex++;
                 return t;
             }
         } else {
@@ -74,6 +73,10 @@ public class ImputeRandom extends Impute {
         Tuple tc = new Tuple(t);
         
         for (int j : dropFieldsIndices){
+            // Don't impute if not missing.
+            if (!tc.getField(j).isMissing())
+                continue;
+            
             // Select non-missing field at random.
             int index0 = random.nextInt(buffer.size());
             int index = index0;

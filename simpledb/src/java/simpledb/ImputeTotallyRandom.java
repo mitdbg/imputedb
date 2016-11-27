@@ -61,6 +61,10 @@ public class ImputeTotallyRandom extends Impute {
     private Tuple impute(Tuple t) throws DbException {
         Tuple tc = new Tuple(t);
         for (int i : dropFieldsIndices){
+            // Don't impute if not missing.
+            if (!tc.getField(i).isMissing())
+                continue;
+            
             if (t.getField(i).getType().equals(Type.INT_TYPE)){
                 int randomInt = random.nextInt();
                 tc.setField(i, new IntField(randomInt));

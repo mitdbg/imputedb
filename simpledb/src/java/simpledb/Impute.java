@@ -18,7 +18,11 @@ public abstract class Impute extends Operator {
         
         // Validate drop fields and convert to indices.
         this.dropFields        = dropFields;
-        this.dropFieldsIndices = new ArrayList<Integer>();
+        this.dropFieldsIndices = extractDropFieldsIndices(dropFields, td);
+    }
+    
+    public static Collection<Integer> extractDropFieldsIndices(Collection<String> dropFields, TupleDesc td){
+        Collection<Integer> dropFieldsIndices = new ArrayList<Integer>();
         for (String field : dropFields){
             if (field == null){
                 throw new RuntimeException("All field names must be non-null.");
@@ -31,6 +35,8 @@ public abstract class Impute extends Operator {
                 throw new RuntimeException("Field not present in TupleDesc.");
             }
         }
+
+        return dropFieldsIndices;
     }
 
     @Override

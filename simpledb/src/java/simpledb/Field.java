@@ -39,4 +39,22 @@ public interface Field extends Serializable{
     public boolean isMissing();
 
     public String toString();
+
+    static boolean areEqual(Field fo, Field fi) {
+        boolean result = false;
+        if (fo != null && fi != null){
+            if (fo instanceof IntField && fi instanceof IntField){
+                result = ((IntField) fo).equals((IntField) fi);
+            } else if (fo instanceof DoubleField && fi instanceof DoubleField){
+                result = ((DoubleField) fo).equals((DoubleField) fi);
+            } else if  (fo instanceof StringField && fi instanceof StringField){
+                result = ((StringField) fo).equals((StringField) fi);
+            }
+        }
+        if (result==false){
+            System.out.println(fo);
+            System.out.println(fi);
+        }
+        return result;
+    }
 }

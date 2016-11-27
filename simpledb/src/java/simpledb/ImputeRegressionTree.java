@@ -20,15 +20,24 @@ public class ImputeRegressionTree extends Impute {
     private Random random;
 
     private ArrayList<Tuple> buffer;
-    private Instances imputedInstances;
     private int nextTupleIndex;
+
+    // Keep track of imputed instances as well as the indices that correspond to
+    // these. (Will differ from completeFieldsIndices and dropFieldsIndices if
+    // this is a partial impute.)
+    private Instances imputedInstances;
+    private List<Integer> completeFieldsIndices2;
+    private List<Integer> dropFieldsIndices2;
 
     public ImputeRegressionTree(Collection<String> dropFields, DbIterator child) {
         super(dropFields, child);
         initRng();
         buffer = new ArrayList<>();
-        imputedInstances = null;
         nextTupleIndex = 0;
+
+        imputedInstances = null;
+        completeFieldsIndices2 = null;
+        dropFieldsIndices2 = null;
     }
     
     private void initRng(){
@@ -40,8 +49,11 @@ public class ImputeRegressionTree extends Impute {
         child.rewind();
         initRng();
         buffer.clear();
-        imputedInstances = null;
         nextTupleIndex = 0;
+
+        imputedInstances = null;
+        completeFieldsIndices2 = null;
+        dropFieldsIndices2 = null;
     }
 
     @Override
@@ -82,31 +94,43 @@ public class ImputeRegressionTree extends Impute {
             allFieldsToInclude.addAll(dropFieldsIndices);
             Instances train = WekaUtil.relationToInstances("", buffer, td, allFieldsToInclude);
             
-            // Now, the problem is that if we haven't retained every column, our indices will be slightly off.
-            // In this silly approach, we'll compare the field names to the attribute names.
+            // Now, the problem is that if we haven't retained every column, our indices will be off.
+            // In this silly approach, we'll recreate the lists of indices by comparing the field names.
             List<Integer> completeFieldsIndices2 = new ArrayList<>();
-            for (int i : completeFieldsIndices){
-                String name = td.getFieldName(i);
-                for (int j=0; j<train.numAttributes(); j++){
-                    if (train.attribute(j).name().equals(name)){
-                        completeFieldsIndices2.add(j);
-                        continue;
+            for (int it : completeFieldsIndices){
+                String name = td.getFieldName(it);
+                boolean added = false;
+                for (int ii=0; ii<train.numAttributes(); ii++){
+                    if (train.attribute(ii).name().equals(name)){
+                        completeFieldsIndices2.add(ii);
+                        added = true;
+                        break;
                     }
+                }
+                if (!added){
+                    throw new RuntimeException("Not added.");
                 }
             }
             List<Integer> dropFieldsIndices2 = new ArrayList<>();
-            for (int i : dropFieldsIndices){
-                String name = td.getFieldName(i);
-                for (int j=0; j<train.numAttributes(); j++){
-                    if (train.attribute(j).name().equals(name)){
-                        dropFieldsIndices2.add(j);
-                        continue;
+            for (int it : dropFieldsIndices){
+                String name = td.getFieldName(it);
+                boolean added = false;
+                for (int ii=0; ii<train.numAttributes(); ii++){
+                    if (train.attribute(ii).name().equals(name)){
+                        dropFieldsIndices2.add(ii);
+                        added = true;
+                        break;
                     }
                 }
+                if (!added){
+                    throw new RuntimeException("Not added.");
+                }
             }
+            this.completeFieldsIndices2 = completeFieldsIndices2;
+            this.dropFieldsIndices2 = dropFieldsIndices2;
 
-            // Used as reference for missing values/original dataset.
-            // TODO initialize bit matrix of missing values.
+            // Keep record of original dataset before imputation.
+            // TODO initialize bit matrix of missing values instead.
             Instances trainCopy = new Instances(train);
 
             // Initialize all missing values using random-in-column.
@@ -128,11 +152,12 @@ public class ImputeRegressionTree extends Impute {
                 }
             }
 
-            // DEBUG: Print header and instances.
-            System.out.println("\nDataset:\n");
-            System.out.println(train);    
+            // // debug: print header and instances.
+            // System.out.println("\ndataset:\n");
+            // System.out.println(train);    
 
-            // Iterate creation of trees for each missing column.
+            // Iterate creation of trees for each missing column. This is the
+            // meat of the chained-equation regression trees method.
             for (int j=0; j<NUM_IMPUTATION_EPOCHS; j++){
                 for (int imputationColumn : dropFieldsIndices2){
                     train.setClassIndex(imputationColumn);
@@ -167,21 +192,26 @@ public class ImputeRegressionTree extends Impute {
             imputedInstances = train;
         }
         
+        // We've imputed values, so we can actually return them now.
         if (nextTupleIndex < buffer.size()){
+            Tuple original = buffer.get(nextTupleIndex);
             Instance inst = imputedInstances.get(nextTupleIndex);
-            Tuple t = buffer.get(nextTupleIndex);
-            Tuple nextTuple = new Tuple(t);
 
-            // Naive merge of the tuple and instance.
-            for (int i=0; i<td.numFields(); i++){
-                String field = td.getFieldName(i);
-                for (int j=0; j<inst.numAttributes(); j++){
-                    if (inst.attribute(j).name().equals(field)){
-                        double value = inst.value(j);
-                        if (td.getFieldType(i) == Type.INT_TYPE){
-                            nextTuple.setField(i, new IntField((int) value));
-                        } else if (td.getFieldType(i) == Type.DOUBLE_TYPE){
-                            nextTuple.setField(i, new DoubleField(value));
+            Tuple imputed = new Tuple(original);
+
+            // Naive merge of the tuple and instance. The instance may have
+            // fewer columns and may have out-of-order columns. We can simplify
+            // because we have the guarantee that only values in dropFields will
+            // change, and every other value will stay the same.
+            for (int it : dropFieldsIndices){
+                String field = td.getFieldName(it);
+                for (int ii : dropFieldsIndices2){
+                    if (inst.attribute(ii).name().equals(field)){
+                        double value = inst.value(ii);
+                        if (td.getFieldType(it) == Type.INT_TYPE){
+                            imputed.setField(it, new IntField((int) value));
+                        } else if (td.getFieldType(it) == Type.DOUBLE_TYPE){
+                            imputed.setField(it, new DoubleField(value));
                         } else {
                             throw new RuntimeException("Not implemented.");
                         }
@@ -191,7 +221,7 @@ public class ImputeRegressionTree extends Impute {
             
             nextTupleIndex++;
             
-            return nextTuple;
+            return imputed;
         } else {
             return null;
         }
