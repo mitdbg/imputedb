@@ -428,7 +428,7 @@ public class LogicalPlan {
                     TupleDesc td = node.getTupleDesc();
                     int  id;
                     try {
-                        id = td.fieldNameToIndex(groupByField.attrName);
+                        id = td.fieldNameToIndex(groupByField);
                     } catch (NoSuchElementException e) {
                         throw new ParsingException("Unknown field " +  groupByField + " in GROUP BY statement");
                     }
