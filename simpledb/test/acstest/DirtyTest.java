@@ -165,7 +165,7 @@ public class DirtyTest {
 		return err;
 	}
 	
-	@Rule public AcsTestRule testDb = new AcsTestRule();
+	@ClassRule public static final AcsTestRule testDb = new AcsTestRule();
 	
 	private static DbIterator planQuery(String query, Function<Void, LogicalPlan> planFactory) throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
 		ZqlParser p = new ZqlParser(new ByteArrayInputStream(query.getBytes("UTF-8")));

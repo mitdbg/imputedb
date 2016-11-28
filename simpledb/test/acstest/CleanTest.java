@@ -16,7 +16,7 @@ import simpledb.*;
 
 @RunWith(Parameterized.class)
 public class CleanTest {
-	@Rule public AcsTestRule testDb = new AcsTestRule();
+	@ClassRule public static final AcsTestRule testDb = new AcsTestRule();
 	
 	private final String query;
 	
