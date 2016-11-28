@@ -22,7 +22,11 @@ public class TableStats {
     static final int IOCOSTPERPAGE = 1000;
 
     public static TableStats getTableStats(String tablename) {
-        return statsMap.get(tablename);
+        TableStats stats = statsMap.get(tablename);
+        if (stats == null) {
+        	throw new RuntimeException("No table stats for " + tablename);
+        }
+        return stats;
     }
 
     public static void setTableStats(String tablename, TableStats stats) {
