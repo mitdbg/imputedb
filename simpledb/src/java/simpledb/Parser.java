@@ -4,6 +4,7 @@ import Zql.*;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.function.*;
 
 import jline.ArgumentCompletor;
 import jline.ConsoleReader;
@@ -11,6 +12,15 @@ import jline.SimpleCompletor;
 
 public class Parser {
     static boolean explain = false;
+    private final Function<Void, LogicalPlan> planFactory;
+    
+    public Parser(Function<Void, LogicalPlan> planFactory) {
+    	this.planFactory = planFactory;
+    }
+    
+    public Parser() {
+    	this(x -> new ImputedLogicalPlan(0.0));
+    }
 
     public static Predicate.Op getOp(String s) throws simpledb.ParsingException {
         if (s.equals("="))
@@ -136,7 +146,7 @@ public class Parser {
             throws IOException, Zql.ParseException, simpledb.ParsingException {
         @SuppressWarnings("unchecked")
         Vector<ZFromItem> from = q.getFrom();
-        LogicalPlan lp = new ImputedLogicalPlan(0.0);
+        LogicalPlan lp = planFactory.apply(null);
         lp.setQuery(q.toString());
         // walk through tables in the FROM clause
         for (int i = 0; i < from.size(); i++) {
@@ -584,7 +594,6 @@ public class Parser {
             "insert", "delete", "values", "into" };
 
     public static void main(String argv[]) throws IOException {
-
         if (argv.length < 1 || argv.length > 4) {
             System.out.println("Invalid number of arguments.\n" + usage);
             System.exit(0);

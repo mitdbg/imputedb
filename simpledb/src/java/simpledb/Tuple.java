@@ -166,4 +166,21 @@ public class Tuple implements Serializable {
         return missing;
     }
 
+    public double error(Tuple t) {
+    	if (!t.schema.equals(schema)) {
+    		throw new IllegalArgumentException("Tuples have different schemas.");
+    	}
+    	double err = 0.0;
+    	for (int i = 0; i < fields.length; i++) {
+    		if (fields[i] instanceof IntField) {
+    			IntField f1 = (IntField)fields[i], f2 = (IntField)t.fields[i];
+    			err += Math.pow(f1.getValue() - f2.getValue(), 2);
+    		}
+    		else if (fields[i] instanceof DoubleField) {
+    			DoubleField f1 = (DoubleField)fields[i], f2 = (DoubleField)t.fields[i];
+    			err += Math.pow(f1.getValue() - f2.getValue(), 2);
+    		}
+    	}
+    	return err;
+    }
 }

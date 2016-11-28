@@ -2,6 +2,7 @@ package acstest;
 
 import java.util.*;
 import java.io.*;
+
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -14,10 +15,12 @@ import Zql.ZqlParser;
 import simpledb.*;
 
 @RunWith(Parameterized.class)
-public class AcsTest {
+public class CleanTest {
+	@Rule public AcsTestRule testDb = new AcsTestRule();
+	
 	private final String query;
 	
-	public AcsTest(String query) {
+	public CleanTest(String query) {
 		this.query = query;
 	}
 	
@@ -25,7 +28,6 @@ public class AcsTest {
 	public static Collection<Object[]> data() {
 		return Arrays.asList(new Object[][] {
 			{ "SELECT BLD FROM acs;" },
-			{ "SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;" },
 			{ "SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;" },
 			{ "SELECT BATH as has_bath, COUNT(ST) as ct FROM acs GROUP BY BATH;" },
 			{ "SELECT ACR as lotsize, AVG(BDSP) as avg_num_bedrooms FROM acs GROUP BY ACR;" },
@@ -38,59 +40,6 @@ public class AcsTest {
 			// simpledb cannot handle predicates vs other columns (only relative to constants)
 			{ "SELECT * FROM acs WHERE VEH >= 1 AND VEH <= 5 AND RMSP > 4;" }
 		});
-	}
-	
-	@Before
-	public void loadData() {
-		Database.getCatalog().clear();
-		String[] fields = new String[] {
-				"ST",
-				"NP",
-				"ACR",
-				"AGS",
-				"BATH",
-				"BDSP",
-				"BLD",
-				"BUS",
-				"REFR",
-				"RMSP",
-				"RWAT",
-				"SINK",
-				"STOV",
-				"TEL",
-				"TEN",
-				"TOIL",
-				"VEH",
-				"YBL",
-				"HHL",
-				"HHT",
-				"HUGCLNPP",
-				"HUPAC",
-				"HUPAOC",
-				"HUPARC",
-				"LNGI",
-				"MULTG",
-				"MV",
-				"NR",
-				"NRC",
-				"PARTNER",
-				"PSF",
-				"R18",
-				"R65",
-				"SRNTVAL",
-				"WIF",
-				"WKEXREL",
-				"WORKSTAT"
-		};
-		Type[] types = new Type[fields.length];
-		for (int i = 0; i < types.length; i++) {
-			types[i] = Type.INT_TYPE;
-		}
-		TupleDesc schema = new TupleDesc(types, fields);
-		ClassLoader loader = AcsTest.class.getClassLoader();
-		File acsData = new File(loader.getResource("acstest/acs.dat").getFile());
-		Database.getCatalog().addTable(new HeapFile(acsData, schema), "acs", "");
-		TableStats.computeStatistics();
 	}
 	
 	@Test
