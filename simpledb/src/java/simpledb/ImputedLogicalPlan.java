@@ -367,10 +367,12 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		if (aggField != null) {
 			for (Entry<Set<QuantifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
 				for (ImputationType imp : ImputationType.values()) {
-					LogicalAggregateNode plan = new LogicalAggregateNode(entry.getValue(), imp, groupByField, aggOp, aggField, tableMap);
-					if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
-						bestPlan = plan;
-					}
+					try {
+						LogicalAggregateNode plan = new LogicalAggregateNode(entry.getValue(), imp, groupByField, aggOp, aggField, tableMap);
+						if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
+							bestPlan = plan;
+						}
+					} catch (BadImputation e) {}
 				}
 			}
 		} 
