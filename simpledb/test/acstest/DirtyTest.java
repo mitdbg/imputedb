@@ -2,7 +2,6 @@ package acstest;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.function.*;
 import java.util.function.Predicate;
@@ -17,6 +16,7 @@ import simpledb.*;
 
 public class DirtyTest {
 	private static class SmudgePredicate extends Operator {
+		private static final long serialVersionUID = -5585085012061351883L;
 		private final DbIterator child;
 		private final int dirtyIndex;
 		private final double dirtyPerc;
@@ -89,6 +89,8 @@ public class DirtyTest {
 	}
 	
 	private static class SmudgeRandom extends SmudgePredicate {
+		private static final long serialVersionUID = -7180182613916428629L;
+
 		public SmudgeRandom(DbIterator child, QuantifiedName dirtyName, double d) {
 			super(child, dirtyName, d, x -> true);
 		}
