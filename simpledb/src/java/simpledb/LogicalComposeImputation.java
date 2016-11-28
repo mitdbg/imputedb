@@ -29,7 +29,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 	}
 
 	public static ImputedPlan create(ImputedPlan subplan, ImputationType imp, Set<QuantifiedName> required,
-			Map<String, Integer> tableMap) {
+			Map<String, Integer> tableMap) throws BadImputation {
 		// don't add anything if there are no dirty columns
 		if (subplan.getDirtySet().isEmpty()) {
 			return subplan;
@@ -76,7 +76,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 			if (impute.isEmpty()) {
 				return subplan;
 			}
-			throw new IllegalArgumentException("Must impute all dirty attributes required.");
+			throw new BadImputation();
 		default:
 			throw new RuntimeException("Unexpected ImputationType.");
 		}
