@@ -96,6 +96,60 @@ public class DirtyTest {
 		}
 	}
 	
+	private static class Limit extends Operator {
+		private final DbIterator child;
+		private final int limit;
+		private int count = 0;
+		
+		public Limit(DbIterator child, int limit) {
+			this.child = child;
+			this.limit = limit;
+		}
+		
+		@Override
+		public void rewind() throws DbException, TransactionAbortedException {
+			child.rewind();
+			count = 0;
+		}
+		
+		@Override
+	    public void open() throws DbException, NoSuchElementException,
+	            TransactionAbortedException {
+	    	super.open();
+	        child.open();
+	    }
+		
+		@Override
+	    public void close() {
+	    	super.close();
+	    	child.close();
+	    }
+
+		@Override
+		protected Tuple fetchNext() throws DbException, TransactionAbortedException {
+			if (count >= limit || !child.hasNext()) {
+				return null;
+			}
+			count++;
+			return child.next();
+		}
+
+		@Override
+		public DbIterator[] getChildren() {
+			throw new RuntimeException("Not implemented.");
+		}
+
+		@Override
+		public void setChildren(DbIterator[] children) {
+			throw new RuntimeException("Not implemented.");
+		}
+
+		@Override
+		public TupleDesc getTupleDesc() {
+			return child.getTupleDesc();
+		}
+	}
+	
 	private double error(DbIterator expected, DbIterator actual) throws DbException, TransactionAbortedException {
 		double err = 0.0;
 		while(expected.hasNext()) {
@@ -123,22 +177,26 @@ public class DirtyTest {
 	@Test 
 	public void BldTest() throws DbException, TransactionAbortedException, IOException, ParseException, ParsingException {
 		final Function<String, String> query = 
-				tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD", tbl);
+				tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
 		
-		System.err.print("Creating new table with dirty data... ");
+		System.err.println("Creating new table with dirty data...");
 		TransactionId tid = new TransactionId();
 		Database.getCatalog().addTable("acsd", "", AcsTestRule.schema);
 		int oldTblId = Database.getCatalog().getTableId("acs"),
 				newTblId = Database.getCatalog().getTableId("acsd");
-		new Insert(tid, new SmudgeRandom(new SeqScan(tid, oldTblId), new QuantifiedName("acs", "BDSP"), 0.1), newTblId).next();
-		System.err.println("done.");
+		new Insert(tid, new SmudgeRandom(new Limit(new SeqScan(tid, oldTblId), 100), new QuantifiedName("acs", "BDSP"), 0.1), newTblId).next();
+		TableStats.computeStatistics();
+		System.err.println("Done.");
 		
-		System.err.print("Planning queries... ");
-		DbIterator clean = planQuery(query.apply("acs"), x -> new LogicalPlan()), 
-				imputedDirty = planQuery(query.apply("acsd"), x -> new ImputedLogicalPlan(0.5)), 
-				dirty = planQuery(query.apply("acs"), x -> new LogicalPlan());
-		System.err.println("done.");
+		System.err.println("Planning queries...");
+		DbIterator clean = planQuery(query.apply("acs"), x -> new LogicalPlan());
+		DbIterator imputedDirty = planQuery(query.apply("acsd"), x -> new ImputedLogicalPlan(0.5)); 
+		DbIterator dirty = planQuery(query.apply("acs"), x -> new LogicalPlan());
+		System.err.println("Done.");
 		
+		clean.open();
+		imputedDirty.open();
+		dirty.open();
 		double imputeErr = error(clean, imputedDirty);
 		clean.rewind();
 		double baseErr = error(clean, dirty);
