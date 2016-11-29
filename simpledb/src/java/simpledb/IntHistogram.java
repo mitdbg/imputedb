@@ -59,6 +59,7 @@ public class IntHistogram {
 		this.min = min;
 		this.max = max;
 		this.valuesPerBucket = valuesPerBucket;
+		this.numValues = (int) sum(buckets);
 
 		// unused
 		missingFields = null;
@@ -382,6 +383,7 @@ public class IntHistogram {
 	 */
 	public void scale(double factor) {
 		adjustBuckets(factor, 1, false);
+		numValues = (int) countTuples();
 	}
 
 	/**
@@ -390,6 +392,7 @@ public class IntHistogram {
 	 */
 	public void addToDistribution(double newTuples) {
 		adjustBuckets(newTuples, countTuples(), true);
+		numValues += (int) newTuples;
 	}
 
 	/**
@@ -399,6 +402,12 @@ public class IntHistogram {
 	 */
 	public void distribute(double ctTuples) {
 		adjustBuckets(ctTuples, countTuples(), false);
+		numValues = (int) ctTuples;
 	}
+
+	public double[] getBuckets() {
+		return buckets;
+	}
+
 
 }
