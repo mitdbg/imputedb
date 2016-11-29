@@ -176,6 +176,14 @@ public class TupleDesc implements Serializable {
     	return fieldNameToIndex(name.toString());
     }
 
+    public Collection<Integer> fieldNamesToIndices(Collection<QuantifiedName> names) throws NoSuchElementException {
+        List<Integer> indices = new ArrayList<>();
+        for(QuantifiedName name : names) {
+            indices.add(fieldNameToIndex(name));
+        }
+        return indices;
+    }
+
     /**
      * @return The size (in bytes) of tuples corresponding to this TupleDesc.
      *         Note that tuples from a given TupleDesc are of a fixed size.

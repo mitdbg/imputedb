@@ -173,7 +173,7 @@ public class TableStats {
 		this.intStats = intStats;
 		this.nullStats = nullStats;
 		// we should be able to use any of the columns to count
-		this.numTuples = (int) (intStats[0].countTuples() + nullStats[0]);
+		this.numTuples = computeTotalTuples();
 
 		// unused
 		stringStats = null;
@@ -292,6 +292,15 @@ public class TableStats {
         return numTuples;
     }
 
+	/**
+	 * Actually calculate the total number of tuples (Rather than return the stored field)
+	 * @return
+	 */
+	private int computeTotalTuples(){
+		return (int) (intStats[0].countTuples() + nullStats[0]);
+	}
+
+
 	public Set<String> dirtyAttrs() {
 		Set<String> ret = new HashSet<String>();
 		for (int i = 0; i < schema.numFields(); i++) {
@@ -352,6 +361,7 @@ public class TableStats {
 			}
 			copy.nullStats[ix] = 0;
 		}
+		// no need to adjust count of tuples, as simply redistributed
 		return copy;
 	}
 
@@ -370,6 +380,8 @@ public class TableStats {
 			copy.intStats[i].scale(selectivity);
 			copy.nullStats[i] = (int) (copy.nullStats[i] * selectivity);
 		}
+		// update number of tuples
+		copy.numTuples = copy.computeTotalTuples();
 		return copy;
 	}
 
@@ -395,6 +407,8 @@ public class TableStats {
 			// distribute remainder amongst non-nulls, based on existing histogram
 			copy.intStats[i].distribute(totalCount - cleanNull);
 		}
+		// update number of tuples
+		copy.numTuples = copy.computeTotalTuples();
 		return copy;
 	}
 
