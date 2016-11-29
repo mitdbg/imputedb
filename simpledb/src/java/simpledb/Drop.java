@@ -69,4 +69,12 @@ public class Drop extends Operator {
 	public TupleDesc getTupleDesc() {
 		return child.getTupleDesc();
 	}
+	
+	public Collection<String> getDropFields() {
+		ArrayList<String> ret = new ArrayList<>(dropFields.size());
+		for (int f : dropFields) {
+			ret.add(getTupleDesc().getFieldName(f));
+		}
+		return ret;
+	}
 }
