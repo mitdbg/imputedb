@@ -183,4 +183,19 @@ public class Tuple implements Serializable {
     	}
     	return err;
     }
+    
+    public double error() {
+    	double err = 0.0;
+    	for (int i = 0; i < fields.length; i++) {
+    		if (fields[i] instanceof IntField) {
+    			IntField f1 = (IntField)fields[i];
+    			err += Math.pow(f1.getValue(), 2);
+    		}
+    		else if (fields[i] instanceof DoubleField) {
+    			DoubleField f1 = (DoubleField)fields[i];
+    			err += Math.pow(f1.getValue(), 2);
+    		}
+    	}
+    	return err;
+    }
 }

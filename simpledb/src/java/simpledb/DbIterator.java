@@ -1,5 +1,5 @@
 package simpledb;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -53,4 +53,15 @@ public interface DbIterator extends Serializable{
    */
   public void close();
 
+  public static void print(DbIterator iter, PrintStream strm) throws DbException, TransactionAbortedException {
+	  while (iter.hasNext()) {
+		  strm.println(iter.next());
+	  }
+  }
+  
+  public static void print(DbIterator iter) throws DbException, TransactionAbortedException {
+	  while (iter.hasNext()) {
+		  System.out.println(iter.next());
+	  }
+  }
 }

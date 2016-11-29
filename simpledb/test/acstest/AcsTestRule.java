@@ -14,7 +14,7 @@ import simpledb.TupleDesc;
 import simpledb.Type;
 
 public class AcsTestRule implements TestRule {
-	public static final TupleDesc schema;
+	public static final TupleDesc SCHEMA;
 	static {
 		String[] fields = new String[] {
 				"ST",
@@ -59,7 +59,7 @@ public class AcsTestRule implements TestRule {
 		for (int i = 0; i < types.length; i++) {
 			types[i] = Type.INT_TYPE;
 		}
-		schema = new TupleDesc(types, fields);
+		SCHEMA = new TupleDesc(types, fields);
 	}
 	
 	private class DbInitializer extends ExternalResource {
@@ -68,7 +68,7 @@ public class AcsTestRule implements TestRule {
 			Database.getCatalog().clear();
 			ClassLoader loader = CleanTest.class.getClassLoader();
 			File acsData = new File(loader.getResource("acstest/acs.dat").getFile());
-			Database.getCatalog().addTable(new HeapFile(acsData, schema), "acs", "");
+			Database.getCatalog().addTable(new HeapFile(acsData, SCHEMA), "acs", "");
 			TableStats.computeStatistics();
 		}
 	}

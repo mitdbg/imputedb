@@ -154,10 +154,13 @@ public class DirtyTest {
 		double err = 0.0;
 		while(expected.hasNext()) {
 			try {
-				if (!actual.hasNext()) {
-					throw new RuntimeException("BUG: Iterators have different lengths.");
+				if (actual.hasNext()) {
+					err += expected.next().error(actual.next());
+					//throw new RuntimeException("BUG: Iterators have different lengths.");
+				} else {
+					err += expected.next().error();
 				}
-				err += expected.next().error(actual.next());
+				
 			} catch (NoSuchElementException e) {
 				throw new RuntimeException("BUG: No more tuples.");
 			}
@@ -165,7 +168,9 @@ public class DirtyTest {
 		return err;
 	}
 	
-	@ClassRule public static final AcsTestRule testDb = new AcsTestRule();
+	@ClassRule public static final AcsTestRule TEST_DB = new AcsTestRule();
+	
+	private static final int TABLE_SIZE = 1000;
 	
 	private static DbIterator planQuery(String query, Function<Void, LogicalPlan> planFactory) throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
 		ZqlParser p = new ZqlParser(new ByteArrayInputStream(query.getBytes("UTF-8")));
@@ -180,26 +185,42 @@ public class DirtyTest {
 				tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
 		
 		System.err.println("Creating new table with dirty data...");
-		TransactionId tid = new TransactionId();
-		Database.getCatalog().addTable("acsd", "", AcsTestRule.schema);
+		Database.getCatalog().addTable("acs_small_clean", "", AcsTestRule.SCHEMA);
+		Database.getCatalog().addTable("acs_small_dirty", "", AcsTestRule.SCHEMA);
 		int oldTblId = Database.getCatalog().getTableId("acs"),
-				newTblId = Database.getCatalog().getTableId("acsd");
-		new Insert(tid, new SmudgeRandom(new Limit(new SeqScan(tid, oldTblId), 100), new QuantifiedName("acs", "BDSP"), 0.1), newTblId).next();
+				newTblIdC = Database.getCatalog().getTableId("acs_small_clean"),
+				newTblIdD = Database.getCatalog().getTableId("acs_small_dirty");
+		
+		TransactionId tid = new TransactionId();
+		new Insert(tid, new Limit(new SeqScan(tid, oldTblId), TABLE_SIZE), newTblIdC).next();
+		tid = new TransactionId();
+		new Insert(tid, new SmudgeRandom(new SeqScan(tid, newTblIdC), new QuantifiedName("acs_small_clean", "BDSP"), 0.1), newTblIdD).next();
 		TableStats.computeStatistics();
 		System.err.println("Done.");
 		
 		System.err.println("Planning queries...");
-		DbIterator clean = planQuery(query.apply("acs"), x -> new LogicalPlan());
-		DbIterator imputedDirty = planQuery(query.apply("acsd"), x -> new ImputedLogicalPlan(0.5)); 
-		DbIterator dirty = planQuery(query.apply("acs"), x -> new LogicalPlan());
-		System.err.println("Done.");
+		DbIterator clean = planQuery(query.apply("acs_small_clean"), x -> new LogicalPlan());
+		DbIterator imputedDirty = planQuery(query.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.5)); 
+		DbIterator dirty = planQuery(query.apply("acs_small_dirty"), x -> new LogicalPlan());
+		System.err.println("Done."); 
 		
 		clean.open();
 		imputedDirty.open();
 		dirty.open();
-		double imputeErr = error(clean, imputedDirty);
+		
+		DbIterator.print(clean);
+		System.out.println();
+		DbIterator.print(imputedDirty);
+		System.out.println();
+		DbIterator.print(dirty);
+		
 		clean.rewind();
+		imputedDirty.rewind();
+		dirty.rewind();
+		
 		double baseErr = error(clean, dirty);
+		clean.rewind();
+		double imputeErr = error(clean, imputedDirty);
 		Assert.assertTrue("Base error should be higher than imputed error.", baseErr >= imputeErr);
 	}
 }
