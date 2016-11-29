@@ -2,11 +2,16 @@ package simpledb;
 
 import java.util.*;
 
+import static simpledb.ImputationType.DROP;
+import static simpledb.ImputationType.MAXIMAL;
+import static simpledb.ImputationType.MINIMAL;
+
 public class LogicalAccessNode extends ImputedPlan {
 	private final DbIterator physicalPlan;
 	private final HashSet<QuantifiedName> dirtySet;
 	private final double loss;
 	private final double time;
+	private TableStats tableStats;
 	
 	// TODO: hackish way of getting table alias name for join optimization (better way?)
 	public final String alias;
@@ -59,29 +64,36 @@ public class LogicalAccessNode extends ImputedPlan {
 		}
 
 		/* Add the imputation operator, if any. */
-		TableStats tableStats = TableStats.getTableStats(Database.getCatalog().getTableName(scan.t));
-		double totalData = tableStats.totalTuples() * pp.getTupleDesc().numFields();
+		// use scan's tablestats for initial calculations
+		TableStats subplanTableStats = TableStats.getTableStats(Database.getCatalog().getTableName(scan.t));
+		double totalData = subplanTableStats.totalTuples() * pp.getTupleDesc().numFields();
+
+		// adjusted tablestats to reflect imputation and filtering
+		TableStats adjustedTableStats;
 
 		switch (imp) {
 		case DROP:
 			pp = new Drop(pp, requiredAttrs);
 			tableDirtySet.removeAll(required);
 			dirtySet = tableDirtySet;
-			loss = tableStats.estimateTotalNull(requiredIdx);
-			time = tableStats.estimateScanCost();
+			loss = subplanTableStats.estimateTotalNull(requiredIdx);
+			time = subplanTableStats.estimateScanCost();
+			adjustedTableStats = subplanTableStats.adjustForImpute(DROP, requiredIdx);
 			break;
 		case MAXIMAL:
-			loss = tableStats.estimateTotalNull() * Math.pow(LOSS_FACTOR, -totalData);
-			time = tableStats.estimateScanCost() + tableStats.estimateImputeCost();
+			loss = subplanTableStats.estimateTotalNull() * Math.pow(LOSS_FACTOR, -totalData);
+			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost();
 			pp = new ImputeRandom(pp);
 			dirtySet = new HashSet<QuantifiedName>();
+			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, requiredIdx);
 			break;
 		case MINIMAL:
-			loss = tableStats.estimateTotalNull(requiredIdx) * Math.pow(LOSS_FACTOR, -totalData);
-			time = tableStats.estimateScanCost() + tableStats.estimateImputeCost();
+			loss = subplanTableStats.estimateTotalNull(requiredIdx) * Math.pow(LOSS_FACTOR, -totalData);
+			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost();
 			pp = new ImputeRandom(pp, requiredAttrs);
 			tableDirtySet.removeAll(required);
 			dirtySet = tableDirtySet;
+			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, requiredIdx);
 			break;
 		case NONE:
 			if (!required.isEmpty()) {
@@ -89,7 +101,9 @@ public class LogicalAccessNode extends ImputedPlan {
 			}
 			loss = 0.0;
 			dirtySet = tableDirtySet;
-			time = tableStats.estimateScanCost();
+			time = subplanTableStats.estimateScanCost();
+			// if no action, just keep same histograms
+			adjustedTableStats = subplanTableStats;
 			break;
 		default:
 			throw new RuntimeException("Unexpected ImputationType.");
@@ -98,6 +112,7 @@ public class LogicalAccessNode extends ImputedPlan {
 		/* If no filters, then we're done constructing the plan. */
 		if (filters == null) {
 			physicalPlan = pp;
+			tableStats = adjustedTableStats;
 			return;
 		}
 
@@ -140,11 +155,20 @@ public class LogicalAccessNode extends ImputedPlan {
 				throw new ParsingException("Unknown field " + filter.fieldQuantifiedName);
 			}
 
+			// estimate selectivity for predicate, and adjust table stats based on that
+			double selectivity = adjustedTableStats.estimateSelectivity(p);
+			adjustedTableStats = adjustedTableStats.adjustForSelectivity(selectivity);
+
 			subplan = new Filter(p, subplan);
+
 		}
 		// assign final subplan with all the filters
 		physicalPlan = subplan;
+		tableStats = adjustedTableStats;
+	}
 
+	public TableStats getTableStats() {
+		return tableStats;
 	}
 
 	public DbIterator getPlan() {
@@ -159,9 +183,8 @@ public class LogicalAccessNode extends ImputedPlan {
 		return lossWeight * loss + (1 - lossWeight) * time;
 	}
 
-	// TODO FIX: we need to be able to get cardinality, and cardinality will directly depend on imputation used (MIN/MAX/DROP/NONE)
 	public double cardinality() {
-		return -1;
+		return tableStats.totalTuples();
 	}
 
 }

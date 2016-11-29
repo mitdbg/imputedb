@@ -41,6 +41,9 @@ public class LogicalImputedJoinNode extends ImputedPlan {
     /** The join predicate */
     public Predicate.Op p;
 
+    // table stats
+    private TableStats tableStats;
+
     public LogicalImputedJoinNode(
         TransactionId tid,
         String table1Name,
@@ -88,6 +91,13 @@ public class LogicalImputedJoinNode extends ImputedPlan {
         }
         
         this.tableMap = tableMap;
+
+        // estimate a new combined set of table statistics based on children tablestats and join type
+        tableStats = estimateJoinedTableStats();
+    }
+
+    public TableStats getTableStats() {
+        return tableStats;
     }
     
     /** Return a new LogicalJoinNode with the inner and outer (t1.f1
@@ -111,17 +121,29 @@ public class LogicalImputedJoinNode extends ImputedPlan {
     }
 
     public double cardinality() {
+        return tableStats.totalTuples();
+    }
+
+    private TableStats estimateJoinedTableStats()  {
+        // estimated cardinality of joined table, follows approach in selinger
+        double cardEstimate;
         if (p.equals(Predicate.Op.EQUALS)) {
             if (isPkey(t1Alias, f1PureName)) {
-                return table2.cardinality();
+                cardEstimate = table2.cardinality();
             } else if (isPkey(t2Alias, f2PureName)) {
-                return table1.cardinality();
+                cardEstimate = table1.cardinality();
             } else {
-                return Math.max(table1.cardinality(), table1.cardinality());
+                cardEstimate = Math.max(table1.cardinality(), table1.cardinality());
             }
         } else {
-            return (int) (table1.cardinality() * table2.cardinality() * 0.3);
+            cardEstimate = table1.cardinality() * table2.cardinality() * 0.3;
         }
+
+        // adjust each set of histograms to the new cardinality (i.e. maintains underlying distribution)
+        TableStats stats1 = table1.getTableStats().adjustToTotal(cardEstimate);
+        TableStats stats2 = table2.getTableStats().adjustToTotal(cardEstimate);
+        // merge the histograms
+        return stats1.merge(stats2);
     }
 
     // TODO FIX: should this be the same as before? I don't think so....

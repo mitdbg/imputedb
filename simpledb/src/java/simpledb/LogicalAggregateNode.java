@@ -29,6 +29,10 @@ public class LogicalAggregateNode extends ImputedPlan {
 		physicalPlan = new Aggregate(plan.getPlan(), aggFieldIndex, groupByKeyIndex, aggOp);
 	}
 
+	public TableStats getTableStats() {
+		throw new UnsupportedOperationException("table stats not supported on aggregated results");
+	}
+
 	@Override
 	public Set<QuantifiedName> getDirtySet() {
 		throw new RuntimeException("Not implemented.");

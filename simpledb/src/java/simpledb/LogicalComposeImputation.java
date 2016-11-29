@@ -1,8 +1,10 @@
 package simpledb;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import static simpledb.ImputationType.DROP;
+import static simpledb.ImputationType.MAXIMAL;
+import static simpledb.ImputationType.MINIMAL;
 
 /**
  * Adding imputation on top of a plan that already has imputed values along its
@@ -12,25 +14,37 @@ import java.util.Set;
 public class LogicalComposeImputation extends ImputedPlan {
 	private static final double LOSS_FACTOR = 1.01;
 
-	private final double cardinality;
 	private final DbIterator physicalPlan;
 	private final Set<QuantifiedName> dirtySet;
 	private final double loss;
 	private final double time;
+	private TableStats tableStats;
 
-	private LogicalComposeImputation(double cardinality, DbIterator physicalPlan, Set<QuantifiedName> dirtySet,
+	/**
+	 * Constructor intended only for internal construction of updated plan
+	 * @param tableStats
+	 * @param physicalPlan
+	 * @param dirtySet
+	 * @param loss
+	 * @param time
+	 */
+	private LogicalComposeImputation(TableStats tableStats, DbIterator physicalPlan, Set<QuantifiedName> dirtySet,
 			double loss, double time) {
 		super();
-		this.cardinality = cardinality;
 		this.physicalPlan = physicalPlan;
 		this.dirtySet = dirtySet;
 		this.loss = loss;
 		this.time = time;
+		this.tableStats = tableStats;
+	}
+
+	public TableStats getTableStats() {
+		return this.tableStats;
 	}
 
 	public static ImputedPlan create(ImputedPlan subplan, ImputationType imp, Set<QuantifiedName> required,
 			Map<String, Integer> tableMap) throws BadImputation {
-		// don't add anything if there are no dirty columns
+		// don't change anything if there are no dirty columns
 		if (subplan.getDirtySet().isEmpty()) {
 			return subplan;
 		}
@@ -43,35 +57,40 @@ public class LogicalComposeImputation extends ImputedPlan {
 		final Set<QuantifiedName> dirtySet = new HashSet<>();
 		dirtySet.addAll(subplan.getDirtySet());
 
-		double totalData = subplan.cardinality() * subplan.getPlan().getTupleDesc().numFields();
+		TupleDesc schema = subplan.getPlan().getTupleDesc();
+		double totalData = subplan.cardinality() * schema.numFields();
+
+		Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
 
 		DbIterator physicalPlan;
-		double loss, time, cardinality;
+		double loss, time;
+		// table stats for subplan
+		TableStats subplanTableStats = subplan.getTableStats();
+		// holds tablestats adjusted for imputation
+		TableStats adjustedTableStats;
+
 		switch (imp) {
 		case DROP:
 			physicalPlan = new Drop(subplan.getPlan(), toNames(impute));
 			dirtySet.removeAll(impute);
-			loss = estimateNumNulls(impute, subplan.cardinality(), tableMap);
+			loss = estimateNumNulls(subplan, imputeIndices);
 			time = subplan.cardinality();
-			// TODO FIX: this needs to be changed as well, need to estimate rows
-			// with any null values
-			cardinality = subplan.cardinality();
-			return new LogicalComposeImputation(cardinality, physicalPlan, dirtySet, loss, time);
+			adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
+			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
 		case MINIMAL:
 			physicalPlan = new ImputeRandom(subplan.getPlan(), toNames(impute));
 			dirtySet.removeAll(impute);
-			loss = estimateNumNulls(impute, subplan.cardinality(), tableMap) * Math.pow(LOSS_FACTOR, -totalData);
+			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
 			time = totalData;
-			cardinality = subplan.cardinality();
-			return new LogicalComposeImputation(cardinality, physicalPlan, dirtySet, loss, time);
+			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, imputeIndices);
+			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
 		case MAXIMAL:
 			physicalPlan = new ImputeRandom(subplan.getPlan(), toNames(subplan.getDirtySet()));
 			dirtySet.clear();
-			loss = estimateNumNulls(subplan.getDirtySet(), subplan.cardinality(), tableMap)
-					* Math.pow(LOSS_FACTOR, -totalData);
+			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
 			time = totalData;
-			cardinality = subplan.cardinality();
-			return new LogicalComposeImputation(cardinality, physicalPlan, dirtySet, loss, time);
+			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
+			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
 		case NONE:
 			if (impute.isEmpty()) {
 				return subplan;
@@ -82,9 +101,8 @@ public class LogicalComposeImputation extends ImputedPlan {
 		}
 	}
 
-	public static double estimateNumNulls(Set<QuantifiedName> attrs, double card, Map<String, Integer> tableMap) {
-		// TODO FIX: need a good way to estimate number of nulls at this point..
-		return 1.0;
+	public static double estimateNumNulls(ImputedPlan subplan, Collection<Integer> indices) {
+		return subplan.getTableStats().estimateTotalNull(indices);
 	}
 
 	public DbIterator getPlan() {
@@ -100,7 +118,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 	}
 
 	public double cardinality() {
-		return cardinality;
+		return tableStats.totalTuples();
 	}
 
 	private static Set<String> toNames(Set<QuantifiedName> attrs) {
