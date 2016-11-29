@@ -88,7 +88,8 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		};
 	}
 	
-	private void optimizeFilters(TransactionId tid, ImputedPlanCache cache) throws ParsingException {			
+	private void optimizeFilters(TransactionId tid, ImputedPlanCache cache) throws ParsingException {
+		// Accumulate all filters on each table.
 		HashMap<String, Set<LogicalFilterNode>> filterMap = new HashMap<>();
 		for (LogicalFilterNode filter : filters) {
 			Set<LogicalFilterNode> accFilters = filterMap.get(filter.tableAlias);
@@ -99,21 +100,27 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			filterMap.put(filter.tableAlias, accFilters);
 		}
 
+		// Create an access node for each table to be scanned/filtered.
 		for (LogicalScanNode scan : tables) {
 			String tableAlias = scan.alias;
 			Set<LogicalFilterNode> filters = filterMap.get(tableAlias);
 
 			ArrayList<LogicalAccessNode> candidates = new ArrayList<LogicalAccessNode>();
 			if (!DirtySet.ofBaseTable(scan.t, scan.alias).isEmpty()) {
-				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.DROP, filters));
-				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MINIMAL, filters));
-				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MAXIMAL, filters));
+				try {
+					candidates.add(new LogicalAccessNode(tid, scan, ImputationType.DROP, filters));
+				} catch (BadImputation e) {}
+				try {
+					candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MINIMAL, filters));
+				} catch (BadImputation e) {}
+				try {
+					candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MAXIMAL, filters));
+				} catch (BadImputation e) {}
 			}
 
 			try {
 				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.NONE, filters));
-			} catch (IllegalArgumentException e) {
-			}
+			} catch (BadImputation e) {}
 
 			/* Select the best candidate for each distinct dirty set. */
 			for (LogicalAccessNode node : candidates) {

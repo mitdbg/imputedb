@@ -20,7 +20,7 @@ public class LogicalAccessNode extends ImputedPlan {
 	private static final double LOSS_FACTOR = 1.01;
 
 	public LogicalAccessNode(TransactionId tid, LogicalScanNode scan, ImputationType imp, LogicalFilterNode filter)
-	throws ParsingException {
+	throws ParsingException, BadImputation {
 		this(tid, scan, imp, filterToSingletonSet(filter));
 	}
 
@@ -29,7 +29,7 @@ public class LogicalAccessNode extends ImputedPlan {
 	}
 
 	public LogicalAccessNode(TransactionId tid, LogicalScanNode scan, ImputationType imp, Set<LogicalFilterNode> filters)
-			throws ParsingException {
+			throws ParsingException, BadImputation {
 		DbIterator pp;
 
 		tableId = scan.t;
@@ -73,6 +73,9 @@ public class LogicalAccessNode extends ImputedPlan {
 
 		switch (imp) {
 		case DROP:
+			if (required.isEmpty()) {
+				throw new BadImputation();
+			}
 			pp = new Drop(pp, requiredAttrs);
 			tableDirtySet.removeAll(required);
 			dirtySet = tableDirtySet;
@@ -88,6 +91,9 @@ public class LogicalAccessNode extends ImputedPlan {
 			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, requiredIdx);
 			break;
 		case MINIMAL:
+			if (required.isEmpty()) {
+				throw new BadImputation();
+			}
 			loss = subplanTableStats.estimateTotalNull(requiredIdx) * Math.pow(LOSS_FACTOR, -totalData);
 			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost();
 			pp = new ImputeRandom(pp, requiredAttrs);
@@ -97,7 +103,7 @@ public class LogicalAccessNode extends ImputedPlan {
 			break;
 		case NONE:
 			if (!required.isEmpty()) {
-				throw new IllegalArgumentException("Must impute all dirty attributes used by the predicate.");
+				throw new BadImputation();
 			}
 			loss = 0.0;
 			dirtySet = tableDirtySet;
