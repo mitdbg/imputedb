@@ -180,6 +180,14 @@ public class TableStats {
 		ioCostPerPage = -1;
 	}
 
+	public TableStats setNullStats(int[] nullStats) {
+		TableStats copy = copyTableStats();
+		assert(nullStats.length == copy.nullStats.length);
+		System.arraycopy(nullStats, 0, copy.nullStats, 0, nullStats.length);
+		copy.numTuples = copy.computeTotalTuples();
+		return copy;
+	}
+
     /**
      * Estimates the cost of sequentially scanning the file, given that the cost
      * to read a page is costPerPageIO. You can assume that there are no seeks
@@ -361,7 +369,7 @@ public class TableStats {
 			}
 			copy.nullStats[ix] = 0;
 		}
-		// no need to adjust count of tuples, as simply redistributed
+		copy.numTuples = copy.computeTotalTuples();
 		return copy;
 	}
 
@@ -443,5 +451,20 @@ public class TableStats {
 		TupleDesc combinedSchema = TupleDesc.merge(schema, other.schema);
 
 		return new TableStats(combinedSchema, combinedIntStats, combinedNullStats);
+	}
+
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		for(int i = 0; i < intStats.length; i++) {
+			sb.append("col ");
+			sb.append(i);
+			sb.append(": not null[");
+			sb.append(intStats[i].countTuples());
+			sb.append("], null[");
+			sb.append(nullStats[i]);
+			sb.append("]\n");
+		}
+		return sb.toString();
 	}
 }
