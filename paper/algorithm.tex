@@ -10,34 +10,64 @@ To reduce the size of the query plan search space, only plans that fit the follo
 We introduce two new relational operators to perform imputation: impute ($\mu$) and drop ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of attributes and $R$ is a relation. Impute uses a machine learning method to replace all null values with non-null values for attributes in $C$ in the relation $R$. Drop simply removes all tuples which have a null value for some attribute in $C$ from $R$. Both operators guarantee that the resulting relation will contain no null values for attributes in $C$. 
 
 \subsection{Imputation placement}
+\label{sec:placement}
 Imputation operators must be placed so that no relational operator receives a tuple containing null in an attribute that the operator examines, regardless of the state of the data in the base tables.
 
-Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan is associated with a set of dirty attributes $D$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each base table using the table statistics, which track the number of null values in each column. If we apply an imputation operator to a relation $R$ with a dirty vector $D$, $\mu_C (R)$ or $\delta_C (R)$, the resulting query has a dirty vector $D' = D \ C$. Projections produce a new dirty vector by dropping each attribute that is not in the projection. A join R⨝_ψ▒R^′  ⁆ with dirty vectors D⁆ and D^′  produces a dirty vector D OR D^′⁆.  Filters do not change the dirty vector. [MS It's possible that a filter φ_t   removes all of the rows that had null-values in some column t` != t, thus removing t` from the dirty vector.] 
+Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan is associated with a set of dirty attributes $D$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each base table using the table statistics, which track the number of null values in each column. If we apply an imputation operator to a relation $R$ with a dirty set $D$, $\mu_C (R)$ or $\delta_C (R)$, the resulting query has a dirty set $D' = D \ C$.  Applying a projection $\pi_C(R)$ produces a dirty set $D' = D \cap C$. A join $R_1 \Join_\psi R_2$ with dirty sets $D_1$ and $D_2$  produces a dirty set $D' = D_1 \cup D_2$.  Filters do not change the dirty set. 
 
 The dirty set over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null without changing the dirty set, forcing an unnecessary imputation. We choose to over-approximate the dirty set to avoid the possibility of dropping a tuple that contains a null value without explicitly imputing the value or applying a drop operator.
 
 \subsection{Query planning}
 The input to our query planner is a tuple $(T, \Phi, \Psi, P, G, A)$: a set of tables $T$, a set of filter predicates $\phi_t, t \in T$, a set of join predicates $\psi_(t_1, t_2), t_1, t_2 \in T$, a set of attributes $P$, and an optional set of attributes $G$ and aggregator function $A \in \{\text{Max}, \text{Min}, \text{Sum}, \text{Avg}, \text{Count}\}$.
 
-To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all columns in the relation, regardless of which are required.
+The query planner must select a join ordering in addition to placing imputation operators as described in Section~\ref{sec:placement}.
 
-# For a plan and a set of necessary attributes, add the allowed amount of imputation.
-AddImpute(q, attrs):
-	Dattr = Dirty(q) intersect attrs
-	if Dattr = empty:
-		return {q}
-	else:
-		return {impute_all(q), impute_min(q, Dattr), drop_min(q, Dattr)}
-		
-# For a set of plans with different dirty sets, return the best plan for each dirty set.
-OptRel(Q):
-	D = {Dirty(q) | q in Q}
-	return { argmin_q Cost(q) s.t. Dirty(q) = d | d in D}
+To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all columns in the relation, regardless of which are required. 
 
-# Given a table and a filter predicate, return the optimal plans.
-OptFilter(t⁆,φ⁆):
-	return OptRel(AddImpute(t, Attrs(φ)))
-		
+\begin{algorithm}
+  \begin{algorithmic}
+    \Require{$q$ is a query plan, $C_{req}$ is a set of attributes that must be imputed.}
+    \Ensure{Returns a set of query plans such that $\Call{Dirty}{q'} \cap C_{req} = \emptyset$.}
+    \Function{AddImpute}{$q, C_{req}$}
+    \State $C_{min} \gets \Call{Dirty}{q} \cap C_{req}$
+    \If{$C_{min} = \emptyset$}
+    \State \Return $\{q\}$
+    \Else
+    \State \Return $\{\mu_{\Call{Dirty}{q}}(q), \mu_{C_{min}}(q), \delta_{C_{min}}(q)\}$
+    \EndIf
+    \EndFunction
+    
+    \State
+
+    \Require{$Q$ is a set of query plans.}
+    \Ensure{Returns an optimal query plan for each distinct dirty set in $Q$.}
+    \Function{OptRel}{$Q$}
+    \State $D \gets \{\Call{Dirty}{q} ~|~ q \in Q\}$
+    \State \Return $\{\argmin_{q \in Q \land \Call{Dirty}{q} = d} \Call{Cost}{q} ~|~ d \in D\}$
+    \EndFunction
+
+    \State
+
+    \Require{$t$ is a table and $\phi$ is a filter predicate.}
+    \Ensure{Returns a set of optimal query plans for scanning and filtering $t$, with distinct dirty sets.}
+    \Function{OptFilter}{$t, \phi$}
+    \State \Return $\Call{OptRel}{\Call{AddImpute}{t, \Call{Attrs}{\phi}}}$
+    \EndFunction
+
+    \State
+
+    \Require{$Q$ is a set of query plans and $\Psi$ relates query plans with join predicates.}
+    \Function{OptJoin}{$Q, \Phi$}
+    \State $Q \gets \emptyset$
+    \For{$q \in Q$}
+    
+    \EndFor
+    \EndFunction
+  \end{algorithmic}
+  \caption{An algorithm for query planning with imputations.}
+\end{algorithm}
+
+\begin{verbatim}		
 # For a set of tables (with filter predicates) and join predicates, return the optimal plans.
 OptJoin(T⁆, join_preds):
 	Q = empty
@@ -48,7 +78,7 @@ OptJoin(T⁆, join_preds):
 			if r_l, r_r in join_preds:
 				# Add imputation to the left and right arguments.
 				Q = Q union OptRel(Join(r_l', r_r') for r_l' in AddImpute(r_l, Attrs(join_pred)), r_r' in AddImpute(r_r, Attrs(join_pred)))
-	return OptRel(Q)
+	return OptRel(Q)
 # Extended cost calculation to account for information loss/computation cost in imputations
 Cost(q):
   case drop_min(q', d) =>  info_loss(drop, q', attrs(q') intersect d) + Cost(q')
@@ -65,6 +95,7 @@ info_loss(op, t, a):
 impute_cost(t):
   # alpha: some scaling factor
   alpha * (ntuples(t) + ct(attr(t)))
+\end{verbatim}
 
 \subsection{Histogram computation}
 Histogram adjustment algorithm:
