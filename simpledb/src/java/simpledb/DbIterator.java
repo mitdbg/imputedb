@@ -55,24 +55,40 @@ public interface DbIterator extends Serializable{
   
   public DbIterator[] getChildren();
 
-  public static void print(DbIterator iter, PrintStream strm) throws DbException, TransactionAbortedException {
-	  while (iter.hasNext()) {
-		  strm.println(iter.next());
+  public default double error(DbIterator actual) throws DbException, TransactionAbortedException {
+	double err = 0.0;
+	while(hasNext()) {
+		try {
+			if (actual.hasNext()) {
+				err += next().error(actual.next());
+				//throw new RuntimeException("BUG: Iterators have different lengths.");
+			} else {
+				err += next().error();
+			}
+			
+		} catch (NoSuchElementException e) {
+			throw new RuntimeException("BUG: No more tuples.");
+		}
+	}
+	return err;
+}
+
+public default void print(PrintStream strm) throws DbException, TransactionAbortedException {
+	  while (hasNext()) {
+		  strm.println(next());
 	  }
   }
   
-  public static void print(DbIterator iter) throws DbException, TransactionAbortedException {
-	  while (iter.hasNext()) {
-		  System.out.println(iter.next());
-	  }
+  public default void print() throws DbException, TransactionAbortedException {
+	  print(System.out);
   }
   
-  public static boolean contains(DbIterator iter, Class<?> op) {
-	  if (op.isInstance(iter)) {
+  public default boolean contains(Class<?> op) {
+	  if (op.isInstance(this)) {
 		  return true;
 	  }
-	  for (DbIterator child : iter.getChildren()) {
-		  if (DbIterator.contains(child, op)) {
+	  for (DbIterator child : getChildren()) {
+		  if (child.contains(op)) {
 			  return true;
 		  }
 	  }
