@@ -1,6 +1,16 @@
 \documentclass{article}
-\usepackage{amsmath}
+\usepackage[activate={true,nocompatibility},final,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10]{microtype}
+\usepackage{amsfonts,amssymb,amsmath}
 \usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\MakeRobust{\Call}
+
+\renewcommand{\emptyset}{\varnothing}
 
 \title{Data Imputation as a Query Optimization}
 
