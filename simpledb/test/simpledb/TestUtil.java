@@ -300,6 +300,11 @@ public class TestUtil {
             cur++;
             return tup;
         }
+
+		@Override
+		public DbIterator[] getChildren() {
+			return new DbIterator[]{};
+		}
     }
 
     /**

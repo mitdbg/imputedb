@@ -207,6 +207,11 @@ public class IntegerAggregator implements Aggregator {
 			public void close() {
 				keys = null;
 			}
+			
+			@Override
+			public DbIterator[] getChildren() {
+				return new DbIterator[]{};
+			}
         };
     }
 }

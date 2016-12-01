@@ -52,6 +52,8 @@ public interface DbIterator extends Serializable{
    * hasNext(), or rewind() should fail by throwing IllegalStateException.
    */
   public void close();
+  
+  public DbIterator[] getChildren();
 
   public static void print(DbIterator iter, PrintStream strm) throws DbException, TransactionAbortedException {
 	  while (iter.hasNext()) {
@@ -63,5 +65,17 @@ public interface DbIterator extends Serializable{
 	  while (iter.hasNext()) {
 		  System.out.println(iter.next());
 	  }
+  }
+  
+  public static boolean contains(DbIterator iter, Class<?> op) {
+	  if (op.isInstance(iter)) {
+		  return true;
+	  }
+	  for (DbIterator child : iter.getChildren()) {
+		  if (DbIterator.contains(child, op)) {
+			  return true;
+		  }
+	  }
+	  return false;
   }
 }

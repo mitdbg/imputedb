@@ -57,4 +57,9 @@ public class TupleIterator implements DbIterator {
     public void close() {
         i = null;
     }
+    
+    @Override
+	public DbIterator[] getChildren() {
+		return new DbIterator[]{};
+	}
 }

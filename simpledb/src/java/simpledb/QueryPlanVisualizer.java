@@ -262,7 +262,7 @@ public class QueryPlanVisualizer {
                                 - currentStartPosition);
                 thisNode.leftChild = child;
                 thisNode.height = currentDepth;
-            } else if (plan instanceof Impute) {
+            } else if (plan instanceof ImputeRandom || plan instanceof ImputeRegressionTree) {
                 Impute p = (Impute) plan;
                 String fields = "";
                 Iterator<TDItem> it = p.getTupleDesc().iterator();

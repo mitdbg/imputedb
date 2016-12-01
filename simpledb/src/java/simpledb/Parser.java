@@ -759,5 +759,10 @@ class TupleArrayIterator implements DbIterator {
      */
     public void close() {
     }
+    
+    @Override
+	public DbIterator[] getChildren() {
+		return new DbIterator[]{};
+	}
 
 }

@@ -132,6 +132,11 @@ public class StringAggregator implements Aggregator {
 			public void close() {
 				keys = null;
 			}
+			
+			@Override
+			public DbIterator[] getChildren() {
+				return new DbIterator[]{};
+			}
         };
     }
 

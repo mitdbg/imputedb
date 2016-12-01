@@ -1,17 +1,11 @@
 package acstest;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.function.Predicate;
-
 import org.junit.*;
-
-import Zql.ParseException;
-import Zql.ZQuery;
-import Zql.ZStatement;
-import Zql.ZqlParser;
+import Zql.*;
 import simpledb.*;
 
 public class DirtyTest {
@@ -168,9 +162,9 @@ public class DirtyTest {
 		return err;
 	}
 	
-	@ClassRule public static final AcsTestRule TEST_DB = new AcsTestRule();
-	
 	private static final int TABLE_SIZE = 1000;
+	
+	@ClassRule public static final AcsTestRule TEST_DB = new AcsTestRule();
 	
 	private static DbIterator planQuery(String query, Function<Void, LogicalPlan> planFactory) throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
 		ZqlParser p = new ZqlParser(new ByteArrayInputStream(query.getBytes("UTF-8")));
@@ -179,11 +173,8 @@ public class DirtyTest {
 		return pp.handleQueryStatement((ZQuery)s, new TransactionId()).getPhysicalPlan();
 	}
 	
-	@Test 
-	public void BldTest() throws DbException, TransactionAbortedException, IOException, ParseException, ParsingException {
-		final Function<String, String> query = 
-				tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
-		
+	@BeforeClass
+	public static void Before() throws NoSuchElementException, DbException, TransactionAbortedException, IOException {
 		System.err.println("Creating new table with dirty data...");
 		Database.getCatalog().addTable("acs_small_clean", "", AcsTestRule.SCHEMA);
 		Database.getCatalog().addTable("acs_small_dirty", "", AcsTestRule.SCHEMA);
@@ -197,10 +188,16 @@ public class DirtyTest {
 		new Insert(tid, new SmudgeRandom(new SeqScan(tid, newTblIdC), new QuantifiedName("acs_small_clean", "BDSP"), 0.1), newTblIdD).next();
 		TableStats.computeStatistics();
 		System.err.println("Done.");
+	}
+	
+	@Test 
+	public void BldTest() throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
+		final Function<String, String> query = 
+				tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
 		
 		System.err.println("Planning queries...");
 		DbIterator clean = planQuery(query.apply("acs_small_clean"), x -> new LogicalPlan());
-		DbIterator imputedDirty = planQuery(query.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.5)); 
+		DbIterator imputedDirty = planQuery(query.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.0)); 
 		DbIterator dirty = planQuery(query.apply("acs_small_dirty"), x -> new LogicalPlan());
 		System.err.println("Done."); 
 		
@@ -222,5 +219,34 @@ public class DirtyTest {
 		clean.rewind();
 		double imputeErr = error(clean, imputedDirty);
 		Assert.assertTrue("Base error should be higher than imputed error.", baseErr >= imputeErr);
+	}
+	
+	@Test
+	public void SwitchFromDropToImputeTest() throws NoSuchElementException, DbException, TransactionAbortedException, IOException, ParseException, ParsingException {
+		final double step = 0.1;
+		final Function<String, String> query = 
+				tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
+		
+		System.err.println("Planning queries...");
+		
+		DbIterator imputedDirty = planQuery(query.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.0));
+		imputedDirty.open();
+		Assert.assertTrue("Plan does not use drop at lowest quality setting.", DbIterator.contains(imputedDirty, Drop.class));
+		
+		for (double a = step; a <= 1.0; a += step) {
+			final double aa = a;
+			imputedDirty = planQuery(query.apply("acs_small_dirty"), x -> {
+				return new ImputedLogicalPlan(aa);
+			});
+			imputedDirty.open();
+			if (DbIterator.contains(imputedDirty, ImputeRandom.class) 
+					|| DbIterator.contains(imputedDirty, ImputeRegressionTree.class)) {
+				System.err.format("Switched from drop to impute at alpha %f.\n", aa);
+				return;
+			}
+			imputedDirty.close();
+			Assert.assertTrue("Plan contains neither drop nor impute.", DbIterator.contains(imputedDirty, Drop.class));
+		}
+		Assert.fail("Never switched from drop to impute.");
 	}
 }
