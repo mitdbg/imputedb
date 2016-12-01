@@ -69,6 +69,18 @@ public class Catalog {
     public void addTable(DbFile file) {
         addTable(file, (UUID.randomUUID()).toString());
     }
+    
+    /**
+     * Adds a new table to the catalog. Stored in a temp file.
+     * @param tableName The name of the table.
+     * @param pKeyField The primary key of the table.
+     * @throws IOException 
+     */
+    public void addTable(String tableName, String pKeyField, TupleDesc schema) throws IOException {
+    	File file = File.createTempFile(tableName, ".dat");
+    	DbFile dbFile = new HeapFile(file, schema);
+    	addTable(dbFile, tableName, pKeyField);
+    }
 
     /**
      * Return the id of the table with a specified name,

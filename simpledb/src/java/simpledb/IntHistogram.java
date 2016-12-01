@@ -1,5 +1,6 @@
 package simpledb;
 
+import java.util.Arrays;
 import java.util.List;
 
 /** A class to represent a fixed-width histogram over a single integer-based field.
@@ -44,6 +45,27 @@ public class IntHistogram {
     	this.max = max;
     	valuesPerBucket = (int) Math.ceil((max - min + 1) / (double)this.buckets.length);
     }
+
+	/**
+	 * Constructor only meant to be used for copying a histogram. We have abandoned the missingFields/missingTuples
+	 * stats, so these are initialized to null (and never used)
+	 * @param buckets
+	 * @param min
+	 * @param max
+	 * @param valuesPerBucket
+	 */
+    private IntHistogram(double[] buckets, int min, int max, int valuesPerBucket) {
+		this.buckets = buckets;
+		this.min = min;
+		this.max = max;
+		this.valuesPerBucket = valuesPerBucket;
+		this.numValues = (int) sum(buckets);
+
+		// unused
+		missingFields = null;
+		// count of tuples with any missing fields in a given bucket
+		missingTuples = null;
+	}
     
     private int bucketOfValue(int v) {
     	return (v - min) / valuesPerBucket;
@@ -321,4 +343,71 @@ public class IntHistogram {
         // some code goes here
         return null;
     }
+
+	/**
+	 * Return a count of the (non-null) tuples by summing across buckets
+	 * @return
+	 */
+	public double countTuples() {
+		return sum(buckets);
+	}
+
+	/**
+	 * Create a copy of the existing histogram
+	 * @return
+	 */
+	public IntHistogram copyHistogram() {
+		double[] copyBuckets = Arrays.copyOf(buckets, buckets.length);
+		return new IntHistogram(copyBuckets, min, max, valuesPerBucket);
+	}
+
+	/**
+	 * Adjust buckets
+	 * @param ct count to use for adjustment
+	 * @param denom denominator for adjustment
+	 * @param add if true, adds to existing value, otherwise overwrites existing value
+	 */
+	private void adjustBuckets(double ct, double denom, boolean add) {
+		for(int i = 0; i < buckets.length; i++) {
+			if (add) {
+				buckets[i] += (buckets[i] / denom) * ct;
+			} else {
+				buckets[i] = (buckets[i] / denom) * ct;
+			}
+		}
+	}
+
+	/**
+	 * Scale all buckets by a constant factor
+	 * @param factor
+	 */
+	public void scale(double factor) {
+		adjustBuckets(factor, 1, false);
+		numValues = (int) countTuples();
+	}
+
+	/**
+	 * Add a number of new tuples to the existing distribution
+	 * @param newTuples
+	 */
+	public void addToDistribution(double newTuples) {
+		adjustBuckets(newTuples, countTuples(), true);
+		numValues += (int) newTuples;
+	}
+
+	/**
+	 * Set counts in each bucket according to existing distribution s.t. total number of couts
+	 * is equal to ctTuples
+	 * @param ctTuples
+	 */
+	public void distribute(double ctTuples) {
+		adjustBuckets(ctTuples, countTuples(), false);
+		numValues = (int) ctTuples;
+	}
+
+	public double[] getBuckets() {
+		return buckets;
+	}
+
+
 }

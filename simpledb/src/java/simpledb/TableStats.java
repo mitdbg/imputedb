@@ -1,10 +1,13 @@
 package simpledb;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -19,7 +22,11 @@ public class TableStats {
     static final int IOCOSTPERPAGE = 1000;
 
     public static TableStats getTableStats(String tablename) {
-        return statsMap.get(tablename);
+        TableStats stats = statsMap.get(tablename);
+        if (stats == null) {
+        	throw new RuntimeException("No table stats for " + tablename);
+        }
+        return stats;
     }
 
     public static void setTableStats(String tablename, TableStats stats) {
@@ -71,7 +78,7 @@ public class TableStats {
     private final StringHistogram[] stringStats;
     private final int ioCostPerPage;
     private final TupleDesc schema;
-    private final int numTuples;
+    private int numTuples;
     private final int[] nullStats;
 
     /**
@@ -154,6 +161,33 @@ public class TableStats {
 		}
     }
 
+	/**
+	 * Meant to create copies of histogram information for imputation. Only works on integer columns.
+	 *
+	 * Solely to be used for copies, as sets ioCostPerPage and stringStats to null/dummy values
+	 * @param intStats
+	 * @param nullStats
+	 */
+	private TableStats(TupleDesc schema, IntHistogram[] intStats, int[] nullStats) {
+		this.schema = schema;
+		this.intStats = intStats;
+		this.nullStats = nullStats;
+		// we should be able to use any of the columns to count
+		this.numTuples = computeTotalTuples();
+
+		// unused
+		stringStats = null;
+		ioCostPerPage = -1;
+	}
+
+	public TableStats setNullStats(int[] nullStats) {
+		TableStats copy = copyTableStats();
+		assert(nullStats.length == copy.nullStats.length);
+		System.arraycopy(nullStats, 0, copy.nullStats, 0, nullStats.length);
+		copy.numTuples = copy.computeTotalTuples();
+		return copy;
+	}
+
     /**
      * Estimates the cost of sequentially scanning the file, given that the cost
      * to read a page is costPerPageIO. You can assume that there are no seeks
@@ -234,10 +268,203 @@ public class TableStats {
     	}
     }
 
+	/**
+	 * Convenience wrapper for selectivity estimation
+	 * @param pred
+	 * @return
+	 */
+	public double estimateSelectivity(Predicate pred) {
+		return estimateSelectivity(pred.getField(), pred.getOp(), pred.getOperand());
+	}
+    
+    public double estimateTotalNull(Collection<Integer> fields) {
+    	double ret = 0.0;
+    	for (int field : fields) {
+    		ret += nullStats[field];
+    	}
+    	return ret;
+    }
+    
+    public double estimateTotalNull() {
+    	double ret = 0.0;
+    	for (int n : nullStats) {
+    		ret += n;
+    	}
+    	return ret;
+    }
+
     /**
      * return the total number of tuples in this table
      * */
     public int totalTuples() {
         return numTuples;
     }
+
+	/**
+	 * Actually calculate the total number of tuples (Rather than return the stored field)
+	 * @return
+	 */
+	private int computeTotalTuples(){
+		return (int) (intStats[0].countTuples() + nullStats[0]);
+	}
+
+
+	public Set<String> dirtyAttrs() {
+		Set<String> ret = new HashSet<String>();
+		for (int i = 0; i < schema.numFields(); i++) {
+			if (nullStats[i] > 0) {
+				ret.add(schema.getFieldName(i));
+			}
+		}
+		return ret;
+	}
+	
+	public double estimateImputeCost() {
+		return numTuples * schema.numFields();
+	}
+
+
+	/**
+	 * Create a copy of table stats instance
+	 * @return
+	 */
+	public TableStats copyTableStats() {
+		IntHistogram[] copyIntStats = new IntHistogram[intStats.length];
+		int[] copyNullStats = new int[nullStats.length];
+
+		assert(nullStats.length == intStats.length);
+		for(int i = 0 ; i < intStats.length; i++) {
+			// create copies of histograms
+			copyIntStats[i] = intStats[i].copyHistogram();
+			// copy over null counts
+			copyNullStats[i] = nullStats[i];
+		}
+
+		return new TableStats(schema, copyIntStats, copyNullStats);
+	}
+
+	/**
+	 * Adjust tablestats to reflect imputation on indices using operation imp. The null count associated
+	 * with these indices goes down to zero in all cases. For drop, that is the only change. For imputations,
+	 * the null counts are redistributed to the histogram according to the existing distribution.
+	 *
+	 * Creates a new instance
+	 * @param imp imputation operation
+	 * @param indices indices affected
+	 * @return
+	 */
+	public TableStats adjustForImpute(ImputationType imp, Collection<Integer> indices) {
+		TableStats copy = copyTableStats();
+		for(int ix : indices) {
+			switch (imp) {
+				case DROP:
+					// nothing to do beside zero out
+					break;
+				case MINIMAL:
+					// intentional fall through
+					// both imputations work the same in terms of per-column histogram changes
+				case MAXIMAL:
+					copy.intStats[ix].addToDistribution(copy.nullStats[ix]);
+					break;
+			}
+			copy.nullStats[ix] = 0;
+		}
+		copy.numTuples = copy.computeTotalTuples();
+		return copy;
+	}
+
+
+	/**
+	 * Adjust the counts in all histograms based on the selectivity provided. Also adjusts null counts similarly.
+	 *
+	 * Creates a new instance.
+	 * @param selectivity
+	 * @return
+	 */
+	public TableStats adjustForSelectivity(double selectivity) {
+		TableStats copy = copyTableStats();
+		assert(intStats.length == nullStats.length);
+		for(int i = 0; i < copy.intStats.length; i++) {
+			copy.intStats[i].scale(selectivity);
+			copy.nullStats[i] = (int) (copy.nullStats[i] * selectivity);
+		}
+		// update number of tuples
+		copy.numTuples = copy.computeTotalTuples();
+		return copy;
+	}
+
+	/**
+	 * Adjust counts such that the total number of tuples is equal to countTuples. It assigns values to buckets
+	 * in each histogram according to existing distribution. Accounts for nulls.
+	 *
+	 * Creates a new instance
+	 * @param totalCount new total count of tuples
+	 * @return
+	 */
+	public TableStats adjustToTotal(double totalCount) {
+		TableStats copy = copyTableStats();
+		for(int i = 0; i < copy.intStats.length; i++) {
+			// make sure to account for missing values
+			double denom = copy.intStats[i].countTuples() + copy.nullStats[i];
+			// with some floating point smudge
+			double dirtyNull = (copy.nullStats[i] / denom) * totalCount;
+			// integral value
+			int cleanNull = (int) dirtyNull;
+			// assign new null count
+			copy.nullStats[i] = cleanNull;
+			// distribute remainder amongst non-nulls, based on existing histogram
+			copy.intStats[i].distribute(totalCount - cleanNull);
+		}
+		// update number of tuples
+		copy.numTuples = copy.computeTotalTuples();
+		return copy;
+	}
+
+	/**
+	 * Combine two table stats instances
+	 *
+	 * Creates new instance
+	 * @param other table stats to append
+	 * @return
+	 */
+	public TableStats merge(TableStats other) {
+		// create new instances to avoid modifying existing references
+		TableStats copy1 = copyTableStats();
+		IntHistogram[] intStats1 = copy1.intStats;
+		int[] nullStats1 = copy1.nullStats;
+
+		TableStats copy2 = other.copyTableStats();
+		IntHistogram[] intStats2 = copy2.intStats;
+		int[] nullStats2 = copy2.nullStats;
+
+		// combine histograms
+		IntHistogram[] combinedIntStats = new IntHistogram[intStats1.length + intStats2.length];
+		System.arraycopy(intStats1, 0, combinedIntStats, 0, intStats1.length);
+		System.arraycopy(intStats2, 0, combinedIntStats, intStats1.length, intStats2.length);
+
+		// combine null stats
+		int[] combinedNullStats = new int[nullStats1.length + nullStats2.length];
+		System.arraycopy(nullStats1, 0, combinedNullStats, 0, nullStats1.length);
+		System.arraycopy(nullStats2, 0, combinedNullStats, nullStats1.length, nullStats2.length);
+
+		// combine schemas
+		TupleDesc combinedSchema = TupleDesc.merge(schema, other.schema);
+
+		return new TableStats(combinedSchema, combinedIntStats, combinedNullStats);
+	}
+
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		for(int i = 0; i < intStats.length; i++) {
+			sb.append("col ");
+			sb.append(i);
+			sb.append(": not null[");
+			sb.append(intStats[i].countTuples());
+			sb.append("], null[");
+			sb.append(nullStats[i]);
+			sb.append("]\n");
+		}
+		return sb.toString();
+	}
 }

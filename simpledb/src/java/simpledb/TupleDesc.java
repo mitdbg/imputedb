@@ -162,6 +162,27 @@ public class TupleDesc implements Serializable {
         }
         throw new NoSuchElementException();
     }
+    
+    /**
+     * Find the index of the field with a given name.
+     * 
+     * @param name
+     *            name of the field.
+     * @return the index of the field that is first to have the given name.
+     * @throws NoSuchElementException
+     *             if no field with a matching name is found.
+     */
+    public int fieldNameToIndex(QuantifiedName name) throws NoSuchElementException {
+    	return fieldNameToIndex(name.toString());
+    }
+
+    public Collection<Integer> fieldNamesToIndices(Collection<QuantifiedName> names) throws NoSuchElementException {
+        List<Integer> indices = new ArrayList<>();
+        for(QuantifiedName name : names) {
+            indices.add(fieldNameToIndex(name));
+        }
+        return indices;
+    }
 
     /**
      * @return The size (in bytes) of tuples corresponding to this TupleDesc.
@@ -256,4 +277,13 @@ public class TupleDesc implements Serializable {
     	}
     	return sb.toString();
     }
+
+	public boolean containsField(String fname) {
+		for (TDItem td : schema) {
+			if (td.fieldName.equals(fname)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

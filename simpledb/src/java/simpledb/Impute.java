@@ -53,6 +53,12 @@ public abstract class Impute extends Operator {
     }
 
     @Override
+    public void open() throws DbException, TransactionAbortedException {
+        super.open();
+        child.open();
+    }
+
+    @Override
     public TupleDesc getTupleDesc() {
         return td;
     }

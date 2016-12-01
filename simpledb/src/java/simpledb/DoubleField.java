@@ -43,7 +43,7 @@ public class DoubleField implements Field {
 	public boolean compare(Op op, Field value) {
 		DoubleField val = (DoubleField) value;
 		
-		if (value == null) {
+		if (this.value == null) {
 			return op == Predicate.Op.EQUALS && val.isMissing();
 		}
 		
@@ -74,5 +74,9 @@ public class DoubleField implements Field {
 	@Override
 	public boolean isMissing() {
 		return value == null;
+	}
+	
+	public double getValue() {
+		return value;
 	}
 }

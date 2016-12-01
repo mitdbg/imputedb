@@ -16,6 +16,8 @@ public class QueryPlanVisualizer {
     static final String ORDERBY = "o";
     static final String GROUPBY = "g";
     static final String SPACE = "  ";
+    static final String DROP = "δ";
+    static final String IMPUTE = "μ";
 
     private int calculateQueryPlanTreeDepth(DbIterator root) {
         if (root == null)
@@ -260,6 +262,50 @@ public class QueryPlanVisualizer {
                                 - currentStartPosition);
                 thisNode.leftChild = child;
                 thisNode.height = currentDepth;
+            } else if (plan instanceof Impute) {
+                Impute p = (Impute) plan;
+                String fields = "";
+                Iterator<TDItem> it = p.getTupleDesc().iterator();
+                while (it.hasNext())
+                    fields += it.next().fieldName + ",";
+                fields = fields.substring(0, fields.length() - 1);
+                thisNode.text = String.format("%1$s(%2$s),card:%3$d", IMPUTE, fields, p.getEstimatedCardinality());
+                
+                int upBarShift = parentUpperBarStartShift;
+                if (IMPUTE.length() / 2 > parentUpperBarStartShift)
+                    upBarShift = IMPUTE.length() / 2;
+                
+                SubTreeDescriptor child = this.buildTree(queryPlanDepth,
+                        currentDepth + 2 + adjustDepth, children[0],
+                        currentStartPosition, upBarShift);
+                
+                thisNode.upBarPosition = child.upBarPosition;
+                thisNode.textStartPosition = thisNode.upBarPosition - IMPUTE.length() / 2;
+                thisNode.width = Math.max(child.width, thisNode.textStartPosition + thisNode.text.length() - currentStartPosition);
+                thisNode.leftChild = child;
+                thisNode.height = currentDepth;
+            } else if (plan instanceof Drop) {
+            	Drop p = (Drop) plan;
+                String fields = "";
+                for (String fieldName : p.getDropFields()) {
+                    fields += fieldName + ",";
+                }
+                fields = fields.length() == 0 ? fields : fields.substring(0, fields.length() - 1);
+                thisNode.text = String.format("%1$s(%2$s),card:%3$d", DROP, fields, p.getEstimatedCardinality());
+                
+                int upBarShift = parentUpperBarStartShift;
+                if (DROP.length() / 2 > parentUpperBarStartShift)
+                    upBarShift = DROP.length() / 2;
+                
+                SubTreeDescriptor child = this.buildTree(queryPlanDepth,
+                        currentDepth + 2 + adjustDepth, children[0],
+                        currentStartPosition, upBarShift);
+                
+                thisNode.upBarPosition = child.upBarPosition;
+                thisNode.textStartPosition = thisNode.upBarPosition - DROP.length() / 2;
+                thisNode.width = Math.max(child.width, thisNode.textStartPosition + thisNode.text.length() - currentStartPosition);
+                thisNode.leftChild = child;
+                thisNode.height = currentDepth;
             }
             else if (plan.getClass().getSuperclass().getSuperclass().getSimpleName().equals("Exchange")) {
                 String name="Exchange";
@@ -329,6 +375,8 @@ public class QueryPlanVisualizer {
                     thisNode.leftChild = child;
                 }
                 thisNode.height = currentDepth;
+            } else {
+            	throw new RuntimeException("Unexpected query node.");
             }
         }
         return thisNode;

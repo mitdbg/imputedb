@@ -2,6 +2,8 @@ package simpledb;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +19,11 @@ public class TableStatsTest extends SimpleDbTestBase {
 	HeapFile f;
 	String tableName;
 	int tableId;
+
+	ArrayList<ArrayList<Integer>> tuples2;
+	HeapFile f2;
+	String tableName2;
+	int tableId2;
 	
 	@Before public void setUp() throws Exception {
 		super.setUp();
@@ -25,7 +32,14 @@ public class TableStatsTest extends SimpleDbTestBase {
 		
 		this.tableName = SystemTestUtil.getUUID();
 		Database.getCatalog().addTable(f, tableName);
-		this.tableId = Database.getCatalog().getTableId(tableName);		
+		this.tableId = Database.getCatalog().getTableId(tableName);
+
+		// create a second table
+		this.tuples2 = new ArrayList<ArrayList<Integer>>();
+		this.f2 = SystemTestUtil.createRandomHeapFile(10, 10200, 32, null, tuples2);
+		this.tableName2 = SystemTestUtil.getUUID();
+		Database.getCatalog().addTable(f2, tableName2);
+		this.tableId2 = Database.getCatalog().getTableId(tableName2);
 	}
 	
 	private double[] getRandomTableScanCosts(int[] pageNums, int[] ioCosts) throws IOException, DbException, TransactionAbortedException {
@@ -150,5 +164,160 @@ public class TableStatsTest extends SimpleDbTestBase {
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN_OR_EQ, atMin), 0.05);
 			Assert.assertEquals(0.0, s.estimateSelectivity(col, Predicate.Op.LESS_THAN_OR_EQ, belowMin), 0.001);
 		}
+	}
+
+
+	/* Table Stats tests for imputation */
+	public TableStats statsWithNulls(int tableId, int ctNullsPerCol) {
+		TableStats s = new TableStats(tableId, IO_COST);
+		TupleDesc schema = Database.getCatalog().getTupleDesc(tableId);
+		int[] nulls = new int[schema.numFields()];
+		for(int i = 0; i < nulls.length; i++) {
+			nulls[i] = ctNullsPerCol;
+		}
+
+		TableStats withNulls = s.setNullStats(nulls);
+		assert(withNulls.totalTuples() == s.totalTuples() + ctNullsPerCol);
+		return withNulls;
+	}
+
+	public List<Integer> getAllIndices(int tableId) {
+		TupleDesc schema = Database.getCatalog().getTupleDesc(tableId);
+		List<Integer> indices = new ArrayList<>();
+		for(int i = 0 ; i < schema.numFields(); i++) {
+			indices.add(i);
+		}
+		return indices;
+	}
+
+
+	public void checkDistributionEquivalence(TableStats dist1, TableStats dist2, int col1, int col2, int len) {
+		final int maxCellVal = 32;	// Tuple values are randomized between 0 and this number
+
+		final Field aboveMax = new IntField(maxCellVal + 10);
+		final Field atMax = new IntField(maxCellVal);
+		final Field halfMaxMin = new IntField(maxCellVal/2);
+		final Field atMin = new IntField(0);
+		final Field belowMin = new IntField(-10);
+
+		for ( ; len >= 1; col1++, col2++, len--) {
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.EQUALS, aboveMax), dist2.estimateSelectivity(col2, Predicate.Op.EQUALS, aboveMax), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.EQUALS, halfMaxMin), dist2.estimateSelectivity(col2, Predicate.Op.EQUALS, halfMaxMin), 0.015);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.EQUALS, belowMin), dist2.estimateSelectivity(col2, Predicate.Op.EQUALS, belowMin), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.NOT_EQUALS, aboveMax), dist2.estimateSelectivity(col2, Predicate.Op.NOT_EQUALS, aboveMax), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.NOT_EQUALS, halfMaxMin), dist2.estimateSelectivity(col2, Predicate.Op.NOT_EQUALS, halfMaxMin), 0.015);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.NOT_EQUALS, belowMin), dist2.estimateSelectivity(col2, Predicate.Op.NOT_EQUALS, belowMin), 0.015);
+
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN, aboveMax), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN, aboveMax), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN, atMax), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN, atMax), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN, halfMaxMin), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN, halfMaxMin), 0.1);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN, atMin), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN, atMin), 0.05);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN, belowMin), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN, belowMin), 0.001);
+
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN, aboveMax), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN, aboveMax), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN, atMax), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN, atMax), 0.015);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN, halfMaxMin), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN, halfMaxMin), 0.1);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN, atMin), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN, atMin), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN, belowMin), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN, belowMin), 0.001);
+
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN_OR_EQ, aboveMax), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN_OR_EQ, aboveMax), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN_OR_EQ, atMax), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN_OR_EQ, atMax), 0.015);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN_OR_EQ, halfMaxMin), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN_OR_EQ, halfMaxMin), 0.1);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN_OR_EQ, atMin), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN_OR_EQ, atMin), 0.015);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.GREATER_THAN_OR_EQ, belowMin), dist2.estimateSelectivity(col2, Predicate.Op.GREATER_THAN_OR_EQ, belowMin), 0.001);
+
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN_OR_EQ, aboveMax), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN_OR_EQ, aboveMax), 0.001);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN_OR_EQ, atMax), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN_OR_EQ, atMax), 0.015);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN_OR_EQ, halfMaxMin), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN_OR_EQ, halfMaxMin), 0.1);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN_OR_EQ, atMin), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN_OR_EQ, atMin), 0.05);
+			Assert.assertEquals(dist1.estimateSelectivity(col1, Predicate.Op.LESS_THAN_OR_EQ, belowMin), dist2.estimateSelectivity(col2, Predicate.Op.LESS_THAN_OR_EQ, belowMin), 0.001);
+		}
+	}
+
+
+	// checks invariant that imputations etc result in same distribution
+	@Test public void adjustForImputeTest() {
+		int ctNullPerCol = 100;
+		TableStats withNulls = statsWithNulls(this.tableId, ctNullPerCol);
+		// original distribution without nulls
+		TableStats orig = new TableStats(this.tableId, IO_COST);
+
+		// impute all columns
+		List<Integer> imputeIndices = getAllIndices(this.tableId);
+
+		// dropping missing values
+		TableStats drop = withNulls.adjustForImpute(ImputationType.DROP, imputeIndices);
+		Assert.assertEquals(withNulls.totalTuples() - ctNullPerCol, drop.totalTuples(), 1);
+		checkDistributionEquivalence(orig, drop, 0, 0, 10);
+
+		// minimal imputation
+		TableStats min = withNulls.adjustForImpute(ImputationType.MINIMAL, imputeIndices);
+		Assert.assertEquals(withNulls.totalTuples(), min.totalTuples(), 1);
+		checkDistributionEquivalence(orig, min, 0, 0, 10);
+		// maximal imputation
+		TableStats max = withNulls.adjustForImpute(ImputationType.MAXIMAL, imputeIndices);
+		Assert.assertEquals(withNulls.totalTuples(), max.totalTuples(), 1);
+		checkDistributionEquivalence(orig, max, 0, 0, 10);
+	}
+
+
+	@Test public void adjustForSelectivityTest() {
+		int ctNullPerCol = 100;
+		TableStats withNulls = statsWithNulls(this.tableId, ctNullPerCol);
+		TableStats orig = new TableStats(this.tableId, IO_COST);
+
+		double selectivity = 0.5;
+		// adjusted without nulls
+		TableStats adjNoNulls = orig.adjustForSelectivity(selectivity);
+		Assert.assertEquals(orig.totalTuples() * selectivity, adjNoNulls.totalTuples(), 1);
+		checkDistributionEquivalence(orig, adjNoNulls, 0, 0, 10);
+
+		// adjusted with nulls
+		TableStats adjNulls = withNulls.adjustForSelectivity(selectivity);
+		// check nulls
+		List<Integer> ix0 = Collections.singletonList(0);
+		double expectedNulls = withNulls.estimateTotalNull(ix0) * selectivity;
+		Assert.assertEquals(expectedNulls, adjNulls.estimateTotalNull(ix0), 0.01);
+		// check total count
+		Assert.assertEquals(withNulls.totalTuples() * selectivity, adjNulls.totalTuples(), 1);
+		checkDistributionEquivalence(orig, adjNulls, 0, 0, 10);
+	}
+
+	@Test public void adjustToTotalTest() {
+		int ctNullPerCol = 100;
+		TableStats withNulls = statsWithNulls(this.tableId, ctNullPerCol);
+		TableStats orig = new TableStats(this.tableId, IO_COST);
+		int scaledPopulation = 1000000;
+
+		// adjusted without nulls
+		TableStats adjNoNulls = orig.adjustToTotal(scaledPopulation);
+		Assert.assertEquals(scaledPopulation, adjNoNulls.totalTuples(), 1);
+		checkDistributionEquivalence(orig, adjNoNulls, 0, 0, 10);
+
+		// adjusted with nulls
+		TableStats adjNulls = withNulls.adjustToTotal(scaledPopulation);
+		Assert.assertEquals(adjNulls.totalTuples(), scaledPopulation, 1);
+		// check nulls
+		List<Integer> ix0 = Collections.singletonList(0);
+		double expectedNulls = (withNulls.estimateTotalNull(ix0) / withNulls.totalTuples()) * scaledPopulation;
+		// check total count
+		Assert.assertEquals(adjNulls.estimateTotalNull(Collections.singletonList(1)), expectedNulls, 1);
+		checkDistributionEquivalence(orig, adjNulls, 0, 0, 10);
+
+	}
+
+	@Test public void mergeTest() {
+		TableStats t1 = new TableStats(this.tableId, IO_COST);
+		TableStats t2 = new TableStats(this.tableId2, IO_COST);
+		TableStats merged = t1.merge(t2);
+		Assert.assertEquals(t1.totalTuples(), merged.totalTuples());
+		Assert.assertEquals(t2.totalTuples(), merged.totalTuples());
+
+		// check that first half is the same as t1
+		checkDistributionEquivalence(t1, merged, 0, 0, 10);
+
+		// check that second half is the same as t2
+		checkDistributionEquivalence(t2, merged, 0, 10, 10);
+
 	}
 }

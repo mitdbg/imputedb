@@ -34,7 +34,8 @@
     <path id="classpath.test">
         <path refid="classpath.base"/>
         <pathelement location="${build.test}"/>
-        <pathelement location="${lib}/junit-4.5.jar"/>
+        <pathelement location="${lib}/junit-4.12.jar"/>
+        <pathelement location="${lib}/hamcrest-core-1.3.jar"/>
         <pathelement location="${lib}/javassist-3.16.1-GA.jar"/>
     </path>
     <!-- Common macro for compiling Java source -->
@@ -61,7 +62,7 @@
         <element name="testspecification" implicit="yes" />
         <sequential>
             <!-- timeout at 10.5 minutes, since TransactionTest is limited to 10 minutes. -->
-            <junit printsummary="on" fork="yes" timeout="630000" haltonfailure="@{haltonfailure}" maxmemory="128M" failureproperty="junit.failed">
+            <junit printsummary="on" fork="yes" timeout="630000" haltonfailure="@{haltonfailure}" maxmemory="1024M" failureproperty="junit.failed">
                 <classpath refid="classpath.test" />
                 <formatter type="plain" usefile="false"/>
                 <assertions><enable/></assertions>
@@ -102,9 +103,15 @@
     &lt;classpathentry kind=&quot;con&quot; path=&quot;org.eclipse.jdt.launching.JRE_CONTAINER&quot;/&gt;
     &lt;classpathentry kind=&quot;output&quot; path=&quot;bin/src&quot;/&gt;
     </echo>
-    <if> <available file="${lib}/junit-4.5.jar" /> <then>
+    <if> <available file="${lib}/junit-4.12.jar" /> <then>
             <echo file=".classpath" append="true">
-                &lt;classpathentry kind=&quot;lib&quot; path=&quot;lib/junit-4.5.jar&quot;/&gt;
+                &lt;classpathentry kind=&quot;lib&quot; path=&quot;lib/junit-4.12.jar&quot;/&gt;
+            </echo>
+        </then>
+    </if>
+    <if> <available file="${lib}/hamcrest-core-1.3.jar" /> <then>
+            <echo file=".classpath" append="true">
+                &lt;classpathentry kind=&quot;lib&quot; path=&quot;lib/hamcrest-core-1.3.jar&quot;/&gt;
             </echo>
         </then>
     </if>
@@ -174,6 +181,12 @@
     <copy todir="${build}" flatten="true">
         <fileset dir="${src}">
             <include name="bin/*.sh"/>
+        </fileset>
+    </copy>
+    <!-- copy data in test folder too into src/ for running tests from command line -->
+    <copy todir="${build}/src">
+        <fileset dir="${testd}">
+            <include name="acstest/*"/>
         </fileset>
     </copy>
     </target>
