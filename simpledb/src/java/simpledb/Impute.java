@@ -2,6 +2,7 @@ package simpledb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public abstract class Impute extends Operator {
 
@@ -17,8 +18,18 @@ public abstract class Impute extends Operator {
         this.td = child.getTupleDesc();
         
         // Validate drop fields and convert to indices.
-        this.dropFields        = dropFields;
-        this.dropFieldsIndices = extractDropFieldsIndices(dropFields, td);
+        if (dropFields != null) {
+            this.dropFields = dropFields;
+        } else {
+            // if no fields provided, then we assume all fields are to be used
+            List<String> allFields = new ArrayList<>();
+            for(int i = 0; i < td.numFields(); i++) {
+                allFields.add(td.getFieldName(i));
+            }
+
+            this.dropFields = allFields;
+        }
+        this.dropFieldsIndices = extractDropFieldsIndices(this.dropFields, td);
     }
     
     public static Collection<Integer> extractDropFieldsIndices(Collection<String> dropFields, TupleDesc td){
@@ -61,6 +72,10 @@ public abstract class Impute extends Operator {
     @Override
     public TupleDesc getTupleDesc() {
         return td;
+    }
+
+    public Collection<String> getDropFields() {
+        return dropFields;
     }
 
 }

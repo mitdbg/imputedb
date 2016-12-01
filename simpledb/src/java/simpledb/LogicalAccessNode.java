@@ -76,7 +76,7 @@ public class LogicalAccessNode extends ImputedPlan {
 			if (required.isEmpty()) {
 				throw new BadImputation();
 			}
-			pp = new Drop(pp, requiredAttrs);
+			pp = new Drop(requiredAttrs, pp);
 			tableDirtySet.removeAll(required);
 			dirtySet = tableDirtySet;
 			loss = subplanTableStats.estimateTotalNull(requiredIdx);
@@ -96,7 +96,7 @@ public class LogicalAccessNode extends ImputedPlan {
 			}
 			loss = subplanTableStats.estimateTotalNull(requiredIdx) * Math.pow(LOSS_FACTOR, -totalData);
 			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost();
-			pp = new ImputeRandom(pp, requiredAttrs);
+			pp = new ImputeRandom(requiredAttrs, pp);
 			tableDirtySet.removeAll(required);
 			dirtySet = tableDirtySet;
 			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, requiredIdx);

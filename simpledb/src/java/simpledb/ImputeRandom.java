@@ -29,6 +29,10 @@ public class ImputeRandom extends Impute {
         buffer = new ArrayList<>();
         nextTupleIndex = 0;
     }
+
+    public ImputeRandom(DbIterator child) {
+        this(null, child);
+    }
     
     private void initRng(){
         random = new Random(GENERATOR_SEED);
