@@ -13,7 +13,7 @@ We introduce two new relational operators to perform imputation: impute ($\mu$) 
 \label{sec:placement}
 Imputation operators must be placed so that no relational operator receives a tuple containing null in an attribute that the operator examines, regardless of the state of the data in the base tables.
 
-Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan is associated with a set of dirty attributes $D$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each base table using the table statistics, which track the number of null values in each column. If we apply an imputation operator to a relation $R$ with a dirty set $D$, $\mu_C (R)$ or $\delta_C (R)$, the resulting query has a dirty set $D' = D \ C$.  Applying a projection $\pi_C(R)$ produces a dirty set $D' = D \cap C$. A join $R_1 \Join_\psi R_2$ with dirty sets $D_1$ and $D_2$  produces a dirty set $D' = D_1 \cup D_2$.  Filters do not change the dirty set. 
+Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan is associated with a set of dirty attributes $D$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each base table using the table statistics, which track the number of null values in each column. If we apply an imputation operator to a relation $R$ with a dirty set $D$, $\mu_C (R)$ or $\delta_C (R)$, the resulting query has a dirty set $D' = D \setminus C$.  Applying a projection $\pi_C(R)$ produces a dirty set $D' = D \cap C$. A join $R_1 \Join_\psi R_2$ with dirty sets $D_1$ and $D_2$  produces a dirty set $D' = D_1 \cup D_2$.  Filters do not change the dirty set. 
 
 The dirty set over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null without changing the dirty set, forcing an unnecessary imputation. We choose to over-approximate the dirty set to avoid the possibility of dropping a tuple that contains a null value without explicitly imputing the value or applying a drop operator.
 
@@ -55,57 +55,138 @@ To reduce the search space, we only consider the minimal imputation, the maximal
     \EndFunction
 
     \State
-
-    \Require{$Q$ is a set of query plans and $\Psi$ relates query plans with join predicates.}
-    \Function{OptJoin}{$Q, \Phi$}
-    \State $Q \gets \emptyset$
-    \For{$q \in Q$}
     
+  
+    \Require{$Q$ is a map from tables and dirty sets to optimal query plans (possibly with imputations), and $\Psi$ relates query plans with join predicates.}
+    \Ensure{Returns a set of optimal query plans for all joins, with distinct dirty sets.}
+    \Function{OptJoin}{$Q, \Phi$}
+    \For{$size \in 1...|\Psi|$}
+    	\State $S \gets subset(\Psi, size)$
+	\For{$\phi \in S$}
+		\State $S' \gets S \setminus \phi$
+			\If{$joins(S', \phi)$}
+				\State $S'_{plans} \gets Q(\Call{Rels}{S'})$
+				\State $(t, \_) \gets \Call{Rels}{\phi}$
+				\State $t_{plans} \gets Q(t)$
+				\For {$l, r \in t_{plans} \times S'_{plans}$}
+					\State $P_l \gets \Call{AddImpute}{l, \Call{Attrs}{\phi}}$
+					\State $P_r \gets \Call{AddImpute}{r, \Call{Attrs}{\phi}}$
+					\State \Call{Update}{Q, $\Call{OptRel}{ \{p_l \bowtie_{\phi} p_r | p_l \in P_l, p_r \in P_r \} }$}
+				\EndFor
+		\EndIf
+	\EndFor
     \EndFor
+    \State \Return{Q(\Call{Rels}{$\Phi$})}
     \EndFunction
   \end{algorithmic}
   \caption{An algorithm for query planning with imputations.}
 \end{algorithm}
 
-\begin{verbatim}		
-# For a set of tables (with filter predicates) and join predicates, return the optimal plans.
-OptJoin(T⁆, join_preds):
-	Q = empty
-	for t, pred in T:
-		S = T \ {t, pred}
-		# Get the optimal plans for the left and right arguments to the join.
-		for r_l, r_r in OptJoin(S) x OptFilter(t, pred):
-			if r_l, r_r in join_preds:
-				# Add imputation to the left and right arguments.
-				Q = Q union OptRel(Join(r_l', r_r') for r_l' in AddImpute(r_l, Attrs(join_pred)), r_r' in AddImpute(r_r, Attrs(join_pred)))
-	return OptRel(Q)
-# Extended cost calculation to account for information loss/computation cost in imputations
-Cost(q):
-  case drop_min(q', d) =>  info_loss(drop, q', attrs(q') intersect d) + Cost(q')
-  case impute_all(q') => info_loss(impute, q', attr(q')) + impute_cost(q') + Cost(q')
-  case impute_min(q', d) => info_loss(impute, q', attrs(q') intersect d) + impute_cost(q'[d]) + Cost(q')
-  case _ => normal cost calculation
-
-  
-info_loss(op, t, a):
-    # beta: some scaling factor
-    case info_loss(drop, t, a) => beta * sum(for ct_missing(t.a) in a)
-    case info_loss(impute, t, a) => beta *sum(for ct_missing(t.a) / ct_complete(t) in a)
-
-impute_cost(t):
-  # alpha: some scaling factor
-  alpha * (ntuples(t) + ct(attr(t)))
-\end{verbatim}
+%\begin{verbatim}		
+%# For a set of tables (with filter predicates) and join predicates, return the optimal plans.
+%OptJoin(T⁆, join_preds):
+%	Q = empty
+%	for t, pred in T:
+%		S = T \ {t, pred}
+%		# Get the optimal plans for the left and right arguments to the join.
+%		for r_l, r_r in OptJoin(S) x OptFilter(t, pred):
+%			if r_l, r_r in join_preds:
+%				# Add imputation to the left and right arguments.
+%				Q = Q union OptRel(Join(r_l', r_r') for r_l' in AddImpute(r_l, Attrs(join_pred)), r_r' in AddImpute(r_r, Attrs(join_pred)))
+%	return OptRel(Q)
+%# Extended cost calculation to account for information loss/computation cost in imputations
+%Cost(q):
+%case drop_min(q', d) =>  info_loss(drop, q', attrs(q') intersect d) + Cost(q')
+%case impute_all(q') => info_loss(impute, q', attr(q')) + impute_cost(q') + Cost(q')
+%case impute_min(q', d) => info_loss(impute, q', attrs(q') intersect d) + impute_cost(q'[d]) + Cost(q')
+%case _ => normal cost calculation
+%
+%
+%info_loss(op, t, a):
+%# beta: some scaling factor
+%case info_loss(drop, t, a) => beta * sum(for ct_missing(t.a) in a)
+%case info_loss(impute, t, a) => beta *sum(for ct_missing(t.a) / ct_complete(t) in a)
+%
+%impute_cost(t):
+%# alpha: some scaling factor
+%alpha * (ntuples(t) + ct(attr(t)))
+%\end{verbatim}
 
 \subsection{Histogram computation}
-Histogram adjustment algorithm:
-Invariant: the distribution of non-null values is preserved
-Drop(t, ix) => remove nulls from t table statistics for indices ix
-Impute(t, ix) => redistribute nulls from t table statistics for indices ix to other buckets based on existing distribution
-Filter(t, predicate) => scale all buckets of t table statistics and null counts by predicate selectivity
-Join(t1, t2) => estimate cardinality of join result (following selinger, if non-equality, then 30% of product,
-If equality and no primary/foreign key relationship then the maximum of the two cardinalities, otherwise
-If equality and primary/foreign key relationship then the size ofthe foreign key relationship table). Scale t1's statistics and null counts to total the new cardinality estimate. Do same for t2. Union histograms.
+In order to correctly estimate the imputation cost and computation time parameters in our cost model,  the system must have updated cardinality estimates
+at each point in a query plan. These cardinality estimates can be impacted not just be filtering or joining, as in the traditional relational calculus, but also by
+the imputation operators. For example,  dropping versus imputing tuples has a clearly different effect on cardinality. For simplicity of design,
+each of the logical nodes in a query plan keeps a reference to a set of histograms. The optimizer creates a copy-on-write of the histograms and modifies them
+as necessary to account for new operations in the plan. In all cases, modifications maintain as an invariant that the distribution of data in the new histogram
+matches the distribution (but not necessarily the cardinality) of the original statistics. Algorithm~\ref{algo:histogram-transformation} provides the details
+of our implementation.
+
+
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \Require{$H$ is a map from attribute names to histograms, $op$ is an operator node in a logical query plan}
+    \Ensure{Returns an updated $H$, such that the distribution of data matches the original $H$}
+    
+    \Function{UpdateHistogram}{$H, op$}
+    	\If{$op \not\in \{\delta, \mu, \sigma, \bowtie \}$}
+		\Return{H}
+	\EndIf
+	\State $H' \gets \Call{Copy}{H}$
+    	\If{op = $\delta_C$}
+		\For{$c \in C$}
+			\State $H'[c][null] \gets 0$
+		\EndFor
+	\ElsIf{op = $\mu_C$}
+		\For{$c \in C$}
+			\State \Call{Add}{$H'[c], H'[c][null]$}
+		\EndFor
+	\ElsIf{op = $\sigma$}
+		\State \Call{ScaleBy}{H',  \Call{Selectivity}{$\sigma$}}
+	\ElsIf{op = $\bowtie_\phi$}
+		\State \Call{ScaleTo}{H', \Call{Cardinality}{$\bowtie_{\phi}$}}
+	\EndIf
+	\Return{H'}
+    \EndFunction
+  \end{algorithmic}
+  \caption{An algorithm for in-plan histogram updates}
+  \label{algo:histogram-transformation}
+\end{algorithm}
+
+\subsection{Imputation Strategies}
+The current version of the system uses an imputation strategy based on chained-equations regression trees (CERT) \todo{CITE}. Note that plugging in a new
+imputation strategy takes minimal effort, and doesn't require changes to the optimizer, so the system could in principle be tuned to a specific domain.
+The imputation algorithm is iterative in nature, and proceeds by repeatedly fitting regression trees to a subset of the data and the target imputation columns.
+In each iteration, the missing values of a column are replaced with newly imputed values. As the iterations proceed, the quality of the imputation
+should improve as values progressively reflect more accurate relationships amongst attributes. Algorithm~\ref{algo:imputation-strategy}
+provides details on the implementation.
+
+It is worth noting that given the nature of the imputation strategy used here, imputation operators become blocking in our system.
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \Require{$T$ is a table. $D$ is a set of $T$ attributes that need to be imputed, and $C$ is a set of $T$ attributes that has complete data }
+    \Ensure{Returns an imputed $T$}
+    
+    \Function{ImputeWithCERT}{$H, op$}
+    	\State $T' \gets \Call{ImputeRandom}{T, D}$
+	\For{$n\ EPOCHS$}
+		\For{$d \in D$}
+			\State $imp \gets \Call{TrainRT}{\pi_C(T'), \pi_d{T'}}$
+			\State $T' \gets (\pi_C(T'), \Call{PredictRT}{imp, T})$
+		\EndFor
+	\EndFor
+	\Return{T'}
+	\EndFunction
+  \end{algorithmic}
+  \caption{An algorithm for in-plan histogram updates}
+  \label{algo:histogram-transformation}
+\end{algorithm}
+
+
+
+
+\todo{Jose:Micah, take a look at the explanation above and see if it's missing anything (or is incorrect)}
 
 \subsection{Complexity}
 
