@@ -3,18 +3,20 @@ package simpledb;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class QueryPlanDotter {
     // current node identifier
     private int nodeId;
     // intermediate state of graph
-    private StringBuffer sb;
+    private StringBuilder sb;
 
     public QueryPlanDotter(){
         nodeId = 0;
-        sb = new StringBuffer();
+        sb = new StringBuilder();
     }
 
     /**
@@ -25,9 +27,9 @@ public class QueryPlanDotter {
     private int addNode(String msg) {
         nodeId++;
         sb.append(nodeId);
-        sb.append(" [label='");
+        sb.append(" [label=\"");
         sb.append(msg);
-        sb.append("'];\n");
+        sb.append("\"];\n");
         return nodeId;
     }
 
@@ -51,6 +53,7 @@ public class QueryPlanDotter {
      */
     private void buildGraph(DbIterator plan, int parentId) {
         String label;
+        DbIterator[] children;
         if (plan == null) {
             return;
         }
@@ -58,37 +61,61 @@ public class QueryPlanDotter {
         if (plan instanceof SeqScan) {
             SeqScan seq = (SeqScan) plan;
             label = "scan(" + (seq.getAlias() == null ? seq.getTableName() : seq.getAlias()) + ")";
+            children = null;
         } else {
             Operator operator = (Operator) plan;
-            DbIterator[] children = ((Operator) plan).getChildren();
+            children = ((Operator) plan).getChildren();
 
             if (operator instanceof Join) {
                 Join j = (Join) operator;
                 JoinPredicate jpred = j.getJoinPredicate();
-                label = "Join(" + jpred.getField1() + jpred.getOperator() + jpred.getField2() + ")";
+                String left = j.getJoinField1Name();
+                String right = j.getJoinField2Name();
+                label = "Join(" + left + jpred.getOperator() + right + ")";
             } else if (operator instanceof Aggregate) {
                 Aggregate a = (Aggregate) operator;
                 int gfield = a.groupField();
-                label = "Agg";
+                label = "Agg(" + a.aggregateFieldName() + ")";
                 if (gfield != Aggregator.NO_GROUPING) {
-                    label = "Agg + Group-by";
+                    label += "+ group(" + a.groupFieldName() +")";
                 }
             } else if (operator instanceof Project) {
-                label = "Project";
+                Project p = (Project) operator;
+                List<String> fieldNames = new ArrayList<>();
+                TupleDesc td = p.getTupleDesc();
+                for(int i = 0; i < td.numFields(); i++) {
+                    fieldNames.add(td.getFieldName(i));
+                }
+                label = "Project(" + Arrays.toString(fieldNames.toArray()) + ")";
+            } else if (operator instanceof Filter) {
+                Filter f = (Filter) operator;
+                String fieldName = f.getTupleDesc().getFieldName(f.getPredicate().getField());
+                label = "Filter(" + fieldName + ")";
             } else if (operator instanceof Impute) {
                 Impute imp = (Impute) operator;
-                List<QuantifiedName> imputed = imp.getImputedAttr();
-                label = "impute(" + Arrays.toString(imputed.toArray()) + ")";
-            } else if (operator instanceof Drop) {
-                Drop d = (Drop) operator;
-                List<QuantifiedName> dropped = d.getImputedAttr();
-                label = "drop(" + Arrays.toString(dropped.toArray()) + ")";
-            } else {
-                label = "Unknown Op";
-            }
+                Collection<String> imputed = imp.dropFields;
+                String oplabel;
+                if (imp instanceof Drop) {
+                    oplabel = "drop";
+                } else if (imp instanceof ImputeRandom) {
+                    oplabel = "impute_random";
+                } else if (imp instanceof ImputeTotallyRandom) {
+                    oplabel = "impute_total_random";
+                } else if (imp instanceof ImputeRegressionTree) {
+                    oplabel = "impute_tree";
+                } else {
+                    oplabel = "impute_unk";
+                }
 
-            int id = addNode(label);
-            addEdge(parentId, id);
+                label = oplabel + "(" + Arrays.toString(imputed.toArray()) + ")";
+            } else {
+                label = "Unk Op";
+            }
+        }
+
+        int id = addNode(label);
+        addEdge(id, parentId);
+        if (children != null) {
             for (DbIterator child : children) {
                 buildGraph(child, id);
             }
@@ -96,13 +123,18 @@ public class QueryPlanDotter {
     }
 
     public void initGraph() {
-        sb.append(" 0 [label = 'query'];\n");
+        sb.append("digraph g {\n0 [label=\"query\"];\n");
+    }
+
+    public void closeGraph() {
+        sb.append("}\n");
     }
 
     public static String draw(DbIterator plan) {
         QueryPlanDotter p = new QueryPlanDotter();
         p.initGraph();
         p.buildGraph(plan, 0);
+        p.closeGraph();
         return p.sb.toString();
     }
 
@@ -113,4 +145,7 @@ public class QueryPlanDotter {
         writer.write(graph);
         writer.close();
     }
+
+
+
 }

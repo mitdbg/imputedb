@@ -1,7 +1,15 @@
 package simpledb;
 
+import Zql.ZQuery;
+import Zql.ZStatement;
+import Zql.ZqlParser;
+
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
+import java.util.List;
 
 public class SimpleDb {
 	public static void main(String args[]) throws DbException, TransactionAbortedException, IOException {
@@ -108,6 +116,39 @@ public class SimpleDb {
 				e.printStackTrace();
 			}
 
+		} else if (args[0].equals("draw")) {
+			if (args.length != 4) {
+				System.out.println("Usage: simpledb draw catalog query_file output_prefix");
+				System.exit(-1);
+			}
+
+			Database.getCatalog().loadSchema(args[1]);
+			TableStats.computeStatistics();
+
+			Path path = Paths.get(args[2]);
+			String outputPrefix = args[3];
+
+			List<String> lines = Files.readAllLines(path);
+			StringBuilder sb = new StringBuilder();
+			for(String line : lines) {
+				sb.append(line);
+			}
+			String text = sb.toString();
+			String[] queries = text.split(";");
+			for(int i = 0; i < queries.length; i++) {
+				try {
+					String query = queries[i] + ";";
+					System.out.println("Query: " + query);
+					ZqlParser p = new ZqlParser(new ByteArrayInputStream(query.getBytes("UTF-8")));
+					ZStatement s = p.readStatement();
+					Parser pp = new Parser();
+					Query plan = pp.handleQueryStatement((ZQuery)s, new TransactionId());
+					String fileName = outputPrefix + "_" + i + ".dot";
+					QueryPlanDotter.print(plan.getPhysicalPlan(), fileName);
+				} catch (Zql.ParseException | ParsingException e) {
+					e.printStackTrace();
+				}
+			}
 		} else {
 			System.err.println("Unknown command: " + args[0]);
 			System.exit(1);
