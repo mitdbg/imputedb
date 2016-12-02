@@ -49,6 +49,10 @@ public class LogicalComposeImputation extends ImputedPlan {
 			return subplan;
 		}
 
+		if (Collections.disjoint(subplan.getDirtySet(), required) && (imp == MINIMAL || imp == DROP)) {
+			return subplan;
+		}
+
 		// which ones do we actually need to impute
 		Set<QuantifiedName> impute = new HashSet<>();
 		impute.addAll(subplan.getDirtySet());

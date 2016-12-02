@@ -391,7 +391,6 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			for(int fieldIx : outFields) {
 				// TODO: hackish!
 				String fieldNm = td.getFieldName(fieldIx);
-				System.out.println("Looking up: " + fieldNm);
 				String[] aliasAndAttr = fieldNm.split("\\.");
 				required.add(new QuantifiedName(aliasAndAttr[0], aliasAndAttr[1]));
 			}
