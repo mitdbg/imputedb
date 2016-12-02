@@ -19,7 +19,7 @@ public class DirtySet {
 	public static final HashSet<String> toAttrs(HashSet<QuantifiedName> dirty) {
 		HashSet<String> ret = new HashSet<String>();
 		for (QuantifiedName n : dirty) {
-			ret.add(n.attrName);
+			ret.add(n.toString());
 		}
 		return ret;
 	}
