@@ -67,7 +67,7 @@ public class AcsTestRule implements TestRule {
 		protected void before() {
 			Database.getCatalog().clear();
 			ClassLoader loader = CleanTest.class.getClassLoader();
-			File acsData = new File(loader.getResource("acstest/acs.dat").getFile());
+			File acsData = new File(loader.getResource("testdata/acs.dat").getFile());
 			Database.getCatalog().addTable(new HeapFile(acsData, SCHEMA), "acs", "");
 			TableStats.computeStatistics();
 		}

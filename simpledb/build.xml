@@ -186,7 +186,7 @@
     <!-- copy data in test folder too into src/ for running tests from command line -->
     <copy todir="${build}/src">
         <fileset dir="${testd}">
-            <include name="acstest/*"/>
+            <include name="testdata/*"/>
         </fileset>
     </copy>
     </target>
