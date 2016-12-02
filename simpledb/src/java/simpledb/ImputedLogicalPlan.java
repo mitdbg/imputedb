@@ -382,19 +382,35 @@ public class ImputedLogicalPlan extends LogicalPlan {
 					} catch (BadImputation e) {}
 				}
 			}
-		} 
-		
-		// Otherwise, select the plan of lowest cost.
+		}
 		else {
+			// Otherwise impute other outfields and select lowest cost plan
+
+			// retrieve quantified names of out fields
+			Set<QuantifiedName> required = new HashSet<>();
+			for(int fieldIx : outFields) {
+				// TODO: hackish!
+				String fieldNm = td.getFieldName(fieldIx);
+				System.out.println("Looking up: " + fieldNm);
+				String[] aliasAndAttr = fieldNm.split("\\.");
+				required.add(new QuantifiedName(aliasAndAttr[0], aliasAndAttr[1]));
+			}
+
+			// search over possible plans
 			for (Entry<Set<QuantifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
-				ImputedPlan plan = entry.getValue();
-				if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
-					bestPlan = plan;
+				for (ImputationType imp : ImputationType.values()) {
+					try {
+						ImputedPlan plan = LogicalComposeImputation.create(entry.getValue(), imp, required, null);
+						if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
+							bestPlan = plan;
+						}
+					} catch (BadImputation e) {}
 				}
 			}
 		}
 
 		DbIterator physicalPlan = bestPlan.getPlan();
+		// order-by can only be used on one of the projected fields, so no need to impute again
 		if (oByField != null) {
 			physicalPlan = new OrderBy(physicalPlan.getTupleDesc().fieldNameToIndex(oByField), oByAsc, physicalPlan);
 		}
