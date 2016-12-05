@@ -86,7 +86,7 @@ public class LogicalAccessNode extends ImputedPlan {
 		case MAXIMAL:
 			loss = subplanTableStats.estimateTotalNull() * Math.pow(LOSS_FACTOR, -totalData);
 			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost();
-			pp = new ImputeRandom(pp);
+			pp = new ImputeRegressionTree(DirtySet.toAttrs(tableDirtySet), pp);
 			dirtySet = new HashSet<QuantifiedName>();
 			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, requiredIdx);
 			break;
@@ -96,7 +96,7 @@ public class LogicalAccessNode extends ImputedPlan {
 			}
 			loss = subplanTableStats.estimateTotalNull(requiredIdx) * Math.pow(LOSS_FACTOR, -totalData);
 			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost();
-			pp = new ImputeRandom(requiredAttrs, pp);
+			pp = new ImputeRegressionTree(requiredAttrs, pp);
 			tableDirtySet.removeAll(required);
 			dirtySet = tableDirtySet;
 			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, requiredIdx);

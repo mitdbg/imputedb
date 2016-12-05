@@ -82,14 +82,14 @@ public class LogicalComposeImputation extends ImputedPlan {
 			adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
 		case MINIMAL:
-			physicalPlan = new ImputeRandom(toNames(impute), subplan.getPlan());
+			physicalPlan = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
 			dirtySet.removeAll(impute);
 			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
 			time = totalData;
 			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
 		case MAXIMAL:
-			physicalPlan = new ImputeRandom(toNames(subplan.getDirtySet()), subplan.getPlan());
+			physicalPlan = new ImputeRegressionTree(toNames(subplan.getDirtySet()), subplan.getPlan());
 			dirtySet.clear();
 			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
 			time = totalData;
