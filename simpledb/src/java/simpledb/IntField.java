@@ -18,6 +18,13 @@ public class IntField implements Field {
         }
         return value;
     }
+    
+    public int getValueDefault(int default_) {
+    	if (isMissing()) {
+            return default_;
+        }
+        return value;
+    }
 
     /**
      * Constructor.

@@ -71,4 +71,11 @@ public class DoubleField implements Field {
 	public double getValue() {
 		return value;
 	}
+	
+	public double getValueDefault(double default_) {
+    	if (isMissing()) {
+            return default_;
+        }
+        return value;
+    }
 }

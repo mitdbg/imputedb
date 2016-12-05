@@ -1,26 +1,46 @@
 package acstest;
 
-import java.io.*;
-import java.time.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
-import java.util.function.*;
+import java.util.function.Function;
 
 import org.junit.*;
-import Zql.*;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
+import Zql.ParseException;
+import Zql.ZQuery;
+import Zql.ZStatement;
+import Zql.ZqlParser;
 import simpledb.*;
 
+@RunWith(Parameterized.class)
 public class DirtyTest {
-	private static class SmudgeRandom extends SmudgePredicate {
-		private static final long serialVersionUID = -7180182613916428629L;
-
-		public SmudgeRandom(DbIterator child, QuantifiedName dirtyName, double d) {
-			super(child, dirtyName, d, x -> true);
-		}
-	}
-	
-	private static final int TABLE_SIZE = 5000;
+	@Parameters(name = "{index}: {0}")
+	public static Collection<Object[]> data() {
+		return Arrays.asList(new Object[][] {
+			{ "SELECT BLD FROM acs;" },
+			{ "SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;" },
+			{ "SELECT BATH as has_bath, COUNT(ST) as ct FROM acs GROUP BY BATH;" },
+			{ "SELECT ACR as lotsize, AVG(BDSP) as avg_num_bedrooms FROM acs GROUP BY ACR;" },
+			{ "SELECT PSF as has_sub_families, SUM(NP) as num_people FROM acs GROUP BY PSF;" },
+			{ "SELECT AVG(NP) as avg_num_people FROM acs;" },
+			{ "SELECT BDSP as num_bedrooms, AVG(ACR) as avg_lot_size FROM acs WHERE VEH >= 2 GROUP BY BDSP;" },
+			{ "SELECT MIN(YBL) as earliest_built_bucket FROM acs WHERE ACR = 3;" },
+			{ "SELECT MIN(RMSP) as min_num_rooms FROM acs WHERE RWAT=2;" },
+			{ "SELECT * FROM acs WHERE REFR = 1 AND STOV = 1 AND TEL = 1 AND TOIL = 2;" },
+			// simpledb cannot handle predicates vs other columns (only relative to constants)
+			{ "SELECT * FROM acs WHERE VEH >= 1 AND VEH <= 5 AND RMSP > 4;" }
+		});
+	};
 	
 	@ClassRule public static final AcsTestRule TEST_DB = new AcsTestRule();
+	
+	private static final int TABLE_SIZE = 5000;
 	
 	private static DbIterator planQuery(String query, Function<Void, LogicalPlan> planFactory) throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
 		ZqlParser p = new ZqlParser(new ByteArrayInputStream(query.getBytes("UTF-8")));
@@ -39,6 +59,13 @@ public class DirtyTest {
 		}
 	}
 	
+	private final String query;
+	
+	public DirtyTest(String query) {
+		this.query = query;
+	}
+	
+	
 	@BeforeClass
 	public static void Before() throws NoSuchElementException, DbException, TransactionAbortedException, IOException {
 		System.err.println("Creating new table with dirty data...");
@@ -51,20 +78,17 @@ public class DirtyTest {
 		TransactionId tid = new TransactionId();
 		new Insert(tid, new Limit(new SeqScan(tid, oldTblId), TABLE_SIZE), newTblIdC).next();
 		tid = new TransactionId();
-		new Insert(tid, new SmudgeRandom(new SeqScan(tid, newTblIdC), new QuantifiedName("acs_small_clean", "BDSP"), 0.1), newTblIdD).next();
+		new Insert(tid, new Smudge(new SeqScan(tid, newTblIdC), 0.1), newTblIdD).next();
 		TableStats.computeStatistics();
 		System.err.println("Done.");
 	}
 	
-	private final static Function<String, String> QUERY = 
-			tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
-	
-	@Test 
-	public void ErrorTest1() throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
+	@Test
+	public void errorTest() throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
 		System.err.println("Planning queries...");
-		DbIterator clean = planQuery(QUERY.apply("acs_small_clean"), x -> new LogicalPlan());
-		DbIterator imputedDirty = planQuery(QUERY.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.0)); 
-		DbIterator dirty = planQuery(QUERY.apply("acs_small_dirty"), x -> new LogicalPlan());
+		DbIterator clean = planQuery(query.replaceAll("acs", "acs_small_clean"), x -> new LogicalPlan());
+		DbIterator imputedDirty = planQuery(query.replaceAll("acs", "acs_small_dirty"), x -> new ImputedLogicalPlan(0.0)); 
+		DbIterator dirty = planQuery(query.replaceAll("acs", "acs_small_dirty"), x -> new LogicalPlan());
 		System.err.println("Done."); 
 		
 		clean.open();
@@ -84,26 +108,24 @@ public class DirtyTest {
 		double baseErr = clean.error(dirty);
 		clean.rewind();
 		double imputeErr = clean.error(imputedDirty);
-		Assert.assertTrue("Base error should be higher than imputed error.", baseErr >= imputeErr);
+		Assert.assertTrue(
+				String.format("Base error should be higher than imputed error. [base: %f, imputed: %f]", baseErr, imputeErr), 
+				baseErr >= imputeErr);
 	}
 	
 	@Test
-	public void SwitchFromDropToImputeTest() throws NoSuchElementException, DbException, TransactionAbortedException, IOException, ParseException, ParsingException {
+	public void switchTest() throws NoSuchElementException, DbException, TransactionAbortedException, IOException, ParseException, ParsingException {
 		final double step = 0.1;
-		final Function<String, String> query = 
-				tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
-		
-		System.err.println("Planning queries...");
-		
-		DbIterator imputedDirty = planQuery(query.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.0));
+		final String query = this.query.replaceAll("acs", "acs_small_dirty"); 
+
+		System.err.println("Planning queries...");		
+		DbIterator imputedDirty = planQuery(query, x -> new ImputedLogicalPlan(0.0));
 		imputedDirty.open();
 		Assert.assertTrue("Plan does not use drop at lowest quality setting.", imputedDirty.contains(Drop.class));
 		
 		for (double a = step; a <= 1.0; a += step) {
 			final double aa = a;
-			imputedDirty = planQuery(query.apply("acs_small_dirty"), x -> {
-				return new ImputedLogicalPlan(aa);
-			});
+			imputedDirty = planQuery(query, x -> { return new ImputedLogicalPlan(aa); });
 			imputedDirty.open();
 			if (imputedDirty.contains(ImputeRandom.class) || imputedDirty.contains(ImputeRegressionTree.class)) {
 				System.err.format("Switched from drop to impute at alpha %f.\n", aa);
@@ -118,13 +140,14 @@ public class DirtyTest {
 	@Test
 	public void TimeImputation() throws NoSuchElementException, DbException, TransactionAbortedException, IOException, ParseException, ParsingException {
 		final double step = 0.1;
+		final String query = this.query.replaceAll("acs", "acs_small_dirty"); 
 		final Duration[] times = new Duration[(int)(1.0 / step) + 1];
 		Instant start, end;
 		
 		System.err.println("Planning queries...");
 		
 		start = Instant.now();
-		DbIterator imputedDirty = planQuery(QUERY.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.0));
+		DbIterator imputedDirty = planQuery(query, x -> new ImputedLogicalPlan(0.0));
 		imputedDirty.open();
 		drain(imputedDirty);
 		end = Instant.now();
@@ -133,9 +156,7 @@ public class DirtyTest {
 		int t = 1;
 		for (double a = step; a <= 1.0; a += step) {
 			final double aa = a;
-			imputedDirty = planQuery(QUERY.apply("acs_small_dirty"), x -> {
-				return new ImputedLogicalPlan(aa);
-			});
+			imputedDirty = planQuery(query, x -> { return new ImputedLogicalPlan(aa); });
 			
 			start = Instant.now();
 			imputedDirty.open();
@@ -147,7 +168,8 @@ public class DirtyTest {
 			t++;
 		}
 		
-		Assert.assertTrue("Imputation should take longer than dropping.",
-				times[0].compareTo(times[times.length -1]) < 0);
+		Assert.assertTrue(
+				String.format("Imputation should take longer than dropping. [drop: %s, impute: %s]", times[0], times[times.length - 1]), 
+				times[0].compareTo(times[times.length - 1]) < 0);
 	}
 }
