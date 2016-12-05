@@ -35,6 +35,7 @@ public class TupleDesc implements Serializable {
     }
     
     private final TDItem[] schema;
+    private final int size;
 
     /**
      * @return
@@ -67,6 +68,12 @@ public class TupleDesc implements Serializable {
     	for (int i = 0; i < len; i++) {
     		schema[i] = new TDItem(typeAr[i], fieldAr[i]);
     	}
+    	
+    	int s = 0;
+        for (TDItem i : schema) {
+        	s += i.fieldType.length;
+        }
+        size = s;
     }
 
     /**
@@ -83,6 +90,12 @@ public class TupleDesc implements Serializable {
     	for (int i = 0; i < len; i++) {
     		schema[i] = new TDItem(typeAr[i], null);
     	}
+    	
+    	int s = 0;
+        for (TDItem i : schema) {
+        	s += i.fieldType.length;
+        }
+        size = s;
     }
     
     public TupleDesc(TupleDesc td, String prefix) {
@@ -90,6 +103,12 @@ public class TupleDesc implements Serializable {
     	for (int i = 0; i < td.schema.length; i++) {
     		schema[i] = new TDItem(td.schema[i].fieldType, prefix + "." + td.schema[i].fieldName);
     	}
+    	
+    	int s = 0;
+        for (TDItem i : schema) {
+        	s += i.fieldType.length;
+        }
+        size = s;
     }
     
     /**
@@ -97,6 +116,12 @@ public class TupleDesc implements Serializable {
      */
     private TupleDesc(TDItem[] schema) {
     	this.schema = schema;
+    	
+    	int s = 0;
+        for (TDItem i : schema) {
+        	s += i.fieldType.length;
+        }
+        size = s;
     }
 
     /**
@@ -189,10 +214,6 @@ public class TupleDesc implements Serializable {
      *         Note that tuples from a given TupleDesc are of a fixed size.
      */
     public int getSize() {
-        int size = 0;
-        for (TDItem i : schema) {
-        	size += i.fieldType.getLen();
-        }
         return size;
     }
 

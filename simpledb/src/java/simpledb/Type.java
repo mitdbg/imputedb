@@ -9,12 +9,7 @@ import java.io.*;
  * constructor is private.
  */
 public enum Type implements Serializable {
-    INT_TYPE() {
-        @Override
-        public int getLen() {
-            return 4;
-        }
-
+    INT_TYPE(4) {
         @Override
         public Field parse(DataInputStream dis) throws ParseException {
             try {
@@ -28,12 +23,7 @@ public enum Type implements Serializable {
                 throw new ParseException("couldn't parse", 0);
             }
         }
-    }, STRING_TYPE() {
-        @Override
-        public int getLen() {
-            return STRING_LEN+4;
-        }
-
+    }, STRING_TYPE(Defaults.STRING_LEN + 4) {
         @Override
         public Field parse(DataInputStream dis) throws ParseException {
             try {
@@ -51,12 +41,7 @@ public enum Type implements Serializable {
                 throw new ParseException("couldn't parse", 0);
             }
         }
-    }, DOUBLE_TYPE() {
-		@Override
-		public int getLen() {
-			return 8;
-		}
-
+    }, DOUBLE_TYPE(8) {
 		@Override
 		public Field parse(DataInputStream dis) throws ParseException {
 			try {
@@ -72,13 +57,21 @@ public enum Type implements Serializable {
 		}
     	
     };
+	
+	private static class Defaults {
+		public static final int STRING_LEN = 128;
+	}
+	
+	private Type(int length) {
+		this.length = length;
+	}
     
-    public static final int STRING_LEN = 128;
+    public static final int STRING_LEN = Defaults.STRING_LEN;
 
   /**
    * @return the number of bytes required to store a field of this type.
    */
-    public abstract int getLen();
+   public final int length;
 
   /**
    * @return a Field object of the same type as this object that has contents

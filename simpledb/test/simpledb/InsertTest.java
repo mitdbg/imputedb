@@ -53,7 +53,7 @@ public class InsertTest extends TestUtil.CreateHeapFile {
         op.next()));
 
     // we should fit on one page
-    assertEquals(1, empty.numPages());
+    assertEquals(1, empty.numPages);
   }
 
   /**

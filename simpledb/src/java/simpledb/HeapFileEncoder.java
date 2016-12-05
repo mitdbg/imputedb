@@ -107,7 +107,7 @@ public class HeapFileEncoder {
 
 		int nrecbytes = 0;
 		for (int i = 0; i < numFields; i++) {
-			nrecbytes += typeAr[i].getLen();
+			nrecbytes += typeAr[i].length;
 		}
 		// floor comes for free
 		final int nrecords = (npagebytes * 8) / (nrecbytes * 8 + 1); 

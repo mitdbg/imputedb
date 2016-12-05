@@ -39,10 +39,11 @@ public class BufferPoolWriteTest extends TestUtil.CreateHeapFile {
                 byte[] emptyData = HeapPage.createEmptyPageData();
                 bw.write(emptyData);
                 bw.close();
-    			HeapPage p = new HeapPage(new HeapPageId(super.getId(), super.numPages() - 1), 
+    			HeapPage p = new HeapPage(new HeapPageId(super.getId(), numPages - 1), 
     					HeapPage.createEmptyPageData());
     	        p.insertTuple(t);
     			dirtypages.add(p);
+    			numPages++;
     		}
     		return dirtypages;
     	}

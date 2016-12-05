@@ -24,7 +24,7 @@ public class TupleDescTest extends SimpleDbTestBase {
         // test td1.combine(td2)
         td3 = TupleDesc.merge(td1, td2);
         assertEquals(3 , td3.numFields());
-        assertEquals(3 * Type.INT_TYPE.getLen(), td3.getSize());
+        assertEquals(3 * Type.INT_TYPE.length, td3.getSize());
         for (int i = 0; i < 3; ++i)
             assertEquals(Type.INT_TYPE, td3.getFieldType(i));
         assertEquals(combinedStringArrays(td1, td2, td3), true);
@@ -32,7 +32,7 @@ public class TupleDescTest extends SimpleDbTestBase {
         // test td2.combine(td1)
         td3 = TupleDesc.merge(td2, td1);
         assertEquals(3 , td3.numFields());
-        assertEquals(3 * Type.INT_TYPE.getLen(), td3.getSize());
+        assertEquals(3 * Type.INT_TYPE.length, td3.getSize());
         for (int i = 0; i < 3; ++i)
             assertEquals(Type.INT_TYPE, td3.getFieldType(i));
         assertEquals(combinedStringArrays(td2, td1, td3), true);
@@ -40,7 +40,7 @@ public class TupleDescTest extends SimpleDbTestBase {
         // test td2.combine(td2)
         td3 = TupleDesc.merge(td2, td2);
         assertEquals(4 , td3.numFields());
-        assertEquals(4 * Type.INT_TYPE.getLen(), td3.getSize());
+        assertEquals(4 * Type.INT_TYPE.length, td3.getSize());
         for (int i = 0; i < 4; ++i)
             assertEquals(Type.INT_TYPE, td3.getFieldType(i));
         assertEquals(combinedStringArrays(td2, td2, td3), true);
@@ -130,7 +130,7 @@ public class TupleDescTest extends SimpleDbTestBase {
 
         for (int len: lengths) {
             TupleDesc td = Utility.getTupleDesc(len);
-            assertEquals(len * Type.INT_TYPE.getLen(), td.getSize());
+            assertEquals(len * Type.INT_TYPE.length, td.getSize());
         }
     }
 

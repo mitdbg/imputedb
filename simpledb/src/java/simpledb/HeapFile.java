@@ -17,6 +17,8 @@ public class HeapFile implements DbFile {
 	private final int id;
 	private final File file;
 	private final TupleDesc schema;
+	
+	public int numPages;
 
     /**
      * Constructs a heap file backed by the specified file.
@@ -29,6 +31,7 @@ public class HeapFile implements DbFile {
         file = f;
         schema = td;
         id = f.getAbsoluteFile().hashCode();
+        numPages = (int) file.length() / BufferPool.getPageSize();
     }
 
     /**
@@ -86,13 +89,6 @@ public class HeapFile implements DbFile {
     	}
     }
 
-    /**
-     * Returns the number of pages in this HeapFile.
-     */
-    public int numPages() {
-        return (int)(file.length() / BufferPool.getPageSize());
-    }
-
     // see DbFile.java for javadocs
     public ArrayList<Page> insertTuple(TransactionId tid, Tuple t)
             throws DbException, IOException, TransactionAbortedException {
@@ -100,7 +96,7 @@ public class HeapFile implements DbFile {
     	HeapPage insertPage = null;
     
     	// Find a page with empty slots.
-    	for (int pageNum = 0; pageNum < numPages(); pageNum++) {
+    	for (int pageNum = 0; pageNum < numPages; pageNum++) {
     		HeapPageId pid = new HeapPageId(id, pageNum);
     		HeapPage page = (HeapPage)bp.getPage(tid, pid, Permissions.READ_WRITE);
     		if (page.getNumEmptySlots() > 0) {
@@ -114,7 +110,7 @@ public class HeapFile implements DbFile {
     	// of the file.
     	if (insertPage == null) {
     		try (RandomAccessFile fc = new RandomAccessFile(file, "rw")) {
-    			int pageNum = numPages();
+    			int pageNum = numPages;
         		int pageSize = BufferPool.getPageSize();
     			int pageOffset = pageNum * pageSize;
     			
@@ -123,6 +119,7 @@ public class HeapFile implements DbFile {
     			fc.write(buf);
     			
     			insertPage = (HeapPage)bp.getPage(tid, new HeapPageId(id, pageNum), Permissions.READ_WRITE);
+    			numPages++;
     		}
     	}
     	
@@ -160,7 +157,7 @@ public class HeapFile implements DbFile {
     	}
 		
 		public boolean hasNext() {
-			return pageNum < numPages();
+			return pageNum < numPages;
 		}
 
 		public HeapPage next() throws DbException, TransactionAbortedException {

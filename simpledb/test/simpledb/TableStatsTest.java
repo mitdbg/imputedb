@@ -46,7 +46,7 @@ public class TableStatsTest extends SimpleDbTestBase {
 		double[] ret = new double[ioCosts.length];
 		for(int i = 0; i < ioCosts.length; ++i) {
 			HeapFile hf = SystemTestUtil.createRandomHeapFile(1, 992*pageNums[i], 32, null, tuples);
-			Assert.assertEquals(pageNums[i], hf.numPages());			
+			Assert.assertEquals(pageNums[i], hf.numPages);			
 			String tableName = SystemTestUtil.getUUID();
 			Database.getCatalog().addTable(hf, tableName);
 			int tableId = Database.getCatalog().getTableId(tableName);
