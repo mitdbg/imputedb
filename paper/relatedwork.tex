@@ -1,4 +1,71 @@
 \section{Related Work}
+\subsection{Missing Values and Statistics}
+Imputation of missing values is a widely studied field within the statistics and machine
+learning communities. As highlighted in \cite{gelman2006data}, missing data
+can appear for a variety of reasons, including both random and conditioned on
+existing values (observed and missing). Methods in the statistical community
+focus on correctly modeling relationships between the attributes to factor in
+such varied forms of missingness.
+
+Burgette and Reiter introduce imputation of missing data using sequences
+of regression trees in \cite{burgette2010multiple}. \ProjectName{} uses
+this technique to impute missing values as needed in the generated query plan.
+The flexibility of this non-parametric imputation approach aligns well with the
+spirit of query optimization, which aims to reconcile performance with a declarative interface to
+data manipulation. By removing concerns for imputation, users executing queries
+in \ProjectName{} don't need to consider the potential nature of the missing data.
+
+In \cite{akande2015empirical}, Akande et al analyze the performance of various
+imputation techniques on American Community Survey data, "an ongoing survey
+that provides vital information on a yearly basis"\cite{censusbureau}. The authors
+use a common technique: multiple imputation, which imputes missing values
+with various strategies on the base data, computes aggregates, and then
+combines estimates of these aggregates to account for additional uncertainty across
+strategies. The computational difficulties of imputing on large base tables
+are well known and can limit approaches. For example, Akande finds that
+one of their approaches (MI-GLM) crashes when attempting to impute on data that
+includes variables with potentially large domains (ten categories specifically).
+ In contrast, \ProjectName{} allows users to specify a tradeoff
+between information loss and computational complexity (in terms of time). 
+Furthermore, the query planner's imputation is guided by the requirements of
+each specific query's operators, rather than requiring broad assumptions
+about query workloads.
+
+
+\subsection{Missing Values and Databases}
+There is a long history in the database community surrounding the
+treatment of nulls. As early as 1973, \cite{codd1973understanding}
+provides a treatment of the semantics of null. Multiple
+papers have described various (at times conflicting) treatments
+of nulls \cite{grant1977null}. \ProjectName's main design invariant - that no relational operator
+see attributes with missing values for attributes it must operate on - eliminates
+the need to handle null value semantics, while guaranteeing soundness (modulo
+imputation strategy) of the query evaluation.
+
+BayesDB \cite{mansinghka2015bayesdb} provides users with a simple interface to 
+leverage statistical inference techniques on a database. Non-experts
+can use a simple declarative language, akin to SQL, to specify models
+which allow missing value imputation, amongst other broader functionality.
+Experts can further customize strategies and express domain knowledge to
+improve performance and accuracy.
+
+While BayesDB can be used for value imputation, this step is not framed
+within the context of query planning, but rather as an explicit step, using the
+\verb|INFER| operation. 
+
+BayesDB provides a great alternative for bridging the gap between
+traditional databases and sophisticated modeling software. \ProjectName{}, in
+contrast, aims to remain squarely in the database realm, while allowing
+users to perform queries on a potentially larger subset of their data.
+
+\ProjectName's cost-based query planner 
+is partially based on the seminal work developed for System R's query planning\cite{blasgen1981system}.
+However, in contrast to System R, \ProjectName{} performs additional histogram transformations to account
+for the changing nature of missing values.
+
+
+
+
 
 %%% Local Variables:
 %%% mode: latex
