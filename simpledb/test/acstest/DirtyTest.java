@@ -1,6 +1,7 @@
 package acstest;
 
 import java.io.*;
+import java.time.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -17,7 +18,7 @@ public class DirtyTest {
 		}
 	}
 	
-	private static final int TABLE_SIZE = 1000;
+	private static final int TABLE_SIZE = 5000;
 	
 	@ClassRule public static final AcsTestRule TEST_DB = new AcsTestRule();
 	
@@ -26,6 +27,16 @@ public class DirtyTest {
 		ZStatement s = p.readStatement();
 		Parser pp = new Parser(planFactory);
 		return pp.handleQueryStatement((ZQuery)s, new TransactionId()).getPhysicalPlan();
+	}
+	
+	private static void drain(DbIterator iter) throws DbException, TransactionAbortedException {
+		while (iter.hasNext()) {
+			try {
+				iter.next();
+			} catch(NoSuchElementException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	@BeforeClass
@@ -45,15 +56,15 @@ public class DirtyTest {
 		System.err.println("Done.");
 	}
 	
+	private final static Function<String, String> QUERY = 
+			tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
+	
 	@Test 
-	public void ErrorTest() throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
-		final Function<String, String> query = 
-				tbl -> String.format("SELECT BLD as units_in_structure, AVG(BDSP) as estimate FROM %s GROUP BY BLD;", tbl);
-		
+	public void ErrorTest1() throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
 		System.err.println("Planning queries...");
-		DbIterator clean = planQuery(query.apply("acs_small_clean"), x -> new LogicalPlan());
-		DbIterator imputedDirty = planQuery(query.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.0)); 
-		DbIterator dirty = planQuery(query.apply("acs_small_dirty"), x -> new LogicalPlan());
+		DbIterator clean = planQuery(QUERY.apply("acs_small_clean"), x -> new LogicalPlan());
+		DbIterator imputedDirty = planQuery(QUERY.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.0)); 
+		DbIterator dirty = planQuery(QUERY.apply("acs_small_dirty"), x -> new LogicalPlan());
 		System.err.println("Done."); 
 		
 		clean.open();
@@ -102,5 +113,41 @@ public class DirtyTest {
 			Assert.assertTrue("Plan contains neither drop nor impute.", imputedDirty.contains(Drop.class));
 		}
 		Assert.fail("Never switched from drop to impute.");
+	}
+	
+	@Test
+	public void TimeImputation() throws NoSuchElementException, DbException, TransactionAbortedException, IOException, ParseException, ParsingException {
+		final double step = 0.1;
+		final Duration[] times = new Duration[(int)(1.0 / step) + 1];
+		Instant start, end;
+		
+		System.err.println("Planning queries...");
+		
+		start = Instant.now();
+		DbIterator imputedDirty = planQuery(QUERY.apply("acs_small_dirty"), x -> new ImputedLogicalPlan(0.0));
+		imputedDirty.open();
+		drain(imputedDirty);
+		end = Instant.now();
+		times[0] = Duration.between(start, end);
+		
+		int t = 1;
+		for (double a = step; a <= 1.0; a += step) {
+			final double aa = a;
+			imputedDirty = planQuery(QUERY.apply("acs_small_dirty"), x -> {
+				return new ImputedLogicalPlan(aa);
+			});
+			
+			start = Instant.now();
+			imputedDirty.open();
+			drain(imputedDirty);
+			imputedDirty.close();
+			end = Instant.now();
+			times[t] = Duration.between(start, end);
+			
+			t++;
+		}
+		
+		Assert.assertTrue("Imputation should take longer than dropping.",
+				times[0].compareTo(times[times.length -1]) < 0);
 	}
 }
