@@ -14,9 +14,21 @@ import java.util.*;
  * @author Sam Madden
  */
 public class HeapFile implements DbFile {
+	private static class TupleId {
+		public final int pageNum;
+		public final int tupleNum;
+		
+		public TupleId(int pageNum, int tupleNum) {
+			this.pageNum = pageNum;
+			this.tupleNum = tupleNum;
+		}
+	}
+	
 	private final int id;
 	private final File file;
 	private final TupleDesc schema;
+	
+	private Integer firstEmpty;
 	
 	public int numPages;
 
@@ -32,6 +44,7 @@ public class HeapFile implements DbFile {
         schema = td;
         id = f.getAbsoluteFile().hashCode();
         numPages = (int) file.length() / BufferPool.getPageSize();
+        firstEmpty = null;
     }
 
     /**
@@ -93,23 +106,24 @@ public class HeapFile implements DbFile {
     public ArrayList<Page> insertTuple(TransactionId tid, Tuple t)
             throws DbException, IOException, TransactionAbortedException {
     	BufferPool bp = Database.getBufferPool();
-    	HeapPage insertPage = null;
-    
-    	// Find a page with empty slots.
-    	for (int pageNum = 0; pageNum < numPages; pageNum++) {
-    		HeapPageId pid = new HeapPageId(id, pageNum);
-    		HeapPage page = (HeapPage)bp.getPage(tid, pid, Permissions.READ_WRITE);
-    		if (page.getNumEmptySlots() > 0) {
-    			insertPage = page;
-    			break;
-    		}
-    		bp.releasePage(tid, pid);
+    	
+    	// If we haven't found the first page w/ empty slots, we need to.    	
+    	if (firstEmpty == null) {
+    		for (int pageNum = 0; pageNum < numPages; pageNum++) {
+        		HeapPageId pid = new HeapPageId(id, pageNum);
+        		HeapPage page = (HeapPage)bp.getPage(tid, pid, Permissions.READ_WRITE);
+        		if (page.getNumEmptySlots() > 0) {
+        			firstEmpty = pageNum;
+        			break;
+        		}
+        		bp.releasePage(tid, pid);
+        	}
     	}
     	
     	// If we didn't find a page with empty slots, add a new page to the end
     	// of the file.
-    	if (insertPage == null) {
-    		try (RandomAccessFile fc = new RandomAccessFile(file, "rw")) {
+		if (firstEmpty == null || firstEmpty >= numPages) {
+			try (RandomAccessFile fc = new RandomAccessFile(file, "rw")) {
     			int pageNum = numPages;
         		int pageSize = BufferPool.getPageSize();
     			int pageOffset = pageNum * pageSize;
@@ -118,12 +132,21 @@ public class HeapFile implements DbFile {
     			fc.seek(pageOffset);
     			fc.write(buf);
     			
-    			insertPage = (HeapPage)bp.getPage(tid, new HeapPageId(id, pageNum), Permissions.READ_WRITE);
+    			firstEmpty = pageNum;
     			numPages++;
     		}
-    	}
-    	
+		}
+		
+		HeapPage insertPage = (HeapPage)bp.getPage(tid, new HeapPageId(id, firstEmpty), Permissions.READ_WRITE);
     	insertPage.insertTuple(t);
+    	
+    	if (insertPage.getNumEmptySlots() == 0) {
+    		if (firstEmpty == numPages - 1) {
+    			firstEmpty++;
+    		} else {
+    			firstEmpty = null;
+    		}
+    	}
     	
     	ArrayList<Page> ret = new ArrayList<Page>();
         ret.add(insertPage);
@@ -138,9 +161,18 @@ public class HeapFile implements DbFile {
     		throw new DbException("Tuple not stored in this file.");
     	}
     	
+    	// Get the page with this tuple and delete it.
     	BufferPool bp = Database.getBufferPool();
-        HeapPage page = (HeapPage)bp.getPage(tid, rid.getPageId(), Permissions.READ_WRITE);
+        PageId pageId = rid.getPageId();
+		HeapPage page = (HeapPage)bp.getPage(tid, pageId, Permissions.READ_WRITE);
         page.deleteTuple(t);
+        
+        // If we've found the first page with empty slots, and this precedes it, update.
+        // (if we haven't found that page, this might not be it, so updating is unsafe).
+        int pageNumber = pageId.getPageNumber();
+		if (firstEmpty != null && pageNumber < firstEmpty) {
+        	firstEmpty = pageNumber;
+        }
                 
         ArrayList<Page> ret = new ArrayList<Page>();
         ret.add(page);

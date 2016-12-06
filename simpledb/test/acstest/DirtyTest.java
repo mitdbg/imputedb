@@ -76,7 +76,7 @@ public class DirtyTest {
 				newTblIdD = Database.getCatalog().getTableId("acs_small_dirty");
 		
 		TransactionId tid = new TransactionId();
-		new Insert(tid, new Limit(new SeqScan(tid, oldTblId), TABLE_SIZE), newTblIdC).next();
+		new Insert(tid, new SeqScan(tid, oldTblId), newTblIdC).next();
 		tid = new TransactionId();
 		new Insert(tid, new Smudge(new SeqScan(tid, newTblIdC), 0.1), newTblIdD).next();
 		TableStats.computeStatistics();
