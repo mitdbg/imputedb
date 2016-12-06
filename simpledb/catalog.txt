@@ -1,3 +1,5 @@
 data (f1 int, f2 int)
 missing (f1 int, f2 int)
+clean(f0 int,f1 int,f2 int,f3 int,f4 int,f5 int,f6 int,f7 int,f8 int,f9 int)
+dirty(f0 int,f1 int,f2 int,f3 int,f4 int,f5 int,f6 int,f7 int,f8 int,f9 int)
 acs (f0 int,f1 int,f2 int,f3 int,f4 int,f5 int,f6 int,f7 int,f8 int,f9 int,f10 int,f11 int,f12 int,f13 int,f14 int,f15 int,f16 int,f17 int,f18 int,f19 int,f20 int,f21 int,f22 int,f23 int,f24 int,f25 int,f26 int,f27 int,f28 int,f29 int,f30 int,f31 int,f32 int,f33 int,f34 int,f35 int,f36 int)
