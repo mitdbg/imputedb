@@ -1,6 +1,7 @@
 package acstest;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -34,12 +35,17 @@ public class DirtyTest {
 			{ "SELECT MIN(RMSP) as min_num_rooms FROM acs WHERE RWAT=2;" },
 			{ "SELECT * FROM acs WHERE REFR = 1 AND STOV = 1 AND TEL = 1 AND TOIL = 2;" },
 			// simpledb cannot handle predicates vs other columns (only relative to constants)
-			{ "SELECT * FROM acs WHERE VEH >= 1 AND VEH <= 5 AND RMSP > 4;" }
+			{ "SELECT * FROM acs WHERE VEH >= 1 AND VEH <= 5 AND RMSP > 4;" },
+			// queries on synthetic data
+			{ "SELECT * FROM dirty m where m.f1 >= 2;" },
+			{ "SELECT * FROM dirty where dirty.f1 <= 2;" },
+			{ "SELECT MAX(f2) as max_f2 FROM dirty GROUP BY dirty.f1;" },
+			{ "SELECT m1.f1, m1.f2 FROM dirty m1, clean m2 WHERE m1.f1 = m2.f1 and m1.f1 = 1 and m2.f2 = 69;" },
+			{ "SELECT d1.f1 FROM dirty d1, clean d2 WHERE d1.f1 = d2.f1 and d2.f2 = 50;"}
 		});
 	};
 	
 	@ClassRule public static final AcsTestRule TEST_DB = new AcsTestRule();
-	
 	private static final int TABLE_SIZE = 5000;
 	
 	private static DbIterator planQuery(String query, Function<Void, LogicalPlan> planFactory) throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
@@ -65,7 +71,23 @@ public class DirtyTest {
 		this.query = query;
 	}
 	
-	
+	public static void loadSyntheticData() {
+		int nfields = 10;
+		Type[] types = new Type[nfields];
+		String[] fields = new String[nfields];
+		for (int i = 0; i < types.length; i++) {
+			types[i] = Type.INT_TYPE;
+			fields[i] = "f" + i;
+		}
+		TupleDesc schema = new TupleDesc(types, fields);
+		ClassLoader loader = CleanTest.class.getClassLoader();
+		File cleanData = new File(loader.getResource("testdata/clean.dat").getFile());
+		Database.getCatalog().addTable(new HeapFile(cleanData, schema), "clean", "");
+		File dirtyData = new File(loader.getResource("testdata/dirty.dat").getFile());
+		Database.getCatalog().addTable(new HeapFile(dirtyData, schema), "dirty", "");
+	}
+
+
 	@BeforeClass
 	public static void Before() throws NoSuchElementException, DbException, TransactionAbortedException, IOException {
 		System.err.println("Creating new table with dirty data...");
@@ -74,7 +96,10 @@ public class DirtyTest {
 		int oldTblId = Database.getCatalog().getTableId("acs"),
 				newTblIdC = Database.getCatalog().getTableId("acs_small_clean"),
 				newTblIdD = Database.getCatalog().getTableId("acs_small_dirty");
-		
+
+		System.err.println("Adding synthetic data");
+		loadSyntheticData();
+		System.err.println("Inserting dirty acs data...");
 		TransactionId tid = new TransactionId();
 		new Insert(tid, new Limit(new SeqScan(tid, oldTblId), TABLE_SIZE), newTblIdC).next();
 		tid = new TransactionId();
