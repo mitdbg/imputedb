@@ -265,10 +265,10 @@ public class QueryPlanVisualizer {
             } else if (plan instanceof ImputeRandom || plan instanceof ImputeRegressionTree) {
                 Impute p = (Impute) plan;
                 String fields = "";
-                Iterator<TDItem> it = p.getTupleDesc().iterator();
-                while (it.hasNext())
-                    fields += it.next().fieldName + ",";
-                fields = fields.substring(0, fields.length() - 1);
+                for (String fieldName : p.getDropFields()) {
+                    fields += fieldName + ",";
+                }
+                fields = fields.length() == 0 ? fields : fields.substring(0, fields.length() - 1);
                 thisNode.text = String.format("%1$s(%2$s),card:%3$d", IMPUTE, fields, p.getEstimatedCardinality());
                 
                 int upBarShift = parentUpperBarStartShift;
