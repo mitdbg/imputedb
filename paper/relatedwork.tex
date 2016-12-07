@@ -38,7 +38,8 @@ treatment of nulls. As early as 1973, \cite{codd1973understanding}
 provides a treatment of the semantics of null. Multiple
 papers have described various (at times conflicting) treatments
 of nulls \cite{grant1977null}. \ProjectName's main design invariant - that no relational operator
-see attributes with missing values for attributes it must operate on - eliminates
+see attributes with missing values for attributes it must operate on and users should never see
+missing data - eliminates
 the need to handle null value semantics, while guaranteeing soundness (modulo
 imputation strategy) of the query evaluation.
 

@@ -8,8 +8,8 @@ This process is called \emph{imputation}.
 Although manual imputation may solve the problem of missing data, an imputation algorithm may be too complex for most users to implement, and may also be computationally expensive to run on a large dataset.
 Additionally, users may have different requirements for their queries: some users may need queries to be fast, regardless of accuracy while others prefer accurate results and are willing to wait for them.
 
-In this paper, we present \ProjectName, a database system which is designed to interact with a dirty dataset as though it were clean.
-The guiding design principle of \ProjectName is that the user should never see missing data or have to modify their queries to account for it.
+In this paper, we present \ProjectName{}, a database system which is designed to interact with a dirty dataset as though it were clean.
+The guiding design principle of \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
 To achieve this goal, we perform imputation on the fly, during query execution.
 We find that performing imputation during query execution allows our system to flexibly trade accuracy for computation time.
 
