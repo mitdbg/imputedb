@@ -64,8 +64,6 @@ public class LogicalComposeImputation extends ImputedPlan {
 		TupleDesc schema = subplan.getPlan().getTupleDesc();
 		double totalData = subplan.cardinality() * schema.numFields();
 
-		Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
-
 		DbIterator physicalPlan;
 		double loss, time;
 		// table stats for subplan
@@ -74,27 +72,34 @@ public class LogicalComposeImputation extends ImputedPlan {
 		TableStats adjustedTableStats;
 
 		switch (imp) {
-		case DROP:
+		case DROP: {
+			Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
 			physicalPlan = new Drop(toNames(impute), subplan.getPlan());
 			dirtySet.removeAll(impute);
 			loss = estimateNumNulls(subplan, imputeIndices);
 			time = subplan.cardinality();
 			adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
-		case MINIMAL:
+		}
+		case MINIMAL: {
+			Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
 			physicalPlan = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
 			dirtySet.removeAll(impute);
 			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
-			time = totalData;
+			time = subplan.cardinality() * imputeIndices.size();
 			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
-		case MAXIMAL:
-			physicalPlan = new ImputeRegressionTree(toNames(subplan.getDirtySet()), subplan.getPlan());
+		}
+		case MAXIMAL: {
+			Set<QuantifiedName> i = subplan.getDirtySet();
+			Collection<Integer> imputeIndices = schema.fieldNamesToIndices(i);
+			physicalPlan = new ImputeRegressionTree(toNames(i), subplan.getPlan());
 			dirtySet.clear();
 			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
-			time = totalData;
+			time = subplan.cardinality() * imputeIndices.size();
 			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
+		}
 		case NONE:
 			if (impute.isEmpty()) {
 				return subplan;

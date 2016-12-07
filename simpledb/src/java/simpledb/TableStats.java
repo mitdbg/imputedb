@@ -319,8 +319,8 @@ public class TableStats {
 		return ret;
 	}
 	
-	public double estimateImputeCost() {
-		return numTuples * schema.numFields();
+	public double estimateImputeCost(int numImputed) {
+		return numTuples * numImputed;
 	}
 
 
