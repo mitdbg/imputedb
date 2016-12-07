@@ -130,9 +130,16 @@ public class DirtyTest {
 		imputedDirty.rewind();
 		dirty.rewind();
 		
-		double baseErr = clean.error(dirty);
+		
+		Double baseErr = null, imputeErr = null;
+		try {
+			baseErr = clean.error(dirty);
+		} catch (BadErrorException e) {}
 		clean.rewind();
-		double imputeErr = clean.error(imputedDirty);
+		try {
+			imputeErr = clean.error(imputedDirty);
+		} catch (BadErrorException e) {}
+
 		Assert.assertTrue(
 				String.format("Base error should be higher than imputed error. [base: %f, imputed: %f]", baseErr, imputeErr), 
 				baseErr >= imputeErr);

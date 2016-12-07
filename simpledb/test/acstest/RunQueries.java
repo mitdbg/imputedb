@@ -15,6 +15,7 @@ import Zql.ParseException;
 import Zql.ZQuery;
 import Zql.ZStatement;
 import Zql.ZqlParser;
+import simpledb.BadErrorException;
 import simpledb.Database;
 import simpledb.DbException;
 import simpledb.DbIterator;
@@ -67,7 +68,7 @@ public class RunQueries {
 		Double baseErr = null;
 		try {
 			baseErr = clean.error(dirty);
-		} catch (UnsupportedOperationException e) {}
+		} catch (BadErrorException e) {}
 		dirty.close();
 		
 		for (double a = 0.9; a <= 1.0; a += 0.01) {
@@ -83,7 +84,10 @@ public class RunQueries {
 			
 			imputedDirty.rewind();
 			clean.rewind();
-			double imputeErr = clean.error(imputedDirty);
+			Double imputeErr = null;
+			try {
+				imputeErr = clean.error(imputedDirty);
+			} catch (BadErrorException e) {}
 			
 			outFile.write(String.format("\"%s\",%f,%f,%s,%s,%f\n", query, baseErr, imputeErr, 
 					Duration.between(startPlan, endPlan), Duration.between(startRun, endRun), a));

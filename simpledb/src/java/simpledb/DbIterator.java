@@ -66,17 +66,15 @@ public interface DbIterator extends Serializable {
 
 	public DbIterator[] getChildren();
 
-	public default double error(DbIterator other) throws DbException, TransactionAbortedException {
+	public default double error(DbIterator other) throws DbException, TransactionAbortedException, BadErrorException {
 		double err = 0.0;
 		int count = 0;
-		while (hasNext() || other.hasNext()) {
+		while (hasNext()) {
 			try {
-				if (hasNext() && other.hasNext()) {
+				if (other.hasNext()) {
 					err += next().error(other.next());
-				} else if (hasNext()) {
-					err += next().error();
 				} else {
-					err += other.next().error();
+					throw new BadErrorException();
 				}
 			} catch (NoSuchElementException e) {
 				throw new RuntimeException("BUG: No more tuples.");
