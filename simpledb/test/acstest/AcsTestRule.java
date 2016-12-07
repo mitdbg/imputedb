@@ -62,9 +62,9 @@ public class AcsTestRule implements TestRule {
 		SCHEMA = new TupleDesc(types, fields);
 	}
 	
-	private class DbInitializer extends ExternalResource {
+	public class DbInitializer extends ExternalResource {
 		@Override 
-		protected void before() {
+		public void before() {
 			Database.getCatalog().clear();
 			ClassLoader loader = CleanTest.class.getClassLoader();
 			File acsData = new File(loader.getResource("testdata/acs.dat").getFile());
@@ -73,7 +73,7 @@ public class AcsTestRule implements TestRule {
 		}
 	}
 	
-	private final DbInitializer initializer = new DbInitializer();
+	public final DbInitializer initializer = new DbInitializer();
 
 	@Override
 	public Statement apply(Statement arg0, Description arg1) {
