@@ -66,25 +66,26 @@ public interface DbIterator extends Serializable {
 
 	public DbIterator[] getChildren();
 
-	public default double error(DbIterator actual) throws DbException, TransactionAbortedException {
+	public default double error(DbIterator other) throws DbException, TransactionAbortedException {
 		double err = 0.0;
-		while (hasNext()) {
+		int count = 0;
+		while (hasNext() || other.hasNext()) {
 			try {
-				if (actual.hasNext()) {
-					err += next().error(actual.next());
-					// throw new RuntimeException("BUG: Iterators have different
-					// lengths.");
-				} else {
+				if (hasNext() && other.hasNext()) {
+					err += next().error(other.next());
+				} else if (hasNext()) {
 					err += next().error();
+				} else {
+					err += other.next().error();
 				}
-
 			} catch (NoSuchElementException e) {
 				throw new RuntimeException("BUG: No more tuples.");
 			}
+			count++;
 		}
-		return err;
+		return Math.sqrt(err) / count;
 	}
-
+	
 	public default void print(PrintStream strm) throws DbException, TransactionAbortedException {
 		while (hasNext()) {
 			strm.println(next());
