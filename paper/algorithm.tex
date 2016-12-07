@@ -226,6 +226,13 @@ It is worth noting that given the nature of the imputation strategy used here, i
 \todo{Jose:Micah, take a look at the explanation above and see if it's missing anything (or is incorrect)}
 
 \subsection{Complexity}
+Our optimization algorithm builds off the approach taken by System R\cite{blasgen1981system}, therefore our algorithm still operates in exponential time. Indeed, 
+note that if we remove our restriction on types of imputation($\delta_{min}, \mu_{min}, \mu_{max}$), and allow any arbitrary subset of attributes to be imputed,
+then every single operator in the query plan has a number of imputations exponential in the number of dirty columns. Our restriction, instead, increases the number
+of plans (in the worst case) at each operator by a factor of 3. Of course, this implies that in the worst case (where all dirty sets tracked are distinct throughout the query plan),
+we explore a number of plans that further scales the number of plans in the original algorithm by an exponential factor.
+
+However, we note that in all cases we have considered, this exponential blowup does not affect the practical performance of our optimizer.
 
 %%% Local Variables:
 %%% mode: latex
