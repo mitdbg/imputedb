@@ -15,7 +15,11 @@ public class LogicalAggregateNode extends ImputedPlan {
 		if (groupByField != null) {
 			required.add(groupByField);
 		}
-		required.add(aggField);
+		
+		// Count aggregation doesn't require the value.
+		if (!aggOp.equals(Aggregator.Op.COUNT)) {
+			required.add(aggField);
+		}
 
 		plan = LogicalComposeImputation.create(subplan, imp, required, tableMap);
 		TupleDesc schema = plan.getPlan().getTupleDesc();
