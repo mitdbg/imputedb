@@ -1,5 +1,41 @@
 \section{Conclusion}
 
+As shown in \ProjectName{}, missing values and their imputation can successfully be integrated into the relational calculus and
+existing plan optimization frameworks. We implement imputation actions, such as dropping or imputing values with a machine
+learning technique, as operators in the algebra and use a simple, but effective, cost model to consider tradeoffs in 
+information loss and time. In effect, user preferences for one or the other can be easily incorporated by adjusting a parameter.
+Simple histogram transformations
+provide incrementally updated cardinality estimates across operators in the plans, which allow us to provide more accurate cost estimates.
+By taking a dynamic programming approach, we can consider a variety of operator placements
+and input columns, while keeping planning tractable in real-world examples.
+
+In our experiments, we considered a series of analytic queries (using relevant aggregates) and set queries (with simple projections) on real-world
+American Community Survey data
+and showed that the chosen query plan improves accuracy of results relative to simply ignoring missing values. Furthermore,
+the variety of imputation operator placements across queries further emphasizes the lack of flexibility imposed by the coarse-grained
+pre-processing approach to imputation. By allowing different imputation strategies for different queries, we
+take a fine-grained approach to missing data, better addressing the often differing needs of database users.
+
+We highlight the long history of dealing with missing data both in the statistical learning and database communities.
+Similarly to existing work, we consider the impact of null values in databases and develop a simple set of invariants to 
+successfully plan around them. In contrast to the statistical learning work, our emphasis is not on the specific algorithm
+used to impute but rather on the timing of imputation in the execution of a query. In contrast to existing database work,
+we incorporate imputation into a cost-based optimizer and hide any details
+regarding missing values inside the system, allowing users to use traditional SQL and engage in normal workloads.
+
+\subsection{Future Work}
+\ProjectName{} opens up multiple avenues for further work. For instance, we could extend our minimal/maximal imputation
+operators to consider global information, such as the specific columns needed in operators higher up in the query plan.
+Our optimizer uses the same machine learning algorithm in all instances of imputation operators. Integrating multiple
+possible algorithms could allow for further fine-grained imputation. Finally, the underlying database for \ProjectName{}
+is far from a full-featured, production database, so a natural step is to integrate imputation planning in a widely-adopted
+production-quality database. This will likely expose further opportunities for improvement.
+
+
+
+
+
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "main"
