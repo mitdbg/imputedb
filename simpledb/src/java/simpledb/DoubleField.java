@@ -78,4 +78,12 @@ public class DoubleField implements Field {
         }
         return value;
     }
+
+	@Override
+	public String toString() {
+		if (isMissing()) {
+			return HeapFileEncoder.NULL_STRING;
+		}
+		return Double.toString(value);
+	}
 }
