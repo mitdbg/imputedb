@@ -11,6 +11,7 @@ public class IntegerAggregator implements Aggregator {
 	private interface Agg {
 		public void add(int v);
 		public int get();
+		public double get_double();
 	}
 	
 	private class MaxAgg implements Agg {
@@ -20,6 +21,9 @@ public class IntegerAggregator implements Aggregator {
 		}
 		public int get() {
 			return value;
+		}
+		public double get_double() {
+			throw new UnsupportedOperationException("no double for max");
 		}
 	}
 	
@@ -31,6 +35,9 @@ public class IntegerAggregator implements Aggregator {
 		public int get() {
 			return value;
 		}
+		public double get_double() {
+			throw new UnsupportedOperationException("no double for min");
+		}
 	}
 	
 	private class CountAgg implements Agg {
@@ -40,6 +47,9 @@ public class IntegerAggregator implements Aggregator {
 		}
 		public int get() {
 			return value;
+		}
+		public double get_double() {
+			throw new UnsupportedOperationException("no double for count");
 		}
 	}
 	
@@ -51,15 +61,21 @@ public class IntegerAggregator implements Aggregator {
 		public int get() {
 			return value;
 		}
+		public double get_double() {
+			throw new UnsupportedOperationException("no double for sum");
+		}
 	}
 	
 	private class AvgAgg implements Agg {
-		private int count = 0, total = 0;
+		private double count = 0, total = 0;
 		public void add(int v) {
 			total += v;
 			count++;
 		}
 		public int get() {
+			return (int) (total / count);
+		}
+		public double get_double() {
 			return total / count;
 		}
 	}
@@ -97,10 +113,11 @@ public class IntegerAggregator implements Aggregator {
         groups = new Hashtable<Field, Agg>();
         
         Type[] types;
+		Type aggType = (op == Op.AVG)?  Type.DOUBLE_TYPE : Type.INT_TYPE;
     	if (gbField == NO_GROUPING) {
-    		types = new Type[] { Type.INT_TYPE };
+			types = new Type[] { aggType};
     	} else {
-    		types = new Type[] { gbFieldType, Type.INT_TYPE };
+			types = new Type[] { gbFieldType, aggType };
     	}
     	schema = new TupleDesc(types); 
     }
@@ -183,10 +200,11 @@ public class IntegerAggregator implements Aggregator {
 				}
 				Field key = keys.nextElement();
 				Agg value = groups.get(key);
+				Field valField = (op == Op.AVG) ? new DoubleField(value.get_double()) : new IntField(value.get());
 				if (gbField == NO_GROUPING) {
-					return new Tuple(schema, new Field[] { new IntField(value.get()) });
+					return new Tuple(schema, new Field[] { valField });
 				} else {
-					return new Tuple(schema, new Field[] { key, new IntField(value.get()) });
+					return new Tuple(schema, new Field[] { key, valField });
 				}
 			}
 
