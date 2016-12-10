@@ -1,0 +1,210 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[activate={true,nocompatibility},final,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10]{microtype}
+\usepackage{amsfonts,amssymb,amsmath}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage[style=ieee]{biblatex}
+\usepackage{booktabs}
+\usepackage{hyperref} % load after other packages
+\usepackage{todonotes}
+\presetkeys{todonotes}{inline}{}
+
+
+\addbibresource{references.bib}
+
+\makeatletter
+\newcommand*{\centerfloat}{%
+  \parindent \z@
+  \leftskip \z@ \@plus 1fil \@minus \textwidth
+  \rightskip\leftskip
+  \parfillskip \z@skip}
+\makeatother
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\MakeRobust{\Call}
+
+\renewcommand{\emptyset}{\varnothing}
+
+\newcommand{\ProjectName}{ImputeDB}
+
+
+
+\title{\ProjectName{}: A Database for Missing Data}
+\author{Jose Cambronero \and Micah Smith \and John K. Feser}
+\institute{MIT}
+\date{\today{}}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Overview}
+\begin{itemize}
+	\item Handling incorrect or dirty data is a complex and challenging problem for data scientists
+	\item $\text{missing data} \subset \text{dirty data}$
+	\item Cost of running imputation on entire dataset
+	\item Lack of flexibility
+	\item \ProjectName{} allows users to interact with dataset as though it were clean.
+	\item User should never see missing data or have to modify query.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Motivating Example}
+\todo{motivating example}
+\end{frame}
+
+\begin{frame}[fragile]{Query Planning: Overview}
+\begin{itemize}
+	\item $\mu_{min}, \mu_{max}, \delta$: new relational algebra operators
+	\item Cost of computation vs. information loss: key tradeoff controlled by $\alpha$ parameter
+	\item Placement of operators and dirty sets generated considered in planning.
+	\item Histogram transformations used to provide up-to-date cardinality and missing value estimates during planning.
+	\item Dynamic programming approach, extends System R optimization\cite{blasgen1981system}
+	\item Exponential complexity, but tractable in practice with low planning times.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Query Planning: Top-Level Algorithm}
+
+\begin{algorithm}[H]
+ \begin{algorithmic}
+   \scriptsize
+   \Require{set of tables $T$, filter predicates $\Phi$, join predicates $\Psi$, a set of projection attributes $P$, optional set of grouping attributes $G$ and aggregator function $A$}
+   \Ensure{Returns optimized query plan.}
+   
+  \Function{Plan}{$T, \Phi, \Psi, P, G, A$}
+ \State  $Q \gets \{ \}$ \Comment{map from table and dirty set to plans }
+   \For{$t \in T$}
+   	\State $\phi \gets \Call{GetFilters}{t, \Phi}$
+	\State $P_{t} \gets \Call{OptFilter}{t, \phi}$
+	\State $Q \gets Q \cup \{ (t, \Call{Dirty}{q}) \mapsto q | q \in P_t \}$
+   \EndFor
+   
+   \State $M \gets \{ \}$ \Comment{map from dirty set to plans, contains all joins necessary}
+   \State $M \gets  \Call{OptJoin}{Q, \Psi}$	\Comment{optimize joins}
+   \If{$G \neq \emptyset \land A \neq NULL$}
+   	\State $attrs \gets \Call{Attrs}{G} \cup \Call{Attrs}{A}$
+   	\State $M \gets \Call{OptRel}{\bigcup_{q \in M} \Call{GroupBy}{\Call{AddImpute}{q, attrs}, G, A}}$
+   \Else
+  	\State $M \gets \Call{OptRel}{\bigcup_{q \in M} \pi_{P}(\Call{AddImpute}{q, P}) }$
+  \EndIf 
+   
+\Return $\argmin_{q \in M} Cost(q)$
+\EndFunction
+  
+  \end{algorithmic}
+  \caption{Top-level query planner with imputations.}
+\label{algo:top-level-planner}
+\end{algorithm}
+
+\end{frame}
+
+\begin{frame}[fragile]{Imputation Algorithm}
+\begin{itemize}
+	\item Iterative algorithm using regression trees: \textit{Chained Equations Regression Trees} (CERT)\cite{burgette2010multiple}
+	\item Significant cost to perform on entire dataset
+	\item \ProjectName{} allows flexible use
+\end{itemize}
+
+\begin{algorithm}[H]
+  \scriptsize
+  \begin{algorithmic}
+    \Require{$T$ is a table. $D$ is a set of $T$ attributes that need to be imputed, and $C$ is a set of $T$ attributes that has complete data }
+    \Ensure{Returns an imputed $T$}
+    
+    \Function{ImputeWithCERT}{$H, op$}
+    	\State $T' \gets \Call{ImputeRandom}{T, D}$
+	\For{$n\ EPOCHS$}
+		\For{$d \in D$}
+			\State $imp \gets \Call{TrainRT}{\pi_C(T'), \pi_d{T'}}$
+			\State $T' \gets (\pi_C(T'), \Call{PredictRT}{imp, T})$
+		\EndFor
+	\EndFor
+	\Return{T'}
+	\EndFunction
+  \end{algorithmic}
+  \caption{An algorithm for chained imputation using regression trees}
+  \label{algo:imputation-strategy}
+\end{algorithm}
+\end{frame}
+
+\begin{frame}[fragile]{Experiments: Data}
+\begin{itemize}
+	\item Real dataset: American Community Survey (U.S. Census Bureau)
+		\begin{itemize}
+			\item Preprocessed version courtesy of authors of~\cite{akande2015empirical}.
+			\item 671,153 rows and 37 columns, all integers.
+			\item Randomly deleted 10\% of fields to create dirtied variant
+			\item Can write typical data analyst queries involving filters and aggregates
+		\end{itemize}
+	\item Synthetic dataset: drawn from uniform distribution $[0,100)$
+		\begin{itemize}
+			\item10,000 rows and 10 columns
+			\item Randomly deleted 30\% ti create dirtied variant
+			\item Crafted ad-hoc queries using joins
+		\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Experiments: Queries}
+\begin{figure}
+  \centerfloat
+  \tiny
+  \input{../paper/queries}
+  \caption{The queries used in our experiments.}
+  \label{fig:queries}
+\end{figure}
+\end{frame}
+
+\begin{frame}[fragile]{Experiments: Results}
+\begin{figure}
+  \tiny
+  \centerfloat
+  \input{../paper/runtimes}
+  \caption{Running time and error for queries with different imputation levels.}
+  \label{fig:experiments}
+\end{figure}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{Related work}
+\begin{itemize}
+	\item Long history of imputation in statistical learning community.
+		\begin{itemize}
+			\item Akande et al (\cite{akande2015empirical}) explored ACS data to compare imputation strategies.
+			\item Burgette and Reiter (\cite{burgette2010multiple}) introduce sequences of regression trees.
+		\end{itemize}
+	\item Long history of null value semantics in database community.
+		\begin{itemize}
+			\item Treatment of nulls described as early as  \cite{codd1973understanding}
+			\item Statistical databases, such as BayesDB (\cite{mansinghka2015bayesdb}) combine statistical inference techniques and traditional querying.
+		\end{itemize}
+	\item \ProjectName{} first to integrate imputation into query planning with cost-based optimizer.
+	\item \ProjectName{} treatment of nulls completely abstracted from user perspective: SQL logical independence.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]{Conclusion and Future work}
+\begin{itemize}
+	\item Missing values and their imputation can successfully be integrated into the relational calculus
+	\item By taking a dynamic programming approach, we can consider a variety of operator placements
+and input columns, while keeping planning tractable in real-world examples.
+	\item Considered series of real-world and fabricated queries, showing viability of approach.
+	\item Future work:
+		\begin{itemize}
+			\item Extend imputation operators with global information (\textit{impute by need})
+			\item Introduce multiple imputation algorithms into optimizer for consideration in plans \
+			\item Implement in a production-quality database.
+		\end{itemize}
+\end{itemize}
+\end{frame}
+
+\end{document}
