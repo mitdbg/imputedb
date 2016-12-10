@@ -227,4 +227,30 @@ public class ImputeRegressionTree extends Impute {
         }
     }
 
+    /*
+     * For impute regression tree, we have that
+     * - fitting one decision tree is O(nm log n) where m is the number of dependent attributes
+     * - fitting one decision tree where we have m_c complete attributes and m_i
+     *   dirty attributes (thus subtract one which is being imputed) is O(n (m_c +
+     *   m_i - 1) log n)
+     * - fitting m_i decision trees is O(m_i n (m_c + m_i - 1) log (n))
+     * - fitting m_i decision trees, k times (where k is the number of
+     *   imputation epochs) is O(k * m_i * n * (m_c + m_i - 1) log (n))
+     * Note that these computations ignore
+     * - the cost of initializing the dirty attributes with an "impute random" strategy
+     * - the cost of pruning
+     * - a more sophisticated cost complexity calculation
+     * @see simpledb.Impute#getEstimatedCost(int, int, int)
+     */
+	@Override
+	public double getEstimatedCost(int numDirty, int numComplete, int numTuples) {
+		int m_c = numComplete;
+		int m_i = numDirty;
+		int n = numTuples;
+		int k = NUM_IMPUTATION_EPOCHS;
+		double T = k * m_i * n * (m_c + m_i - 1) * Math.log(n);
+		
+		return T;
+	}
+
 }
