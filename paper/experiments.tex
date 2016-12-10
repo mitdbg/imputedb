@@ -1,11 +1,38 @@
 \section{Experiments}
 
+To evaluate the performance of our system, we generated plans for queries on two data sets: the American Community Survey and a synthetic data set containing business information.\todo{Synthetic queries?}
+
+\subsection{Data sets}
+
+The American Community Survey provides a number of public data sets collected by the U.S. Census Bureau.
+We used a cleaned version of the 2012 Public Use Microdata Sample (PUMS) data kindly provided by the authors of~\cite{akande2015empirical}.
+The cleaning procedure is described in detail in~\cite{akande2015empirical}, but to summarize, the following data were removed:
+\begin{itemize}
+\item Rows corresponding to vacant houses or single occupant households.
+\item Identification variables (e.g. area codes, serial numbers).
+\item Flag variables.
+\item Continuous variables.
+\end{itemize}
+The final data set consists of a single table with 671,153 rows and 35 columns, where all column entries are integers.
+
+\todo{Describe synthetic data}
+
+\subsection{Queries}
+
+We collected a set of queries that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
+
+The queries on the ACS data all consist only of selections, filters, and aggregations.
+The ACS data is contained in a single table, so there are relatively few join queries that are interesting on this data set.
+However, even with select, filter, and aggregate, there are interesting choices to make with imputation placement.
+
 \begin{figure}
+  \centerfloat
   \input{queries}
   \caption{The queries used in our experiments.}
 \end{figure}
 
 \begin{figure}
+  \centerfloat
   \input{runtimes}
   \caption{Running time and error for queries with different imputation levels.}
 \end{figure}
