@@ -88,7 +88,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 			Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
 			physicalPlan = imputeOp;
 			dirtySet.removeAll(impute);
-			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
+			loss = estimateNumNulls(subplan, imputeIndices) * (1 / Math.sqrt(totalData));
 			int numComplete = schema.numFields() - dirtySet.size();
 			time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
 			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, imputeIndices);
@@ -100,7 +100,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 			Impute imputeOp = new ImputeRegressionTree(toNames(i), subplan.getPlan());
 			physicalPlan = imputeOp;
 			dirtySet.clear();
-			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
+			loss = estimateNumNulls(subplan, imputeIndices) * (1 / Math.sqrt(totalData));
 			int numComplete = schema.numFields() - dirtySet.size();
 			time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
 			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
