@@ -1,0 +1,13 @@
+\begin{tabular}{ll}
+\toprule
+\# & Query \\
+\midrule
+0 & \verb|SELECT BLD FROM acs;| \label{q0} \\
+1 & \verb|SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;| \label{q1} \\
+2 & \verb|SELECT BATH as has_bath, COUNT(ST) as ct FROM acs GROUP BY BATH;| \label{q2} \\
+3 & \verb|SELECT ACR as lotsize, AVG(BDSP) as avg_num_bedrooms FROM acs GROUP BY ACR;| \label{q3} \\
+4 & \verb|SELECT PSF as has_sub_families, SUM(NP) as num_people FROM acs GROUP BY PSF;| \label{q4} \\
+5 & \verb|SELECT AVG(NP) as avg_num_people FROM acs;| \label{q5} \\
+6 & \verb|SELECT BDSP as num_bedrooms, AVG(ACR) as avg_lot_size FROM acs WHERE VEH >= 2 GROUP BY BDSP;| \label{q6} \\
+\bottomrule
+\end{tabular}
