@@ -1,8 +1,11 @@
 \section{Algorithm}
 
-Our optimizer searches a restricted space (Sec.~\ref{sec:search-space}) of query plans for a plan that minimizes a metric which combines the cost of the query and the quality of the results.
+Our optimizer searches a restricted space (Sec.~\ref{sec:search-space}) of query plans for a plan that minimizes a metric (Sec.~\ref{sec:cost-model}) which combines the runtime cost of the query and the quality of the results.
 This plan must not emit any tuples which contain null values, regardless of the state of the base tables.
 Additionally, the traditional relational operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate) must never observe a null value.
+
+\subsection{Imputation operators}
+We introduce two new relational operators to perform imputation: impute ($\mu$) and drop ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of attributes and $R$ is a relation. Impute uses a machine learning method to replace all null values with non-null values for attributes in $C$ in the relation $R$. Drop simply removes from $R$ all tuples which have a null value for some attribute in $C$. Both operators guarantee that the resulting relation will contain no null values for attributes in $C$. 
 
 \subsection{Cost model}
 \label{sec:cost-model}
@@ -18,6 +21,7 @@ Algorithm~\ref{algo:histogram-transformation} describes the process of generatin
 
 The computation of $\text{Time}(Q)$ is standard and is comparable to the cost model used in any modern RDBMS.\@ Our runtime cost model is perhaps less sophisticated than most, as it is identical to the cost model in SimpleDB.
 
+\todo{Check loss calculation w/ Micah}
 $\text{Loss}(Q)$ is computed as follows.
 For each sub-query, in addition to a histogram, we keep track of the estimated number of null values in each column.
 \begin{align*}
@@ -34,10 +38,7 @@ The intuition behind this formula is that imputation performance should increase
 
 \subsection{Search space}
 \label{sec:search-space}
-To reduce the size of the query plan search space, only plans that fit the following template are considered. First, all filters are pushed to the leaves of the query tree, immediately after the scans. Joins are performed after filtering, and only left-deep plans are considered. Any group-by/aggregate will be performed after the final join. Finally, projections are placed at the root of the query tree. The space of query plans is similar to that considered by System R\cite{blasgen1981system}, with the addition of imputation operators appearing before/after traditional operators.
-
-\subsection{Imputation operators}
-We introduce two new relational operators to perform imputation: impute ($\mu$) and drop ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of attributes and $R$ is a relation. Impute uses a machine learning method to replace all null values with non-null values for attributes in $C$ in the relation $R$. Drop simply removes from $R$ all tuples which have a null value for some attribute in $C$. Both operators guarantee that the resulting relation will contain no null values for attributes in $C$. 
+To reduce the size of the query plan search space, only plans that fit the following template are considered. First, all filters are pushed to the leaves of the query tree, immediately after the scans. Joins are performed after filtering, and only left-deep plans are considered. Any group-by/aggregate will be performed after the final join. Finally, projections are placed at the root of the query tree. The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before/after traditional operators.
 
 \subsection{Imputation placement}
 \label{sec:placement}
@@ -48,7 +49,7 @@ Imputation operators can be placed at any point in the query plan, but to meet t
 The dirty set over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null without changing the dirty set, forcing an unnecessary imputation. We choose to over-approximate the dirty set to avoid the possibility of dropping a tuple that contains a null value without explicitly imputing the value or applying a drop operator.
 
 \subsection{Query planning}
-The input to our query planner is a tuple $(T, \Phi, \Psi, P, G, A)$: a set of tables $T$, a set of filter predicates $\phi_t, t \in T$, a set of join predicates $\psi_(t_1, t_2), t_1, t_2 \in T$, a set of attributes $P$, and an optional set of attributes $G$ and aggregator function $A \in \{\text{Max}, \text{Min}, \text{Sum}, \text{Avg}, \text{Count}\}$.
+The input to our query planner is a tuple $(T, \Phi, \Psi, P, G, A)$: a set of tables $T$, a set of filter predicates $\phi_t, t \in T$, a set of join predicates $\psi_(t_1, t_2), t_1, t_2 \in T$, a set of attributes $P$, and an optional set of attributes $G$ and aggregation function $A \in \{\text{Max}, \text{Min}, \text{Sum}, \text{Avg}, \text{Count}\}$.
 
 The query planner must select a join ordering in addition to placing imputation operators as described in Section~\ref{sec:placement}.
 
