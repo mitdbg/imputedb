@@ -4,7 +4,7 @@ At a high level, our goal is to select a query plan that minimizes a metric whic
 Precisely, we will find a query plan $Q$ that minimizes $\text{Cost}(Q) = \alpha \times \text{Time}(Q) + (1 - \alpha) \times \text{Loss}(Q)$. $\alpha$ is a parameter to the query optimizer that controls the emphasis on quality versus performance. $\alpha = 1.0$ means that the query should be as fast as possible, $\alpha=0.0$ means that the query should be as accurate as possible.
 
 \subsection{Search space}
-To reduce the size of the query plan search space, only plans that fit the following template are considered. First, all filters are pushed to the leaves of the query tree, immediately after the scans. Joins are performed after filtering, and only left-deep plans are considered. Any group-by/aggregate will be performed after the final join. Finally, projections are placed at the root of the query tree. The space of query plans is similar to that considered by Selinger \todo{Selinger cite}, with the addition of imputation operators appearing before/after traditional operators.
+To reduce the size of the query plan search space, only plans that fit the following template are considered. First, all filters are pushed to the leaves of the query tree, immediately after the scans. Joins are performed after filtering, and only left-deep plans are considered. Any group-by/aggregate will be performed after the final join. Finally, projections are placed at the root of the query tree. The space of query plans is similar to that considered by System R\cite{blasgen1981system}, with the addition of imputation operators appearing before/after traditional operators.
 
 \subsection{Imputation operators}
 We introduce two new relational operators to perform imputation: impute ($\mu$) and drop ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of attributes and $R$ is a relation. Impute uses a machine learning method to replace all null values with non-null values for attributes in $C$ in the relation $R$. Drop simply removes from $R$ all tuples which have a null value for some attribute in $C$. Both operators guarantee that the resulting relation will contain no null values for attributes in $C$. 
@@ -191,7 +191,7 @@ of our implementation.
 \end{algorithm}
 
 \subsection{Imputation Strategies}
-The current version of the system uses an imputation strategy based on chained-equations regression trees (CERT) \todo{CITE}. Note that plugging in a new
+The current version of the system uses an imputation strategy based on chained-equations regression trees (CERT)\cite{burgette2010multiple}. Note that plugging in a new
 imputation strategy takes minimal effort, and doesn't require changes to the optimizer, so the system could in principle be tuned to a specific domain.
 The imputation algorithm is iterative in nature, and proceeds by repeatedly fitting regression trees to a subset of the data and the target imputation columns.
 In each iteration, the missing values of a column are replaced with newly imputed values. As the iterations proceed, the quality of the imputation
