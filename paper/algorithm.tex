@@ -56,11 +56,17 @@ The query planner must select a join ordering in addition to placing imputation 
 To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all columns in the relation, regardless of which are required.  Algorithm~\ref{algo:plan-helpers} presents
 a series of helper functions used by the top level planner, shown in Algorithm~\ref{algo:top-level-planner}.
 
+\begin{algorithm}
 \input{algorithms/plan-helpers.tex}
+\end{algorithm}
 
+\begin{algorithm}
 \input{algorithms/plan-toplevel.tex}
+\end{algorithm}
 
+\begin{algorithm}
 \input{algorithms/histogram-transform.tex}
+\end{algorithm}
 
 \subsection{Imputation Strategies}
 The current version of the system uses an imputation strategy based on chained-equations regression trees (CERT)\cite{burgette2010multiple}. Note that plugging in a new
@@ -72,9 +78,9 @@ provides details on the implementation.
 
 It is worth noting that given the nature of the imputation strategy used here, imputation operators become blocking in our system.
 
-
+\begin{algorithm}
 \input{algorithms/cert.tex}
-
+\end{algorithm}
 
 
 \todo{Jose:Micah, take a look at the explanation above and see if it's missing anything (or is incorrect)}
