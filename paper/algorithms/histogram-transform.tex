@@ -1,0 +1,29 @@
+\begin{algorithm}
+  \begin{algorithmic}
+    \Require{$H$ is a map from attribute names to histograms, $op$ is an operator node in a logical query plan}
+    \Ensure{Returns an updated $H$, such that the distribution of data matches the original $H$}
+    
+    \Function{UpdateHistogram}{$H, op$}
+    	\If{$op \not\in \{\delta, \mu, \sigma, \bowtie \}$}
+		\Return{H}
+	\EndIf
+	\State $H' \gets \Call{Copy}{H}$
+    	\If{op = $\delta_C$}
+		\For{$c \in C$}
+			\State $H'[c][null] \gets 0$
+		\EndFor
+	\ElsIf{op = $\mu_C$}
+		\For{$c \in C$}
+			\State \Call{Add}{$H'[c], H'[c][null]$}
+		\EndFor
+	\ElsIf{op = $\sigma$}
+		\State \Call{ScaleBy}{H',  \Call{Selectivity}{$\sigma$}}
+	\ElsIf{op = $\bowtie_\phi$}
+		\State \Call{ScaleTo}{H', \Call{Cardinality}{$\bowtie_{\phi}$}}
+	\EndIf
+	\Return{H'}
+    \EndFunction
+  \end{algorithmic}
+  \caption{An algorithm for in-plan histogram updates}
+  \label{algo:histogram-transformation}
+\end{algorithm}
