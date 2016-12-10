@@ -5,13 +5,16 @@ One way in which a dataset can be dirty is for parts of it to be missing altoget
 Missing data is one of the simpler variants of dirty data, but if handled naively, it can still cause analyses to be incorrect.
 To handle this problem, users may manually clean their dataset by performing some regression analysis to replace missing data elements with likely values.
 This process is called \emph{imputation}.
-Although manual imputation may solve the problem of missing data, an imputation algorithm may be too complex for most users to implement, and may also be computationally expensive to run on a large dataset.
-Additionally, users may have different requirements for their queries: some users may need queries to be fast, regardless of accuracy while others prefer accurate results and are willing to wait for them.
+Traditional imputation methods replace all missing values in a dataset to create a new clean dataset.
+Although manual imputation solves the problem of missing data, in the age of big data, it may be very expensive to run an imputation algorithm on an entire dataset.
+Additionally, it may not even be necessary to completely clean the data to make it usable.
+Some users may be willing to run queries on dirty data, simply ignoring the missing values, as long as they do not have to pay the cost of imputation.
+Others may want to run queries on a subset of the data, so do not need to impute every field of every record.
 
 In this paper, we present \ProjectName{}, a database system which is designed to interact with a dirty dataset as though it were clean.
 The guiding design principle of \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
 To achieve this goal, we perform imputation on the fly, during query execution.
-We find that performing imputation during query execution allows our system to flexibly trade accuracy for computation time.
+Performing imputation at query time allows our system to impute only the data necessary to run the query, and it allows our system to flexibly trade accuracy for computation time.
 
 %%% Local Variables:
 %%% mode: latex
