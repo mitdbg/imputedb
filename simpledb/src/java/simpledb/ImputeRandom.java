@@ -104,4 +104,15 @@ public class ImputeRandom extends Impute {
         return tc;
     }
 
+    /*
+     * Can conceive this as O(n m_i)
+     * @see simpledb.Impute#getEstimatedCost(int, int, int)
+     */
+	@Override
+	public double getEstimatedCost(int numDirty, int numComplete, int numTuples) {
+		double T = numTuples * numDirty;
+		
+		return T;
+	}
+
 }

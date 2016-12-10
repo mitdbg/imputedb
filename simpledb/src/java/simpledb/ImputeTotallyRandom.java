@@ -98,4 +98,9 @@ public class ImputeTotallyRandom extends Impute {
         return String.valueOf(result);
     }
 
+	@Override
+	public double getEstimatedCost(int numDirty, int numComplete, int numTuples) {
+		return 0;
+	}
+
 }

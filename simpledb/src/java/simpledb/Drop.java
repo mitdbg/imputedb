@@ -38,4 +38,9 @@ public class Drop extends Impute {
         }
         return null;
     }
+
+	@Override
+	public double getEstimatedCost(int numDirty, int numComplete, int numTuples) {
+		return 0;
+	}
 }
