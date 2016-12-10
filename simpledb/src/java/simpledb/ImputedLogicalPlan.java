@@ -1,5 +1,7 @@
 package simpledb;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -307,7 +309,13 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	@Override
 	public DbIterator physicalPlan(TransactionId tid, Map<String, TableStats> baseTableStats, boolean explain)
 			throws ParsingException {
-		final ImputedPlanCache cache = new ImputedPlanCache();
+		LoggedImputedPlanCache cache = null;
+		try {
+			cache = new LoggedImputedPlanCache(new File("query_plans.log"));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+			throw new RuntimeException(e1);
+		}
 		optimizeFilters(tid, cache);
 		optimizeJoins(tid, cache);
 
