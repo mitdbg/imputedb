@@ -78,4 +78,15 @@ public abstract class Impute extends Operator {
         return dropFields;
     }
 
+    /**
+     * Return the estimated time cost (computational complexity) of the
+     * imputation. This is a unitless quantity that should be scaled by the
+     * caller.
+     * @param numDirty number of dirty attributes (to impute)
+     * @param numComplete number of complete attributes
+     * @param numTuples number of tuples
+     * @return estimated cost
+     */
+	public abstract double getEstimatedCost(int numDirty, int numComplete, int numTuples);
+
 }

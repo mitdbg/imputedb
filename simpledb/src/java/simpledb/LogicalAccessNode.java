@@ -68,6 +68,10 @@ public class LogicalAccessNode extends ImputedPlan {
 		TableStats subplanTableStats = TableStats.getTableStats(Database.getCatalog().getTableName(scan.t));
 		double totalData = subplanTableStats.totalTuples() * pp.getTupleDesc().numFields();
 
+		int numDirtyMaximal = tableDirtySet.size();
+		int numComplete = schema.numFields() - numDirtyMaximal;
+		int numDirtyMinimal = requiredAttrs.size();
+
 		// adjusted tablestats to reflect imputation and filtering
 		TableStats adjustedTableStats;
 
@@ -84,9 +88,9 @@ public class LogicalAccessNode extends ImputedPlan {
 			adjustedTableStats = subplanTableStats.adjustForImpute(DROP, requiredIdx);
 			break;
 		case MAXIMAL:
-			loss = subplanTableStats.estimateTotalNull() * Math.pow(LOSS_FACTOR, -totalData);
-			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost(tableDirtySet.size());
 			pp = new ImputeRegressionTree(DirtySet.toAttrs(tableDirtySet), pp);
+			loss = subplanTableStats.estimateTotalNull() * Math.pow(LOSS_FACTOR, -totalData);
+			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost((Impute) pp, numDirtyMaximal, numComplete);
 			dirtySet = new HashSet<QuantifiedName>();
 			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, requiredIdx);
 			break;
@@ -94,9 +98,9 @@ public class LogicalAccessNode extends ImputedPlan {
 			if (required.isEmpty()) {
 				throw new BadImputation();
 			}
-			loss = subplanTableStats.estimateTotalNull(requiredIdx) * Math.pow(LOSS_FACTOR, -totalData);
-			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost(requiredAttrs.size());
 			pp = new ImputeRegressionTree(requiredAttrs, pp);
+			loss = subplanTableStats.estimateTotalNull(requiredIdx) * Math.pow(LOSS_FACTOR, -totalData);
+			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost((Impute) pp, numDirtyMinimal, numComplete);
 			tableDirtySet.removeAll(required);
 			dirtySet = tableDirtySet;
 			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, requiredIdx);
