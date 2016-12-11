@@ -1,10 +1,9 @@
 \section{Experiments}
 
-To evaluate the performance of our system, we generated plans for queries on two data sets: the American Community Survey and a synthetic data set containing business information.\todo{Synthetic queries?}
-
+To evaluate the performance of our system, we generated plans for queries on two data sets: the American Community Survey and a synthetic dataset.
 \subsection{Data sets}
 
-The American Community Survey provides a number of public data sets collected by the U.S. Census Bureau.
+The American Community Survey (ACS) provides a number of public data sets collected by the U.S. Census Bureau.
 We used a cleaned version of the 2012 Public Use Microdata Sample (PUMS) data kindly provided by the authors of~\cite{akande2015empirical}.
 The cleaning procedure is described in detail in~\cite{akande2015empirical}, but to summarize, the following data were removed:
 \begin{itemize}
@@ -13,29 +12,55 @@ The cleaning procedure is described in detail in~\cite{akande2015empirical}, but
 \item Flag variables.
 \item Continuous variables.
 \end{itemize}
-The final data set consists of a single table with 671,153 rows and 35 columns, where all column entries are integers.
+The final data set consists of a single table with 671,153 rows and 37 columns, where all column entries are integers.
 
-\todo{Describe synthetic data}
+In order to evaluate our implementation, we created a dirtied variant of the ACS data by randomly eliminating
+10\% of the fields across the table.
+
+In order to evaluate additional queries, we constructed a synthetic table, consisting of 10 columns and 10,000 rows, with
+all values drawn from a uniform distribution between 0 and 100. To create a dirtied variant of the synthetic data, we randomly deleted 30\% of the fields
+across the table.
 
 \subsection{Queries}
 
-We collected a set of queries that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
+We collected a set of queries (Figure~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
 
 The queries on the ACS data all consist only of selections, filters, and aggregations.
-The ACS data is contained in a single table, so there are relatively few join queries that are interesting on this data set.
-However, even with select, filter, and aggregate, there are interesting choices to make with imputation placement.
+The ACS data is contained in a single table, so there are relatively few join queries that are interesting on this data set and remain relevant for analysts, rather
+than contrived solely for the purpose of experimentation.
+However, even with select, filter, and aggregate, there are interesting choices to make with imputation placement. In order to explore joins, we leverage the synthetic
+dataset and write various ad-hoc queries.
 
 \begin{figure}
   \centerfloat
   \input{queries}
   \caption{The queries used in our experiments.}
+  \label{fig:queries}
 \end{figure}
 
 \begin{figure}
   \centerfloat
   \input{runtimes}
   \caption{Running time and error for queries with different imputation levels.}
+  \label{fig:experiments}
 \end{figure}
+
+Figure~\ref{fig:experiments} provides a summary of our experimental results. For purposes of simplicity, we present only the results associated with
+queries that return a result size matching our base case. This addresses the fact that deriving a reasonable error metric for set-queries 
+is inherently task specific (e.g. consider tuning precision vs. recall). Meanwhile, for all queries that match, we apply a simple sum of errors squared
+(SSE). Figure~\ref{fig:experiments} indicates the query number and the error produced by a query engine with traditional SQL null semantics (base error).
+For imputations, we present two extremes of the $\alpha$ parameter: 0 and 1, which reflect a a focus on runtime and information loss, respectively.
+For each query, the table displays the new error ($\epsilon$), the planning time ($t_p$) and the running time ($t_r$) in seconds.
+
+The overall low planning times highlight the practicality of our algorithm, despite the exponential complexity. Runtimes clearly vary based on $\alpha$, allowing
+users to tune their query performance as desired.
+
+\todo{add result-specific analysis}
+
+Finally, we performed CERT imputation on the entirety of the ACS table, in order to compare our system to the traditional, pre-processing approach to imputation.
+We note that the latter took \todo{add time}, compared to our maximum of \todo{add time}. Given the varying needs of database users, \ProjectName{} clearly allows flexibility without
+a significant performance hit.
+
 
 %%% Local Variables:
 %%% mode: latex

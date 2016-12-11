@@ -1,0 +1,19 @@
+%\begin{algorithm}
+  \begin{algorithmic}
+    \Require{$T$ is a table. $D$ is a set of $T$ attributes that need to be imputed, and $C$ is a set of $T$ attributes that has complete data }
+    \Ensure{Returns an imputed $T$}
+    
+    \Function{ImputeWithCERT}{$H, op$}
+    	\State $T' \gets \Call{ImputeRandom}{T, D}$
+	\For{$n\ EPOCHS$}
+		\For{$d \in D$}
+			\State $imp \gets \Call{TrainRT}{\pi_C(T'), \pi_d{T'}}$
+			\State $T' \gets (\pi_C(T'), \Call{PredictRT}{imp, T})$
+		\EndFor
+	\EndFor
+	\Return{T'}
+	\EndFunction
+  \end{algorithmic}
+  \caption{An algorithm for chained imputation using regression trees}
+  \label{algo:imputation-strategy}
+%\end{algorithm}

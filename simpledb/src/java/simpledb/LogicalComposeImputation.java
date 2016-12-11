@@ -15,6 +15,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 	private static final double LOSS_FACTOR = 1.01;
 
 	private final DbIterator physicalPlan;
+	private final ImputedPlan subplan;
 	private final Set<QuantifiedName> dirtySet;
 	private final double loss;
 	private final double time;
@@ -28,7 +29,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 	 * @param loss
 	 * @param time
 	 */
-	private LogicalComposeImputation(TableStats tableStats, DbIterator physicalPlan, Set<QuantifiedName> dirtySet,
+	private LogicalComposeImputation(TableStats tableStats, DbIterator physicalPlan, ImputedPlan subplan, Set<QuantifiedName> dirtySet,
 			double loss, double time) {
 		super();
 		this.physicalPlan = physicalPlan;
@@ -36,6 +37,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 		this.loss = loss;
 		this.time = time;
 		this.tableStats = tableStats;
+		this.subplan = subplan;
 	}
 
 	public TableStats getTableStats() {
@@ -79,26 +81,30 @@ public class LogicalComposeImputation extends ImputedPlan {
 			loss = estimateNumNulls(subplan, imputeIndices);
 			time = subplan.cardinality();
 			adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
-			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
+			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
 		}
 		case MINIMAL: {
 			Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
-			physicalPlan = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
+			Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
+			physicalPlan = imputeOp;
 			dirtySet.removeAll(impute);
 			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
-			time = subplan.cardinality() * imputeIndices.size();
+			int numComplete = schema.numFields() - dirtySet.size();
+			time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
 			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, imputeIndices);
-			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
+			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
 		}
 		case MAXIMAL: {
 			Set<QuantifiedName> i = subplan.getDirtySet();
 			Collection<Integer> imputeIndices = schema.fieldNamesToIndices(i);
-			physicalPlan = new ImputeRegressionTree(toNames(i), subplan.getPlan());
+			Impute imputeOp = new ImputeRegressionTree(toNames(i), subplan.getPlan());
+			physicalPlan = imputeOp;
 			dirtySet.clear();
 			loss = estimateNumNulls(subplan, imputeIndices) * Math.pow(LOSS_FACTOR, -totalData);
-			time = subplan.cardinality() * imputeIndices.size();
+			int numComplete = schema.numFields() - dirtySet.size();
+			time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
 			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
-			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, dirtySet, loss, time);
+			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
 		}
 		case NONE:
 			if (impute.isEmpty()) {
@@ -123,7 +129,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 	}
 
 	public double cost(double lossWeight) {
-		return lossWeight * loss + (1 - lossWeight) * time;
+		return lossWeight * loss + (1 - lossWeight) * time + subplan.cost(lossWeight);
 	}
 
 	public double cardinality() {

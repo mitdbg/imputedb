@@ -1,0 +1,62 @@
+%\begin{algorithm}
+  \begin{algorithmic}
+    \Require{$q$ is a query plan, $C_{req}$ is a set of attributes that must be imputed.}
+    \Ensure{Returns a set of query plans such that $\Call{Dirty}{q'} \cap C_{req} = \emptyset$.}
+    \Function{AddImpute}{$q, C_{req}$}
+    \todo{jose: I modified this, since in reality we return only the same plan if it has no dirty values, we may still impute when the intersection is empty, but only maximally}
+    \State $C_{min} \gets \Call{Dirty}{q} \cap C_{req}$
+    \If{$\Call{Dirty}{q} = \emptyset$}
+    	\State \Return $\{ q \}$
+   \ElsIf{$C_{min} = \emptyset$}
+    	\State \Return $\{ \mu_{\Call{Dirty}{q}}(q), q \}$
+    \Else
+    \State \Return $\{\mu_{\Call{Dirty}{q}}(q), \mu_{C_{min}}(q), \delta_{C_{min}}(q)\}$
+    \EndIf
+    \EndFunction
+    
+    \State
+
+    \Require{$Q$ is a set of query plans.}
+    \Ensure{Returns an optimal query plan for each distinct dirty set in $Q$.}
+    \Function{OptRel}{$Q$}
+    \State $D \gets \{\Call{Dirty}{q} ~|~ q \in Q\}$
+    \State \Return $\{\argmin_{q \in Q \land \Call{Dirty}{q} = d} \Call{Cost}{q} ~|~ d \in D\}$
+    \EndFunction
+
+    \State
+
+    \Require{$t$ is a table and $\phi$ is a filter predicate.}
+    \Ensure{Returns a set of optimal query plans for scanning and filtering $t$, with distinct dirty sets.}
+    \Function{OptFilter}{$t, \phi$}
+    \todo{jose: I believe this was missing the sigma before}
+    \State \Return $\Call{OptRel}{\{  \sigma_{\phi}(q) | q \in \Call{AddImpute}{t, \Call{Attrs}{\phi}} \} }$
+    \EndFunction
+
+    \State
+    
+  
+    \Require{$Q$ is a map from tables and dirty sets to optimal query plans (possibly with imputations), and $\Psi$ relates query plans with join predicates.}
+    \Ensure{Returns a set of optimal query plans for all joins, with distinct dirty sets.}
+    \Function{OptJoin}{$Q, \Psi$}
+    \For{$size \in 1...|\Psi|$}
+    	\State $S \gets subset(\Psi, size)$
+	\For{$\psi \in S$}
+		\State $S' \gets S \setminus \psi$
+			\If{$joins(S', \psi)$} 
+				\State $S'_{plans} \gets Q(\Call{Rels}{S'})$
+				\State $t \gets \Call{Rels}{\psi} \setminus \Call{Rels}{S'}$
+				\State $t_{plans} \gets Q(t)$
+				\For {$l, r \in t_{plans} \times S'_{plans}$}
+					\State $P_l \gets \Call{AddImpute}{l, \Call{Attrs}{\psi}}$
+					\State $P_r \gets \Call{AddImpute}{r, \Call{Attrs}{\psi}}$
+					\State \Call{Update}{Q, $\Call{OptRel}{ \{p_l \bowtie_{\psi} p_r | p_l \in P_l, p_r \in P_r \} }$}
+				\EndFor
+		\EndIf
+	\EndFor
+    \EndFor
+    \State \Return{Q(\Call{Rels}{$\Phi$})}
+    \EndFunction
+  \end{algorithmic}
+  \caption{Base algorithms for query planning with imputations.}
+  \label{algo:plan-helpers}
+%\end{algorithm}

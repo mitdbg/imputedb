@@ -1,0 +1,29 @@
+%\begin{algorithm}
+ \begin{algorithmic}
+   \Require{set of tables $T$, filter predicates $\Phi$, join predicates $\Psi$, a set of projection attributes $P$, optional set of grouping attributes $G$ and aggregator function $A$}
+   \Ensure{Returns optimized query plan.}
+   
+  \Function{Plan}{$T, \Phi, \Psi, P, G, A$}
+ \State  $Q \gets \{ \}$ \Comment{map from table and dirty set to plans }
+   \For{$t \in T$}
+   	\State $\phi \gets \Call{GetFilters}{t, \Phi}$
+	\State $P_{t} \gets \Call{OptFilter}{t, \phi}$
+	\State $Q \gets Q \cup \{ (t, \Call{Dirty}{q}) \mapsto q | q \in P_t \}$
+   \EndFor
+   
+   \State $M \gets \{ \}$ \Comment{map from dirty set to plans, contains all joins necessary}
+   \State $M \gets  \Call{OptJoin}{Q, \Psi}$	\Comment{optimize joins}
+   \If{$G \neq \emptyset \land A \neq NULL$}
+   	\State $attrs \gets \Call{Attrs}{G} \cup \Call{Attrs}{A}$
+   	\State $M \gets \Call{OptRel}{\bigcup_{q \in M} \Call{GroupBy}{\Call{AddImpute}{q, attrs}, G, A}}$
+   \Else
+  	\State $M \gets \Call{OptRel}{\bigcup_{q \in M} \pi_{P}(\Call{AddImpute}{q, P}) }$
+  \EndIf 
+   
+\Return $\argmin_{q \in M} Cost(q)$
+\EndFunction
+  
+  \end{algorithmic}
+  \caption{Top-level query planner with imputations.}
+\label{algo:top-level-planner}
+%\end{algorithm}
