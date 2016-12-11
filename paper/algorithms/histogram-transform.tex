@@ -14,12 +14,12 @@
 		\EndFor
 	\ElsIf{op = $\mu_C$}
 		\For{$c \in C$}
-			\State \Call{Add}{$H'[c], H'[c][null]$}
+			\State \Call{Add}{$H'[c], H'[c][null]$} 	\Comment{Adds to histogram based on distirbution}
 		\EndFor
 	\ElsIf{op = $\sigma$}
-		\State \Call{ScaleBy}{H',  \Call{Selectivity}{$\sigma$}}
+		\State \Call{ScaleBy}{$H',  \Call{Selectivity}{\sigma}$} 	\Comment{Scales all buckets by a constant factor}
 	\ElsIf{op = $\bowtie_\phi$}
-		\State \Call{ScaleTo}{H', \Call{Cardinality}{$\bowtie_{\phi}$}}
+		\State \Call{ScaleTo}{$H', \Call{Cardinality}{\bowtie_{\phi}}$} 	\Comment{Scales all buckets to sum to constant}
 	\EndIf
 	\Return{H'}
     \EndFunction

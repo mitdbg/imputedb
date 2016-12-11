@@ -11,7 +11,7 @@
 	\State $Q \gets Q \cup \{ (t, \Call{Dirty}{q}) \mapsto q | q \in P_t \}$
    \EndFor
    
-   \State $M \gets \{ \}$ \Comment{map from dirty set to plans, contains all joins necessary}
+   \State $M \gets \{ \}$ \Comment{map from dirty set to plans, with all joins necessary}
    \State $M \gets  \Call{OptJoin}{Q, \Psi}$	\Comment{optimize joins}
    \If{$G \neq \emptyset \land A \neq NULL$}
    	\State $attrs \gets \Call{Attrs}{G} \cup \Call{Attrs}{A}$
