@@ -24,13 +24,18 @@ we incorporate imputation into a cost-based optimizer and hide any details
 regarding missing values inside the system, allowing users to use traditional SQL and engage in normal workloads.
 
 \subsection{Future Work}
-\ProjectName{} opens up multiple avenues for further work. For instance, we could extend our minimal/maximal imputation
-operators to consider global information, such as the specific columns needed in operators higher up in the query plan.
-Our optimizer uses the same machine learning algorithm in all instances of imputation operators. Integrating multiple
-possible algorithms could allow for further fine-grained imputation. Finally, the underlying database for \ProjectName{}
-is far from a full-featured, production database, so a natural step is to integrate imputation planning in a widely-adopted
-production-quality database. This will likely expose further opportunities for improvement.
-
+\ProjectName{} opens up multiple avenues for further work. For instance, we
+could extend our minimal/maximal imputation operators to consider global
+information, such as the specific columns needed in operators higher up in the
+query plan.  Our optimizer uses the same machine learning algorithm in all
+instances of imputation operators. Integrating multiple possible algorithms
+could allow for further fine-grained imputation. For example, algorithms that
+learn in an online manner could increase the efficiency of the system.
+Furthermore, a multiple imputation strategy could be followed for queries
+involving certain aggregates. Finally, the underlying database for
+\ProjectName{} is far from a full-featured, production database, so a natural
+step is to integrate imputation planning in a widely-adopted production-quality
+database. This will likely expose further opportunities for improvement.  
 
 
 

@@ -191,26 +191,52 @@ of our implementation.
 \end{algorithm}
 
 \subsection{Imputation Strategies}
-The current version of the system uses an imputation strategy based on chained-equations regression trees (CERT) \todo{CITE}. Note that plugging in a new
-imputation strategy takes minimal effort, and doesn't require changes to the optimizer, so the system could in principle be tuned to a specific domain.
-The imputation algorithm is iterative in nature, and proceeds by repeatedly fitting regression trees to a subset of the data and the target imputation columns.
-In each iteration, the missing values of a column are replaced with newly imputed values. As the iterations proceed, the quality of the imputation
-should improve as values progressively reflect more accurate relationships amongst attributes. Algorithm~\ref{algo:imputation-strategy}
-provides details on the implementation.
 
-It is worth noting that given the nature of the imputation strategy used here, imputation operators become blocking in our system.
+We design our system such that any imputation strategy can be plugged in with minimal effort
+and without changes to the optimizer, so the strategy can in principle be targeted to a
+specific domain. The current version of the system uses a general-purpose imputation
+strategy based on chained-equation classification and regression trees (CE-CART). Chained
+equation imputation methods \cite{vanbuuren2011mice} (sometimes called \textit{iterative
+regression} \cite{gelman2006data} and others) impute multiple missing attributes by
+iteratively estimating predictive models of one missing attribute conditional on all
+complete attributes and the other missing attributes. The individual predictive models can
+be customized by the researcher to the problem at hand. Decision tree algorithms, like CART,
+are found to be effective \cite{akande2015empirical} in empirical studies in general-purpose
+routines and are widely used in epidemiological domains \cite{burgette2011multiple}.  
+
+These imputation algorithms are rarely used in isolation --- rather, the ultimate goal is to
+perform statistical analysis of the complete data. To this end, the technique of
+\textit{multiple imputation} can be used, in which multiple distinct copies of the complete
+data are generated and estimators are computed by averaging over the multiple datasets. In
+ImputeDB, we cannot assume the user desires multiple copies of the query result, though we
+note that in further work, multiple imputation could be used within ImputeDB to generate
+lower-variance estimates of some aggregates, like averages.
+
+Our algorithm proceeds by iteratively fitting regression trees to a subset of the data and
+the target imputation columns. In each iteration, the missing values of a column are
+replaced with newly imputed values. With each epoch, the quality of the imputation improves
+as values progressively reflect more accurate relationships amongst attributes. The
+algorithm terminates when convergence is achieved (the imputed values do not change across
+epochs) or a fixed number of epochs is reached.  Algorithm~\ref{algo:imputation-strategy}
+provides details on the implementation.  
+
+It is worth noting that given the nature of the imputation strategy used here, imputation
+operators become blocking in our system. An extension of ImputeDB could consider regression
+algorithms that learn in an online nature; this would reduce the cost of the imputation at
+the possible expense of quality.
 
 \begin{algorithm}
   \begin{algorithmic}
-    \Require{$T$ is a table. $D$ is a set of $T$ attributes that need to be imputed, and $C$ is a set of $T$ attributes that has complete data }
+    \Require{$T$ is a table. $D$ is a set of attributes of $T$ that need to be imputed, and
+      $C$ is a set of attributes of $T$ that has complete data }
     \Ensure{Returns an imputed $T$}
     
-    \Function{ImputeWithCERT}{$H, op$}
+    \Function{ImputeWithCE-CART}{$H, op$}
     	\State $T' \gets \Call{ImputeRandom}{T, D}$
 	\For{$n\ EPOCHS$}
 		\For{$d \in D$}
-			\State $imp \gets \Call{TrainRT}{\pi_C(T'), \pi_d{T'}}$
-			\State $T' \gets (\pi_C(T'), \Call{PredictRT}{imp, T})$
+            \State $imp \gets \Call{TrainRT}{\pi_{C \cup D \backslash \{d\}}(T'), \pi_d{T'}}$
+            \State $T' \gets (\pi_{C \cup D \backslash \{d\}}(T'), \Call{PredictRT}{imp, T})$
 		\EndFor
 	\EndFor
 	\Return{T'}
@@ -220,10 +246,9 @@ It is worth noting that given the nature of the imputation strategy used here, i
   \label{algo:imputation-strategy}
 \end{algorithm}
 
-
-
-
-\todo{Jose:Micah, take a look at the explanation above and see if it's missing anything (or is incorrect)}
+\todo{Micah: Explanation edited a bit. In the algorithm, when we impute attribute $d$, we
+condition on attributes $C \cup D \backslash \{d\}$. Hopefully the way I note it is clear;
+feel free to modify otherwise.}
 
 \subsection{Complexity}
 Our optimization algorithm builds off the approach taken by System R\cite{blasgen1981system}, therefore our algorithm still operates in exponential time. Indeed, 
