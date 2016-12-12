@@ -20,22 +20,36 @@ For simplicity, each of the logical nodes in a query plan points to a set of his
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for new operation in the plan.
 Algorithm~\ref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
-The computation of $\text{Time}(Q)$ is standard and is comparable to the cost model used in any modern RDBMS.\@ Our runtime cost model is perhaps less sophisticated than most, as it is identical to the cost model in SimpleDB.
+The computation of $\text{Time}(Q)$ is standard and is comparable to the cost model used in
+any modern RDBMS.\@ Our runtime cost model is the cost model used in SimpleDB, though modern systems
+have more sophisticated approaches.
 
-\todo{Check loss calculation w/ Micah}
 $\text{Loss}(Q)$ is computed as follows.
-For each sub-query, in addition to a histogram, we keep track of the estimated number of null values in each column.
+For each sub-query, in addition to a histogram, we keep track of the estimated number of
+null values in each column, $\text{MissingCount}(c, Q)$.
 \begin{align*}
   \text{Loss}(Q) = \begin{cases}
-    \sum_{c \in C} \text{Null}(c, Q') & Q = \delta_C(Q') \\
-    \frac{1}{\sqrt{|Q'|}} \sum_{c \in C} \text{Null}(c, Q') & Q = \mu_C(Q') \\
+    \sum_{c \in C} \text{MissingCount}(c, Q') & Q = \delta_C(Q') \\
+    \frac{1}{\sqrt{|Q'|}} \sum_{c \in C} \text{MissingCount}(c, Q') & Q = \mu_C(Q') \\
     \text{Loss}(Q_1') + \text{Loss}(Q_2') & Q = Q_1' \bowtie_\psi Q_2' \\
     \text{Loss}(Q') & Q = \sigma_\phi(Q'), Q = \pi_C(Q') \\
   \end{cases}
 \end{align*}
-Dropping tuples which contain a null value incurs a loss penalty of 1 for each null field dropped.
-Imputing null fields incurs a loss penalty $0 < p \leq 1$ which decreases as the number of tuples available to train the imputation algorithm increases.
-The intuition behind this formula is that imputation performance should increase if there is more training data available, but there is a saturation point beyond which more data provides little additional benefit.
+Dropping tuples which contain a null value incurs a loss of 1 for each null field dropped.
+Imputing null fields incurs a loss penalty $p \in (0, 1]$ which decreases as the number of
+tuples available to train the imputation algorithm increases.  Intuitively, imputation
+accuracy \textit{increases} when more complete attributes and complete tuples are available;
+correspondingly, the information loss \textit{decreases} with more complete values to work
+with. The inverse square loss can be seen as a first approximation to the learning guarantees of
+regression trees. \todo{Micah: Probably need to look into this more carefully since I don't
+know much about the learning guarantees of regression trees!} Since we conceive that
+alternate imputation strategies could be used, the analyst would provide a corresponding
+loss with a reasonable parameterization.
+
+\todo{Micah: Notation not super clear to me. I'm guessing $|Q'|$ is the number of tuples total, but
+$Q'$ is a query plan, and I would interpret it's cardinality as perhaps the height of the
+tree or number of elements in the tree, not in terms of underlying relation. Similarly, I'm
+not sure how to define $\text{MissingCount}(\cdot)$ above.}
 
 \subsection{Search space}
 \label{sec:search-space}
@@ -79,7 +93,7 @@ equation imputation methods \cite{vanbuuren2011mice} (sometimes called \textit{i
 regression} \cite{gelman2006data} and others) impute multiple missing attributes by
 iteratively estimating predictive models of one missing attribute conditional on all
 complete attributes and the other missing attributes. The individual predictive models can
-be customized by the researcher to the problem at hand. Decision tree algorithms, like CART,
+be customized by the analyst to the problem at hand. Decision tree algorithms, like CART,
 are found to be effective \cite{akande2015empirical} in empirical studies in general-purpose
 routines and are widely used in epidemiological domains \cite{burgette2010multiple}.  
 
@@ -98,6 +112,11 @@ as values progressively reflect more accurate relationships amongst attributes. 
 algorithm terminates when convergence is achieved (the imputed values do not change across
 epochs) or a fixed number of epochs is reached.  Algorithm~\ref{algo:imputation-strategy}
 provides details on the implementation.  
+
+The flexibility of this non-parametric imputation approach aligns well with the spirit of
+query optimization, which aims to reconcile performance with a declarative interface to data
+manipulation. By removing concerns for imputation, users executing queries in \ProjectName{}
+don't need to consider the potential nature of the missing data.
 
 It is worth noting that given the nature of the imputation strategy used here, imputation
 operators become blocking in our system. An extension of ImputeDB could consider regression
