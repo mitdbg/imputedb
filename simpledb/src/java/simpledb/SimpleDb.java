@@ -117,8 +117,8 @@ public class SimpleDb {
 			}
 
 		} else if (args[0].equals("draw")) {
-			if (args.length != 4) {
-				System.out.println("Usage: simpledb draw catalog query_file output_prefix");
+			if (args.length != 5) {
+				System.out.println("Usage: simpledb draw catalog query_file output_prefix alpha");
 				System.exit(-1);
 			}
 
@@ -127,6 +127,7 @@ public class SimpleDb {
 
 			Path path = Paths.get(args[2]);
 			String outputPrefix = args[3];
+			double alpha = Double.parseDouble(args[4]);
 
 			List<String> lines = Files.readAllLines(path);
 			StringBuilder sb = new StringBuilder();
@@ -141,7 +142,7 @@ public class SimpleDb {
 					System.out.println("Query: " + query);
 					ZqlParser p = new ZqlParser(new ByteArrayInputStream(query.getBytes("UTF-8")));
 					ZStatement s = p.readStatement();
-					Parser pp = new Parser();
+					Parser pp = new Parser(x -> new ImputedLogicalPlan(alpha));
 					Query plan = pp.handleQueryStatement((ZQuery)s, new TransactionId());
 					String fileName = outputPrefix + "_" + i + ".dot";
 					QueryPlanDotter.print(plan.getPhysicalPlan(), fileName);
