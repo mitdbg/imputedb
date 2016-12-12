@@ -61,6 +61,24 @@ public class AcsTestRule implements TestRule {
 		}
 		SCHEMA = new TupleDesc(types, fields);
 	}
+	public static final TupleDesc SCHEMA_POLLING;
+	static {
+		String[] fields = new String[] {
+				"ST",
+                "TRUMP_POLL",
+                "CLINTON_POLL",
+                "MARGIN_POLL",
+                "TRUMP_ACTUAL",
+                "CLINTON_ACTUAL",
+                "MARGIN_ACTUAL",
+                "ERROR"
+		};
+		Type[] types = new Type[fields.length];
+		for (int i = 0; i < types.length; i++) {
+			types[i] = Type.INT_TYPE;
+		}
+		SCHEMA_POLLING = new TupleDesc(types, fields);
+	}
 	
 	public class DbInitializer extends ExternalResource {
 		@Override 
@@ -69,6 +87,8 @@ public class AcsTestRule implements TestRule {
 			ClassLoader loader = CleanTest.class.getClassLoader();
 			File acsData = new File(loader.getResource("testdata/acs.dat").getFile());
 			Database.getCatalog().addTable(new HeapFile(acsData, SCHEMA), "acs", "");
+			File pollingData = new File(loader.getResource("testdata/polling.dat").getFile());
+			Database.getCatalog().addTable(new HeapFile(pollingData, SCHEMA_POLLING), "polling", "");
 			TableStats.computeStatistics();
 		}
 	}
