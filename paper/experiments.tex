@@ -31,19 +31,20 @@ than contrived solely for the purpose of experimentation.
 However, even with select, filter, and aggregate, there are interesting choices to make with imputation placement. In order to explore joins, we leverage the synthetic
 dataset and write various ad-hoc queries.
 
-\begin{figure}
+\todo{fix query references}
+\begin{table}
   \centerfloat
   \input{queries}
   \caption{The queries used in our experiments.}
   \label{fig:queries}
-\end{figure}
+\end{table}
 
-\begin{figure}
+\begin{table}
   \centerfloat
   \input{runtimes}
   \caption{Running time and error for queries with different imputation levels.}
   \label{fig:experiments}
-\end{figure}
+\end{table}
 
 Figure~\ref{fig:experiments} provides a summary of our experimental results. For purposes of simplicity, we present only the results associated with
 queries that return a result size matching our base case. This addresses the fact that deriving a reasonable error metric for set-queries 
