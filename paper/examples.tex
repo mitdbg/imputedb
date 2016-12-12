@@ -1,5 +1,46 @@
 \section{Examples}
-\todo{add motivating example, explore a couple of plans generated (or by hand, but ideally generated). Can use dot visualizer for plans.}
+
+Consider the case of an analyst looking to explore the sources and causes of
+polling error in a presidential election. One hypothesis \cite{zukin2015s}
+is that the rapid switch from landlines to cellphones has increased the
+difficulty of contacting potential poll respondents. The analyst may
+begin her analysis by comparing the polling error in a state with the
+distribution of households with landlines, for the set of states for which
+polling error was most pronounced. In order to probe deeply, the analyst
+accesses a household-level survey of household characteristics that includes
+whether the household has a landline. One such survey --- which will be
+discussed further (Sec~\ref{subsec:datasets}) --- is the American Community Survey (ACS),
+conducted by the US Census Bureau.
+
+Surveys are rife with missing values due to non-response and other issues, and
+the ACS is no exception. In this case, a non-negligible fraction of respondents omitted
+information on whether they have a landline. The analyst hypothesizes that older houses are
+more likely to have landlines and that households that are relatively new are less likely to
+have landlines. 
+
+The analyst could take advantage of these presumed correlations to impute the missing values
+in an expensive operation\footnote{One would not necessarily want to impute the entire
+database once and store the imputed values, as in many settings the imputation strategy
+would be targeted for a specific question or domain.}. On the other hand, the query
+could be run directly and rows with missing values would be dropped entirely. With
+ImputeDB, the analyst could impute the relevant subset of data on-the-fly, achieving
+better performance without losing the information in the dropped examples.
+
+The analyst submits a query to ImputeDB which finds an optimized query plan. The resulting
+query imputes missing values for \verb!acs.TEL! after states with high polling error have
+been selected.
+
+\begin{verbatim}
+SELECT polling.ST, AVG(acs.TEL)
+FROM polling, acs
+WHERE polling.ST = acs.ST
+  AND polling.ERROR > 50         -- 5 percentage points
+GROUP BY polling.ST
+\end{verbatim}
+
+\todo{Explore a couple of plans generated, using dot visualizer. Confirm that the actual
+plans match my guess in last sentence.}
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "main"

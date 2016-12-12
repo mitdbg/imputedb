@@ -44,19 +44,17 @@
 \begin{document}
 \frame{\titlepage}
 
-\begin{frame}{Overview}
+\begin{frame}{Introduction and Motivation}
 \begin{itemize}
 	\item Handling incorrect or dirty data is a complex and challenging problem for data scientists
-	\item $\text{missing data} \subset \text{dirty data}$
-	\item Cost of running imputation on entire dataset
-	\item Lack of flexibility
-	\item \ProjectName{} allows users to interact with dataset as though it were clean.
-	\item User should never see missing data or have to modify query.
+	\item $\text{missing data} \subset \text{dirty data}$ and requires imputation/dropping.
+	\item Cost of running imputation on entire dataset is a high barrier for analysis.
+	\item Lack of flexibility inherent in existing pre-processing approaches.
+	\item User should never see missing data or have to modify query. Want a DBMS that 
+		allow us to "pretend" data is perfect.
+	\item \ProjectName{} allows users to interact with dataset as though it were clean, planning
+	around necessary imputation/drops.
 \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]{Motivating Example}
-\todo{motivating example}
 \end{frame}
 
 \begin{frame}[fragile]{Query Planning: Overview}
@@ -67,88 +65,7 @@
 	\item Histogram transformations used to provide up-to-date cardinality and missing value estimates during planning.
 	\item Dynamic programming approach, extends System R optimization\cite{blasgen1981system}
 	\item Exponential complexity, but tractable in practice with low planning times.
-\end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]{Query Planning: Top-Level Algorithm}
-
-\begin{algorithm}[H]
- \begin{algorithmic}
-   \scriptsize
-   \Require{set of tables $T$, filter predicates $\Phi$, join predicates $\Psi$, a set of projection attributes $P$, optional set of grouping attributes $G$ and aggregator function $A$}
-   \Ensure{Returns optimized query plan.}
-   
-  \Function{Plan}{$T, \Phi, \Psi, P, G, A$}
- \State  $Q \gets \{ \}$ \Comment{map from table and dirty set to plans }
-   \For{$t \in T$}
-   	\State $\phi \gets \Call{GetFilters}{t, \Phi}$
-	\State $P_{t} \gets \Call{OptFilter}{t, \phi}$
-	\State $Q \gets Q \cup \{ (t, \Call{Dirty}{q}) \mapsto q | q \in P_t \}$
-   \EndFor
-   
-   \State $M \gets \{ \}$ \Comment{map from dirty set to plans, contains all joins necessary}
-   \State $M \gets  \Call{OptJoin}{Q, \Psi}$	\Comment{optimize joins}
-   \If{$G \neq \emptyset \land A \neq NULL$}
-   	\State $attrs \gets \Call{Attrs}{G} \cup \Call{Attrs}{A}$
-   	\State $M \gets \Call{OptRel}{\bigcup_{q \in M} \Call{GroupBy}{\Call{AddImpute}{q, attrs}, G, A}}$
-   \Else
-  	\State $M \gets \Call{OptRel}{\bigcup_{q \in M} \pi_{P}(\Call{AddImpute}{q, P}) }$
-  \EndIf 
-   
-\Return $\argmin_{q \in M} Cost(q)$
-\EndFunction
-  
-  \end{algorithmic}
-  \caption{Top-level query planner with imputations.}
-\label{algo:top-level-planner}
-\end{algorithm}
-
-\end{frame}
-
-\begin{frame}[fragile]{Imputation Algorithm}
-\begin{itemize}
-	\item Iterative algorithm using regression trees: \textit{Chained Equations Regression Trees} (CERT)\cite{burgette2010multiple}
-	\item Significant cost to perform on entire dataset
-	\item \ProjectName{} allows flexible use
-\end{itemize}
-
-\begin{algorithm}[H]
-  \scriptsize
-  \begin{algorithmic}
-    \Require{$T$ is a table. $D$ is a set of $T$ attributes that need to be imputed, and $C$ is a set of $T$ attributes that has complete data }
-    \Ensure{Returns an imputed $T$}
-    
-    \Function{ImputeWithCERT}{$H, op$}
-    	\State $T' \gets \Call{ImputeRandom}{T, D}$
-	\For{$n\ EPOCHS$}
-		\For{$d \in D$}
-			\State $imp \gets \Call{TrainRT}{\pi_C(T'), \pi_d{T'}}$
-			\State $T' \gets (\pi_C(T'), \Call{PredictRT}{imp, T})$
-		\EndFor
-	\EndFor
-	\Return{T'}
-	\EndFunction
-  \end{algorithmic}
-  \caption{An algorithm for chained imputation using regression trees}
-  \label{algo:imputation-strategy}
-\end{algorithm}
-\end{frame}
-
-\begin{frame}[fragile]{Experiments: Data}
-\begin{itemize}
-	\item Real dataset: American Community Survey (U.S. Census Bureau)
-		\begin{itemize}
-			\item Preprocessed version courtesy of authors of~\cite{akande2015empirical}.
-			\item 671,153 rows and 37 columns, all integers.
-			\item Randomly deleted 10\% of fields to create dirtied variant
-			\item Can write typical data analyst queries involving filters and aggregates
-		\end{itemize}
-	\item Synthetic dataset: drawn from uniform distribution $[0,100)$
-		\begin{itemize}
-			\item10,000 rows and 10 columns
-			\item Randomly deleted 30\% ti create dirtied variant
-			\item Crafted ad-hoc queries using joins
-		\end{itemize}
+	\item Imputation operator is a state-of-the-art regression-tree based method.
 \end{itemize}
 \end{frame}
 
@@ -172,7 +89,56 @@
 \end{figure}
 \end{frame}
 
+\begin{frame}
+	\center
+	Extra slides with details for those interested
+\end{frame}
 
+\begin{frame}[fragile]{Motivating Example}
+\todo{motivating example}
+\end{frame}
+
+
+\begin{frame}[fragile]{Query Planning: Top-Level Algorithm}
+
+\begin{algorithm}[H]
+\scriptsize
+\input{../paper/algorithms/plan-toplevel.tex}
+\end{algorithm}
+
+\end{frame}
+
+\begin{frame}[fragile]{Imputation Algorithm}
+\begin{itemize}
+	\item Iterative algorithm using regression trees: \textit{Chained Equations Regression Trees} (CERT)\cite{burgette2010multiple}
+	\item Significant cost to perform on entire dataset
+	\item \ProjectName{} allows flexible use
+\end{itemize}
+\scriptsize
+
+\begin{algorithm}[H]
+\scriptsize
+\input{../paper/algorithms/cert.tex}
+\end{algorithm}
+\end{frame}
+
+\begin{frame}[fragile]{Experiments: Data}
+\begin{itemize}
+	\item Real dataset: American Community Survey (U.S. Census Bureau)
+		\begin{itemize}
+			\item Preprocessed version courtesy of authors of~\cite{akande2015empirical}.
+			\item 671,153 rows and 37 columns, all integers.
+			\item Randomly deleted 10\% of fields to create dirtied variant
+			\item Can write typical data analyst queries involving filters and aggregates
+		\end{itemize}
+	\item Synthetic dataset: drawn from uniform distribution $[0,100)$
+		\begin{itemize}
+			\item10,000 rows and 10 columns
+			\item Randomly deleted 30\% ti create dirtied variant
+			\item Crafted ad-hoc queries using joins
+		\end{itemize}
+\end{itemize}
+\end{frame}
 
 \begin{frame}[fragile]{Related work}
 \begin{itemize}

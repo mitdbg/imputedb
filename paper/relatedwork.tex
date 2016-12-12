@@ -1,36 +1,31 @@
 \section{Related Work}
+
+\todo{Micah: Should this section follow the introduction? A lot of this stuff
+becomes repetitive as we wouldn't be able to develop the body of the paper
+without having already made these citations.}
+
 \subsection{Missing Values and Statistics}
 Imputation of missing values is a widely studied field within the statistics and machine
 learning communities. As highlighted in \cite{gelman2006data}, missing data
 can appear for a variety of reasons, including both random and conditioned on
 existing values (observed and missing). Methods in the statistical community
 focus on correctly modeling relationships between the attributes to factor in
-such varied forms of missingness.
+varied forms of missingness.
 
-Burgette and Reiter introduce imputation of missing data using sequences
-of regression trees in \cite{burgette2010multiple}. \ProjectName{} uses
-this technique to impute missing values as needed in the generated query plan.
-The flexibility of this non-parametric imputation approach aligns well with the
-spirit of query optimization, which aims to reconcile performance with a declarative interface to
-data manipulation. By removing concerns for imputation, users executing queries
-in \ProjectName{} don't need to consider the potential nature of the missing data.
+Burgette and Reiter (\cite{burgette2010multiple}) discuss the usage of
+sequential regression trees for imputing missing data.
 
 In \cite{akande2015empirical}, Akande et al analyze the performance of various
-imputation techniques on American Community Survey data, "an ongoing survey
-that provides vital information on a yearly basis"\cite{censusbureau}. The authors
-use a common technique: multiple imputation, which imputes missing values
-with various strategies on the base data, computes aggregates, and then
-combines estimates of these aggregates to account for additional uncertainty across
-strategies. The computational difficulties of imputing on large base tables
-are well known and can limit approaches. For example, Akande finds that
-one of their approaches (MI-GLM) crashes when attempting to impute on data that
+multiple imputation techniques on the American Community Survey dataset
+(Sec~\ref{subsec:datasets}). The computational difficulties of imputing on large base
+tables are well known and can limit approaches. For example, Akande finds that
+one approaches (MI-GLM) crashes when attempting to impute on data that
 includes variables with potentially large domains (ten categories specifically).
- In contrast, \ProjectName{} allows users to specify a tradeoff
-between information loss and computational complexity (in terms of time). 
-Furthermore, the query planner's imputation is guided by the requirements of
-each specific query's operators, rather than requiring broad assumptions
-about query workloads.
-
+In contrast, \ProjectName{} allows users to specify a tradeoff between
+information loss and computational complexity (in terms of time). Furthermore,
+the query planner's imputation is guided by the requirements of each specific
+query's operators, rather than requiring broad assumptions about query
+workloads.  
 
 \subsection{Missing Values and Databases}
 There is a long history in the database community surrounding the

@@ -12,9 +12,9 @@ Some users may be willing to run queries on dirty data, simply ignoring the miss
 Others may want to run queries on a subset of the data, so do not need to impute every field of every record.
 
 In this paper, we present \ProjectName{}, a database system which is designed to interact with a dirty dataset as though it were clean.
-The guiding design principle of \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
+The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
 To achieve this goal, we perform imputation on the fly, during query execution.
-Performing imputation at query time allows our system to impute only the data necessary to run the query, and it allows our system to flexibly trade accuracy for computation time.
+Performing imputation at query time allows our system to impute only the data necessary to run the query, and it allows users to flexibly trade accuracy for computation time.
 
 %%% Local Variables:
 %%% mode: latex

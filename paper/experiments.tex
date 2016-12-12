@@ -1,7 +1,7 @@
 \section{Experiments}
 
 To evaluate the performance of our system, we generated plans for queries on two data sets: the American Community Survey and a synthetic dataset.
-\subsection{Data sets}
+\subsection{Data sets} \label{subsec:datasets}
 
 The American Community Survey (ACS) provides a number of public data sets collected by the U.S. Census Bureau.
 We used a cleaned version of the 2012 Public Use Microdata Sample (PUMS) data kindly provided by the authors of~\cite{akande2015empirical}.
@@ -47,7 +47,7 @@ dataset and write various ad-hoc queries.
 
 Figure~\ref{fig:experiments} provides a summary of our experimental results. For purposes of simplicity, we present only the results associated with
 queries that return a result size matching our base case. This addresses the fact that deriving a reasonable error metric for set-queries 
-is inherently task specific (e.g. consider tuning precision vs. recall). Meanwhile, for all queries that match, we apply a simple sum of errors squared
+is inherently task specific (e.g. consider tuning precision vs. recall). Meanwhile, for all queries that match, we apply a simple sum of squared errors
 (SSE). Figure~\ref{fig:experiments} indicates the query number and the error produced by a query engine with traditional SQL null semantics (base error).
 For imputations, we present two extremes of the $\alpha$ parameter: 0 and 1, which reflect a a focus on runtime and information loss, respectively.
 For each query, the table displays the new error ($\epsilon$), the planning time ($t_p$) and the running time ($t_r$) in seconds.
@@ -57,7 +57,7 @@ users to tune their query performance as desired.
 
 \todo{add result-specific analysis}
 
-Finally, we performed CERT imputation on the entirety of the ACS table, in order to compare our system to the traditional, pre-processing approach to imputation.
+Finally, we performed $CE-CART$ imputation on the entirety of the ACS table, in order to compare our system to the traditional, pre-processing approach to imputation.
 We note that the latter took \todo{add time}, compared to our maximum of \todo{add time}. Given the varying needs of database users, \ProjectName{} clearly allows flexibility without
 a significant performance hit.
 
