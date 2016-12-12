@@ -13,6 +13,8 @@
 \usepackage{hyperref} % load after other packages
 \usepackage{todonotes}
 \presetkeys{todonotes}{inline}{}
+\usepackage[style=ieee]{biblatex}
+\addbibresource{references.bib}
 
 
 \addbibresource{references.bib}
@@ -110,7 +112,7 @@
 
 \begin{frame}[fragile]{Imputation Algorithm}
 \begin{itemize}
-	\item Iterative algorithm using regression trees: \textit{Chained Equations Regression Trees} (CERT)\cite{burgette2010multiple}
+	\item Iterative algorithm using regression trees: \textit{Chained Equations Regression Trees} (CE-CERT)\cite{burgette2010multiple}
 	\item Significant cost to perform on entire dataset
 	\item \ProjectName{} allows flexible use
 \end{itemize}
@@ -118,7 +120,7 @@
 
 \begin{algorithm}[H]
 \scriptsize
-\input{../paper/algorithms/cert.tex}
+\input{../paper/algorithms/cart.tex}
 \end{algorithm}
 \end{frame}
 
@@ -172,5 +174,11 @@ and input columns, while keeping planning tractable in real-world examples.
 		\end{itemize}
 \end{itemize}
 \end{frame}
+
+\begin{frame}[t,allowframebreaks]{References}
+  \nocite{*}
+  \printbibliography
+ \end{frame}
+
 
 \end{document}
