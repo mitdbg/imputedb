@@ -2,14 +2,14 @@
 
 Handling incorrect or dirty data is a complex and challenging problem for data scientists.
 One way in which a dataset can be dirty is for parts of it to be missing altogether.
-Missing data is one of the simpler variants of dirty data, but if handled naively, it can still cause analyses to be incorrect.
+Missing data is one of the simpler variants of dirty data, but if handled naively, can still cause analyses to be incorrect.
 To handle this problem, users may manually clean their dataset by performing some regression analysis to replace missing data elements with likely values.
 This process is called \emph{imputation}.
 Traditional imputation methods replace all missing values in a dataset to create a new clean dataset.
-Although manual imputation solves the problem of missing data, in the age of big data, it may be very expensive to run an imputation algorithm on an entire dataset.
+Although manual imputation solves the problem of missing data, in the age of big data it may be very expensive to run an imputation algorithm on an entire dataset.
 Additionally, it may not even be necessary to completely clean the data to make it usable.
 Some users may be willing to run queries on dirty data, simply ignoring the missing values, as long as they do not have to pay the cost of imputation.
-Others may want to run queries on a subset of the data, so do not need to impute every field of every record.
+Others may want to run queries on a subset of the data, so do not need to impute every field in every record.
 
 In this paper, we present \ProjectName{}, a database system which is designed to interact with a dirty dataset as though it were clean.
 The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.

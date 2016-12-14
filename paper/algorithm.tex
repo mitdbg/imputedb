@@ -20,13 +20,13 @@ For simplicity, each of the logical nodes in a query plan points to a set of his
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for new operation in the plan.
 Algorithm~\ref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
-The computation of $\text{Time}(Q)$ is standard and is comparable to the cost model used in
-any modern RDBMS.\@ Our runtime cost model is the cost model used in SimpleDB, though modern systems
+Our runtime cost model is the cost model used in SimpleDB, though modern systems
 have more sophisticated approaches.
 
-$\text{Loss}(Q)$ is computed as follows.
 For each sub-query, using the histogram information, we keep track of the estimated number of
-null values in each column, $\text{MissingCount}(c, Q)$.
+null values in a column  ($\text{MissingCount}(c, Q)$). We use this estimate to compute
+$\text{Loss}(Q)$ as follows.
+
 \begin{align*}
   \text{Loss}(Q) = \begin{cases}
     \sum_{c \in C} \text{MissingCount}(c, Q') & Q = \delta_C(Q') \\
@@ -42,7 +42,7 @@ accuracy \textit{increases} when more complete attributes and complete tuples ar
 correspondingly, the information loss \textit{decreases} with more complete values to work
 with. The inverse square loss can be seen as a heuristic first approximation to the learning guarantees of
 regression trees. Since we conceive that
-alternate imputation strategies could be used, the analyst would provide a corresponding
+alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
 
 \subsection{Search space}
@@ -58,7 +58,7 @@ Imputation operators can be placed at any point in the query plan, but to meet t
 That is, the dirty set over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null without changing the dirty set, forcing an unnecessary imputation. We choose to over-approximate the dirty set to avoid the possibility of dropping a tuple that contains a null value without explicitly imputing the value or applying a drop operator.
 
 \subsection{Query planning}
-The input to our query planner is a tuple $(T, \Phi, \Psi, P, G, A)$: a set of tables $T$, a set of filter predicates $\phi_t, t \in T$, a set of join predicates $\psi_(t_1, t_2), t_1, t_2 \in T$, a set of attributes $P$, and an optional set of attributes $G$ and aggregation function $A \in \{\text{Max}, \text{Min}, \text{Sum}, \text{Avg}, \text{Count}\}$.
+The input to our query planner is a tuple $(T, \Phi, \Psi, P, G, A)$: a set of tables $T$, a set of filter predicates $\phi_t, t \in T$, a set of join predicates $\psi_{(t_1, t_2)}, t_1, t_2 \in T$, a set of attributes $P$, and an optional set of attributes $G$ and aggregation function $A \in \{\text{Max}, \text{Min}, \text{Sum}, \text{Avg}, \text{Count}\}$.
 
 The query planner must select a join ordering in addition to placing imputation operators as described in Section~\ref{sec:placement}.
 
@@ -84,7 +84,7 @@ and without changes to the optimizer, so the strategy can in principle be target
 specific domain. The current version of the system uses a general-purpose imputation
 strategy based on chained-equation classification and regression trees (CE-CART). Chained
 equation imputation methods \cite{vanbuuren2011mice} (sometimes called \textit{iterative
-regression} \cite{gelman2006data} and others) impute multiple missing attributes by
+regression} \cite{gelman2006data}) impute multiple missing attributes by
 iteratively estimating predictive models of one missing attribute conditional on all
 complete attributes and the other missing attributes. The individual predictive models can
 be customized by the analyst to the problem at hand. Decision tree algorithms, like CART,

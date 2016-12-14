@@ -17,7 +17,7 @@ The final data set consists of a single table with 671,153 rows and 37 columns, 
 In order to evaluate our implementation, we created a dirtied variant of the ACS data by randomly eliminating
 10\% of the fields across the table.
 
-In order to evaluate additional queries, we constructed a synthetic table, consisting of 10 columns and 10,000 rows, with
+In order to evaluate additional queries, we constructed a synthetic table, consisting of 10,000 rows and 10 columns, with
 all values drawn from a uniform distribution between 0 and 100. To create a dirtied variant of the synthetic data, we randomly deleted 30\% of the fields
 across the table.
 
@@ -65,7 +65,7 @@ Imputation performs very well in these cases, even for data which is missing uni
 
 \item For average queries (\ref{q3}, \ref{q5}, \ref{q6}), imputation does not reduce the error, mainly because running these queries on dirty data incurs only a small penalty.
 This is because, in the case of average, removing data uniformly at random does not change the mean.
-If we were to remove data in a biased way, imputation would perform better because there would be more error for it to correct.
+If we were to remove data in a biased way, imputation would likely perform better because there would be more error for it to correct.
 
 \item For min and max queries (\ref{q7}, \ref{q8}, \ref{q12}), it is unlikely that imputation will ever help, because by definition these queries are looking for extreme values.
 These values are unlikely to be the result of imputation and are also unlikely to be randomly removed from the dataset.

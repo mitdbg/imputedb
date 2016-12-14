@@ -35,12 +35,12 @@ the need to handle null value semantics, while guaranteeing soundness (modulo
 imputation strategy) of the query evaluation.
 
 Database system developers and others have worked on techniques to automatically
-detect dirty values, whether missing or otherwise, and rectify the errors is
+detect dirty values, whether missing or otherwise, and rectify the errors if
 possible. A survey of methods and systems is provided in
 \cite{hellerstein2008quantitative}.
 
 BayesDB \cite{mansinghka2015bayesdb} provides users with a simple interface to 
-leverage statistical inference techniques on a database. Non-experts
+leverage statistical inference techniques in a database. Non-experts
 can use a simple declarative language, akin to SQL, to specify models
 which allow missing value imputation, amongst other broader functionality.
 Experts can further customize strategies and express domain knowledge to
