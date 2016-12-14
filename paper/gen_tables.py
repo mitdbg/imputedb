@@ -4,7 +4,7 @@ import pandas as pd
 import sys
 
 def parse_time(t):
-    return t[2:][:-1]
+    return t
 
 def err_to_str(err):
     if err == 'null':
