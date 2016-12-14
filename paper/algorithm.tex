@@ -33,8 +33,8 @@ Algorithm~\ref{algo:histogram-transformation} describes the process of generatin
 Our runtime cost model is the cost model used in SimpleDB, though modern systems
 have more sophisticated approaches.
 
-For each sub-query, using the histogram information, we keep track of the estimated number of
-null values in a column  ($\text{MissingCount}(c, Q)$), given the histograms associated with
+For each sub-query, we keep track of the estimated number of
+null values in a column  ($\text{MissingCount}(c, Q)$) by using the histograms associated with
 the sub-query. We use this estimate to compute
 $\text{Loss}(Q)$ as follows.
 
@@ -62,7 +62,7 @@ and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and i
 complexity can be expressed as a function of the number of heap pages read and the IO cost
 per page.
 
-Evaluation of the time complexity for \textit{Impute} is more thorny, as the properties of
+Evaluation of the time complexity for \textit{Impute} is thornier, as the properties of
 different decision tree building algorithms can vary significantly, the underlying IO cost
 is not easily extracted (especially in the case that the entire stream of tuples does not
 fit in memory), and the CPU cost dominates (in contrast to the other operators, which may
@@ -73,7 +73,7 @@ parameterization of the partition and heuristic functions, and the \textit{arity
 number of subsets considered for each split). Indeed, the \textit{build tree} phase often
 does not even dominate computation, as post-processing steps like pruning, which are vital
 in achieving good performance, can have cost exponential in the height of the tree. In
-practice, we find that a simple parameterization can be acceptable (yield intelligent query
+practice, we find that a simple parameterization can be acceptable (i.e. yield intelligent query
 plans), though the range of $\alpha$ that does promote tradeoffs is condensed.
 
 \subsection{Imputation placement}
@@ -119,7 +119,7 @@ are found to be effective \cite{akande2015empirical} in empirical studies in gen
 routines and are widely used in epidemiological domains \cite{burgette2010multiple}. Though
 we provide quantitative results for the CE-CART implementation, ImputeDB is designed to be
 agnostic to the choice of imputation algorithm, and additional algorithms --- with
-associated time and loss functions --- could be insert without any change in design.
+associated time and loss functions --- could be inserted without any change in design.
 
 These imputation algorithms are rarely used in isolation --- rather, the ultimate goal is to
 perform statistical analysis of the complete data. To this end, the technique of
@@ -133,14 +133,14 @@ Our algorithm proceeds by iteratively fitting regression trees to a subset of th
 the target imputation columns. In each iteration, the missing values of a column are
 replaced with newly imputed values. With each epoch, the quality of the imputation improves
 as values progressively reflect more accurate relationships amongst attributes. The
-algorithm terminates when convergence is achieved (the imputed values do not change across
+algorithm terminates when convergence is achieved (i.e. the imputed values do not change across
 epochs) or a fixed number of epochs is reached.  Algorithm~\ref{algo:imputation-strategy}
 provides details on the implementation.  
 
 The flexibility of this non-parametric imputation approach aligns well with the spirit of
 query optimization, which aims to reconcile performance with a declarative interface to data
 manipulation. By removing concerns for imputation, users executing queries in \ProjectName{}
-don't need to consider the potential nature of the missing data.
+don't need to consider the potential nature of missing data.
 
 It is worth noting that given the nature of the imputation strategy used here, imputation
 operators become blocking in our system. An extension of ImputeDB could consider regression

@@ -39,7 +39,7 @@ selected. This decision reduces the set of tuples that must be input into the im
 algorithm to just those that are relevant to the query. Later, we show the algorithms that
 the ImputeDB query optimizer uses in order to detect these opportunities and control the
 tradeoffs between efficiency and imputation quality. Finally, note that the optimizer doesn't
-place any imputation operator for the \verb|acs.ST| column, as optimizer uses the histogram to
+place any imputation operator for the \verb|acs.ST| column, as it uses a histogram to
 detect that there are no missing values there (as might be expected for a survey question that isn't
 impacted by non-responses).
 
