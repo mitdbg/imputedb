@@ -1,0 +1,27 @@
+query,base_err,impute_err,plan_time,run_time,alpha
+"SELECT BLD FROM acs;",null,null,0,1,0.000000
+"SELECT BLD FROM acs;",null,null,0,17,1.000000
+"SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;",16592.685153,16592.685153,0,1,0.000000
+"SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;",16592.685153,5194.516590,0,9,1.000000
+"SELECT BATH as has_bath, COUNT(ST) as ct FROM acs GROUP BY BATH;",47755.911220,47755.911220,0,3,0.000000
+"SELECT BATH as has_bath, COUNT(ST) as ct FROM acs GROUP BY BATH;",47755.911220,88.000000,0,9,1.000000
+"SELECT ACR as lotsize, AVG(BDSP) as avg_num_bedrooms FROM acs GROUP BY ACR;",0.001865,0.001865,0,2,0.000000
+"SELECT ACR as lotsize, AVG(BDSP) as avg_num_bedrooms FROM acs GROUP BY ACR;",0.001865,0.052577,0,32,1.000000
+"SELECT PSF as has_sub_families, SUM(NP) as num_people FROM acs GROUP BY PSF;",252126.790450,252126.790450,0,1,0.000000
+"SELECT PSF as has_sub_families, SUM(NP) as num_people FROM acs GROUP BY PSF;",252126.790450,33221.055748,0,25,1.000000
+"SELECT AVG(NP) as avg_num_people FROM acs;",0.000989,0.000989,0,1,0.000000
+"SELECT AVG(NP) as avg_num_people FROM acs;",0.000989,0.099921,0,8,1.000000
+"SELECT BDSP as num_bedrooms, AVG(ACR) as avg_lot_size FROM acs WHERE VEH >= 2 GROUP BY BDSP;",0.037649,0.037649,0,2,0.000000
+"SELECT BDSP as num_bedrooms, AVG(ACR) as avg_lot_size FROM acs WHERE VEH >= 2 GROUP BY BDSP;",0.037649,0.079777,0,55,1.000000
+"SELECT MIN(RMSP) as min_num_rooms FROM acs WHERE RWAT=2;",0.000000,0.000000,0,2,0.000000
+"SELECT MIN(RMSP) as min_num_rooms FROM acs WHERE RWAT=2;",0.000000,0.000000,0,3,1.000000
+"SELECT * FROM dirty m where m.f1 >= 2;",null,null,0,0,0.000000
+"SELECT * FROM dirty m where m.f1 >= 2;",null,null,0,7,1.000000
+"SELECT * FROM dirty where dirty.f1 <= 2;",null,null,0,0,0.000000
+"SELECT * FROM dirty where dirty.f1 <= 2;",null,null,0,0,1.000000
+"SELECT MAX(f2) as max_f2 FROM dirty GROUP BY dirty.f1;",0.000000,0.000000,0,0,0.000000
+"SELECT MAX(f2) as max_f2 FROM dirty GROUP BY dirty.f1;",0.000000,0.100000,0,0,1.000000
+"SELECT m1.f1, m1.f2 FROM dirty m1, clean m2 WHERE m1.f1 = m2.f1 and m1.f1 = 1 and m2.f2 = 69;",null,null,0,0,0.000000
+"SELECT m1.f1, m1.f2 FROM dirty m1, clean m2 WHERE m1.f1 = m2.f1 and m1.f1 = 1 and m2.f2 = 69;",null,null,0,0,1.000000
+"SELECT d1.f1 FROM dirty d1, clean d2 WHERE d1.f1 = d2.f1 and d2.f2 = 50;",0.000000,0.000000,0,0,0.000000
+"SELECT d1.f1 FROM dirty d1, clean d2 WHERE d1.f1 = d2.f1 and d2.f2 = 50;",0.000000,38.108136,0,72,1.000000
