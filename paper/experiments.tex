@@ -62,25 +62,25 @@ Running times clearly vary based on $\alpha$, allowing users to tune their query
 We can group our queries into five categories: sum/count queries, average queries, min/max queries, selection queries, and join queries on synthetic data.
 
 \begin{itemize}
-\item For sum and count queries (\ref{q1}, \ref{q2}, \ref{q4}), imputation does a good job of reducing the error.
+\item For sum and count queries (\ref{q2}, \ref{q3}, \ref{q5}), imputation does a good job of reducing the error.
 For each of these queries, we can reduce total error by several orders of magnitude.
 Imputation performs very well in these cases, even for data which is missing uniformly at random, because each missing value directly increases the error of the result.
 
-\item For average queries (\ref{q3}, \ref{q5}, \ref{q6}), imputation does not reduce the error, mainly because running these queries on dirty data incurs only a small penalty.
+\item For average queries (\ref{q4}, \ref{q6}, \ref{q7}), imputation does not reduce the error, mainly because running these queries on dirty data incurs only a small penalty.
 This is because, in the case of average, removing data uniformly at random does not change the mean.
 If we were to remove data in a biased way, imputation would likely perform better because there would be more error for it to correct.
 
-\item For min and max queries (\ref{q7}, \ref{q8}, \ref{q12}), it is unlikely that imputation will ever help, because by definition these queries are looking for extreme values.
+\item For a min query (\ref{q8}), it is unlikely that imputation will ever help, because by definition these queries are looking for extreme values.
 These values are unlikely to be the result of imputation and are also unlikely to be randomly removed from the dataset.
 
-\item We do not compute error for selection queries (\ref{q9}, \ref{q10}, \ref{q11}), because the output of the query on clean data is not directly comparable to the output on dirty data.
+\item We do not compute error for selection queries (\ref{q1}, \ref{q9}, \ref{q10}, \ref{q12}), because the output of the query on clean data is not directly comparable to the output on dirty data.
 
-  \item Imputation performs poorly on the join queries on synthetic data (\ref{q13}, \ref{q14}) because the data is synthetic, so there are no correlations for imputation to find. We included these queries because we wanted to test the performance of our algorithm on queries that include joins, and we were pleased to find that simple joins cause no perceptible performance problems.
+  \item Imputation performs poorly on the join queries on synthetic data (\ref{q11}, \ref{q13}) because the data is synthetic, so there are no correlations for imputation to find. We included these queries because we wanted to test the performance of our algorithm on queries that include joins, and we were pleased to find that simple joins cause no perceptible performance problems.
 \end{itemize}
 
 Finally, we performed CE-CART imputation on the entirety of the ACS table, in order to compare our system to the traditional, pre-processing approach to imputation.
 We were unable to complete the full imputation due to resource constraints, but the process ran for more than one hour without terminating.
-This time compares favorably to our maximum of \todo{add time} for a query with imputation.
+This time compares favorably to our maximum of 55 seconds for a query with imputation on the ACS data.
 Given the varying needs of database users, \ProjectName{} clearly allows flexibility without a significant performance hit.
 
 
