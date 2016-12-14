@@ -1,13 +1,21 @@
-\begin{tabular}{ll}
+\newcounter{queryno}
+\begin{tabular}{cl}
 \toprule
-\# & Query \\
+\# & \multicolumn{1}{c}{Query} \\
 \midrule
-0 & \verb|SELECT BLD FROM acs;| \label{q0} \\
-1 & \verb|SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;| \label{q1} \\
-2 & \verb|SELECT BATH as has_bath, COUNT(ST) as ct FROM acs GROUP BY BATH;| \label{q2} \\
-3 & \verb|SELECT ACR as lotsize, AVG(BDSP) as avg_num_bedrooms FROM acs GROUP BY ACR;| \label{q3} \\
-4 & \verb|SELECT PSF as has_sub_families, SUM(NP) as num_people FROM acs GROUP BY PSF;| \label{q4} \\
-5 & \verb|SELECT AVG(NP) as avg_num_people FROM acs;| \label{q5} \\
-6 & \verb|SELECT BDSP as num_bedrooms, AVG(ACR) as avg_lot_size FROM acs WHERE VEH >= 2 GROUP BY BDSP;| \label{q6} \\
+1 & \verb|SELECT BLD as units_in_structure, COUNT(ST) as estimate FROM acs GROUP BY BLD;| \refstepcounter{queryno} \label{q1} \\
+2 & \verb|SELECT BATH as has_bath, COUNT(ST) as ct FROM acs GROUP BY BATH;| \refstepcounter{queryno} \label{q2} \\
+3 & \verb|SELECT ACR as lotsize, AVG(BDSP) as avg_num_bedrooms FROM acs GROUP BY ACR;| \refstepcounter{queryno} \label{q3} \\
+4 & \verb|SELECT PSF as has_sub_families, SUM(NP) as num_people FROM acs GROUP BY PSF;| \refstepcounter{queryno} \label{q4} \\
+5 & \verb|SELECT AVG(NP) as avg_num_people FROM acs;| \refstepcounter{queryno} \label{q5} \\
+6 & \verb|SELECT BDSP as num_bedrooms, AVG(ACR) as avg_lot_size FROM acs WHERE VEH >= 2 GROUP BY BDSP;| \refstepcounter{queryno} \label{q6} \\
+7 & \verb|SELECT MIN(YBL) as earliest_built_bucket FROM acs WHERE ACR = 3;| \refstepcounter{queryno} \label{q7} \\
+8 & \verb|SELECT MIN(RMSP) as min_num_rooms FROM acs WHERE RWAT=2;| \refstepcounter{queryno} \label{q8} \\
+9 & \verb|SELECT * FROM acs WHERE REFR = 1 AND STOV = 1 AND TEL = 1 AND TOIL = 2;| \refstepcounter{queryno} \label{q9} \\
+10 & \verb|SELECT * FROM dirty m where m.f1 >= 2;| \refstepcounter{queryno} \label{q10} \\
+11 & \verb|SELECT * FROM dirty where dirty.f1 <= 2;| \refstepcounter{queryno} \label{q11} \\
+12 & \verb|SELECT MAX(f2) as max_f2 FROM dirty GROUP BY dirty.f1;| \refstepcounter{queryno} \label{q12} \\
+13 & \verb|SELECT m1.f1, m1.f2 FROM dirty m1, clean m2 WHERE m1.f1 = m2.f1 and m1.f1 = 1 and m2.f2 = 69;| \refstepcounter{queryno} \label{q13} \\
+14 & \verb|SELECT d1.f1 FROM dirty d1, clean d2 WHERE d1.f1 = d2.f1 and d2.f2 = 50;| \refstepcounter{queryno} \label{q14} \\
 \bottomrule
 \end{tabular}
