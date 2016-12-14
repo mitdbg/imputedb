@@ -29,13 +29,16 @@ could extend our minimal/maximal imputation operators to consider global
 information, such as the specific columns needed in operators higher up in the
 query plan.  Our optimizer uses the same machine learning algorithm in all
 instances of imputation operators. Integrating multiple possible algorithms
-could allow for further fine-grained imputation. For example, algorithms that
-learn in an online manner could increase the efficiency of the system.
-Furthermore, a multiple imputation strategy could be followed for queries
-involving certain aggregates. Finally, the underlying database for
-\ProjectName{} is far from a full-featured, production database, so a natural
-step is to integrate imputation planning in a widely-adopted production-quality
-database. This will likely expose further opportunities for improvement.  
+could allow for further fine-grained imputation, and honing the time complexity and
+loss of these algorithms for an iterator model database could facilitate more
+intelligent query plans and consistent interpretations of $\alpha$ across
+strategies. For example, algorithms that learn in an online manner could
+increase the efficiency of the system.  Furthermore, a multiple imputation
+strategy could be followed for queries involving certain aggregates. Finally,
+the underlying database for \ProjectName{} is far from a full-featured,
+production database, so a natural step is to integrate imputation planning in a
+widely-adopted production-quality database. This will likely expose further
+opportunities for improvement.
 
 
 
