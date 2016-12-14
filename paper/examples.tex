@@ -29,7 +29,7 @@ directly and rows with missing values may be dropped entirely. With ImputeDB, th
 could impute the relevant subset of data on-the-fly, achieving better performance without
 losing the information in the dropped examples.
 
-The analyst submits a query (\todo{ref to listing}) to ImputeDB which finds an optimized query
+The analyst submits a query (Figure~\ref{fig:example-query}) to ImputeDB which finds an optimized query
 plan\footnote{The analyst specifies a relatively high value of $\alpha$, the quality
 emphasis parameter, in order to receive a plan that does an expensive imputation step. See
 Section~\ref{sec:cost-model} for more details.}. The resulting query plan
@@ -38,15 +38,22 @@ imputes missing values for \verb!acs.TEL! after states with high polling error h
 selected. This decision reduces the set of tuples that must be input into the imputation
 algorithm to just those that are relevant to the query. Later, we show the algorithms that
 the ImputeDB query optimizer uses in order to detect these opportunities and control the
-tradeoffs between efficiency and imputation quality.
+tradeoffs between efficiency and imputation quality. Finally, note that the optimizer doesn't
+place any imputation operator for the \verb|acs.ST| column, as optimizer uses the histogram to
+detect that there are no missing values there (as might be expected for a survey question that isn't
+impacted by non-responses).
 
-\begin{verbatim}
+\begin{figure}
+\begin{lstlisting}[language=SQL]
 SELECT polling.ST, AVG(acs.TEL)
 FROM polling, acs
 WHERE polling.ST = acs.ST
   AND polling.ERROR > 50         -- 5 percentage points
 GROUP BY polling.ST;
-\end{verbatim}
+\end{lstlisting}
+\caption{A typical analyst query on ACS data}
+\label{fig:example-query}
+\end{figure}
 
 \begin{figure}[!ht]
     \centering
