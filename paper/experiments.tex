@@ -31,7 +31,6 @@ than contrived solely for the purpose of experimentation.
 However, even with select, filter, and aggregate, there are interesting choices to make with imputation placement. In order to explore joins, we leverage the synthetic
 dataset and write various ad-hoc queries.
 
-\todo{fix query references}
 \begin{table}
   \centerfloat
   \input{queries}
@@ -42,25 +41,44 @@ dataset and write various ad-hoc queries.
 \begin{table}
   \centerfloat
   \input{runtimes}
-  \caption{Running time and error for queries with different imputation levels.}
+  \caption{Running time and error for queries with different imputation levels. Base error is the RMSE between the query run on clean data and the query run on dirty data without imputation.}
   \label{fig:experiments}
 \end{table}
 
-Figure~\ref{fig:experiments} provides a summary of our experimental results. For purposes of simplicity, we present only the results associated with
-queries that return a result size matching our base case. This addresses the fact that deriving a reasonable error metric for set-queries 
-is inherently task specific (e.g. consider tuning precision vs. recall). Meanwhile, for all queries that match, we apply a simple sum of squared errors
-(SSE). Figure~\ref{fig:experiments} indicates the query number and the error produced by a query engine with traditional SQL null semantics (base error).
-For imputations, we present two extremes of the $\alpha$ parameter: 0 and 1, which reflect a a focus on runtime and information loss, respectively.
-For each query, the table displays the new error ($\epsilon$), the planning time ($t_p$) and the running time ($t_r$) in seconds.
+Figure~\ref{fig:experiments} provides a summary of our experimental results.
+We run each query in four configurations: without imputation on clean data, without imputation on dirty data, and with imputation on dirty data for $\alpha = 0$ and $\alpha = 1$.
+When a query returns a relation of the same ``shape'' (same number of tuples and same schema) on both clean and dirty data, we can compute an error value.
+For our experiments, we report root-mean-square error (RMSE).
+For imputations, we run queries using the two extreme values of $\alpha$: 0 and 1, representing a focus on runtime and on information loss, respectively.
+For each query, the table displays the error between the query run on clean data and the query run on dirty data with imputation and the running time in seconds.
 
-The overall low planning times highlight the practicality of our algorithm, despite the exponential complexity. Runtimes clearly vary based on $\alpha$, allowing
-users to tune their query performance as desired.
+Planning times are not shown, as they are fractions of a second for all of the queries that we tested.
+The overall low planning times highlight the practicality of our algorithm, despite the exponential complexity.
+Running times clearly vary based on $\alpha$, allowing users to tune their query performance as desired.
 
-\todo{add result-specific analysis}
+We can group our queries into five categories: sum/count queries, average queries, min/max queries, selection queries, and join queries on synthetic data.
+
+\begin{itemize}
+\item For sum and count queries (\ref{q1}, \ref{q2}, \ref{q4}), imputation does a good job of reducing the error.
+For each of these queries, we can reduce total error by several orders of magnitude.
+Imputation performs very well in these cases, even for data which is missing uniformly at random, because each missing value directly increases the error of the result.
+
+\item For average queries (\ref{q3}, \ref{q5}, \ref{q6}), imputation does not reduce the error, mainly because running these queries on dirty data incurs only a small penalty.
+This is because, in the case of average, removing data uniformly at random does not change the mean.
+If we were to remove data in a biased way, imputation would perform better because there would be more error for it to correct.
+
+\item For min and max queries (\ref{q7}, \ref{q8}, \ref{q12}), it is unlikely that imputation will ever help, because by definition these queries are looking for extreme values.
+These values are unlikely to be the result of imputation and are also unlikely to be randomly removed from the dataset.
+
+\item We do not compute error for selection queries (\ref{q9}, \ref{q10}, \ref{q11}), because the output of the query on clean data is not directly comparable to the output on dirty data.
+
+  \item Imputation performs poorly on the join queries on synthetic data (\ref{q13}, \ref{q14}) because the data is synthetic, so there are no correlations for imputation to find. We included these queries because we wanted to test the performance of our algorithm on queries that include joins, and we were pleased to find that simple joins cause no perceptible performance problems.
+\end{itemize}
 
 Finally, we performed $CE-CART$ imputation on the entirety of the ACS table, in order to compare our system to the traditional, pre-processing approach to imputation.
-We note that the latter took \todo{add time}, compared to our maximum of \todo{add time}. Given the varying needs of database users, \ProjectName{} clearly allows flexibility without
-a significant performance hit.
+We were unable to complete the full imputation due to resource constraints, but the process ran for more than one hour without terminating.
+This time compares favorably to our maximum of \todo{add time}.
+Given the varying needs of database users, \ProjectName{} clearly allows flexibility without a significant performance hit.
 
 
 %%% Local Variables:
