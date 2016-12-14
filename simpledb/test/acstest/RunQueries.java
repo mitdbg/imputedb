@@ -91,7 +91,7 @@ public class RunQueries {
 			
 			outFile.write(String.format("\"%s\",%f,%f,%d,%d,%f\n", query, baseErr, imputeErr,
 					Duration.between(startPlan, endPlan).getSeconds(), Duration.between(startRun, endRun).getSeconds(), a));
-			
+			outFile.flush();
 			imputedDirty.close();
 		}
 		clean.close();
@@ -134,5 +134,6 @@ public class RunQueries {
 		for (Object[] query : DirtyTest.data()) {
 			runQuery((String)query[0]);
 		}
+		outFile.close();
 	}
 }
