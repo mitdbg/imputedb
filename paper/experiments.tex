@@ -41,7 +41,6 @@ dataset and write various ad-hoc queries.
 \begin{table}
   \centerfloat
   \input{runtimes}
-<<<<<<< HEAD
   \caption{Running time and error for queries with different imputation levels. Base error is the RMSE between the query run on clean data and the query run on dirty data without imputation.}
   \label{fig:experiments}
 \end{table}
@@ -56,19 +55,6 @@ For each query, the table displays the error between the query run on clean data
 Planning times are not shown, as they are fractions of a second for all of the queries that we tested.
 The overall low planning times highlight the practicality of our algorithm, despite the exponential complexity.
 Running times clearly vary based on $\alpha$, allowing users to tune their query performance as desired.
-=======
-  \caption{Running time and errors (SSE) for queries with different imputation levels. base error corresponds to the
-error with traditional SQL null semantics. The errors for \ProjectName{} plans are labeled with $\epsilon$. The two
-$\alpha$ levels reflect a relative focus on information loss. $t_p$ and $t_r$ represent planning and run time, respectively, in seconds.}
-  \label{fig:experiments}
-\end{table}
-
-Figure~\ref{fig:experiments} provides a summary of our experimental results. For purposes of simplicity, we present only the results associated with
-queries that return a result size matching our base case. This addresses the fact that deriving a reasonable error metric for set-queries 
-is inherently task specific (e.g. consider tuning precision vs. recall). For all other queries, we use sum of squared errors (SSE) as a metric.
-The overall low planning times highlight the practicality of our algorithm, despite the exponential complexity. Runtimes clearly vary based on $\alpha$, allowing
-users to tune their query performance as desired.
->>>>>>> 594b06596d402300a8cf6bbaaf50b762b48aa5f3
 
 We can group our queries into five categories: sum/count queries, average queries, min/max queries, selection queries, and join queries on synthetic data.
 
