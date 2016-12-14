@@ -1,0 +1,2 @@
+acs (ST int, NP int, ACR int, AGS int, BATH int, BDSP int, BLD int, BUS int, REFR int, RMSP int, RWAT int, SINK int, STOV int, TEL int, TEN int, TOIL int, VEH int, YBL int, HHL int, HHT int, HUGCLNPP int, HUPAC int, HUPAOC int, HUPARC int, LNGI int, MULTG int, MV int, NR int, NRC int, PARTNER int, PSF int, R18 int, R65 int, SRNTVAL int, WIF int, WKEXREL int, WORKSTAT int)
+polling (ST int, TRUMP_POLL int, CLINTON_POLL int, MARGIN_POLL int, TRUMP_ACTUAL int, CLINTON_ACTUAL int, MARGIN_ACTUAL int, ERROR int)

@@ -1,0 +1,1 @@
+SELECT polling.ST, AVG(acs.TEL) FROM polling, acs WHERE polling.ST = acs.ST AND polling.ERROR > 50 GROUP BY polling.ST;
