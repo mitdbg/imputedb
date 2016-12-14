@@ -25,7 +25,7 @@ any modern RDBMS.\@ Our runtime cost model is the cost model used in SimpleDB, t
 have more sophisticated approaches.
 
 $\text{Loss}(Q)$ is computed as follows.
-For each sub-query, in addition to a histogram, we keep track of the estimated number of
+For each sub-query, using the histogram information, we keep track of the estimated number of
 null values in each column, $\text{MissingCount}(c, Q)$.
 \begin{align*}
   \text{Loss}(Q) = \begin{cases}
@@ -40,16 +40,10 @@ Imputing null fields incurs a loss penalty $p \in (0, 1]$ which decreases as the
 tuples available to train the imputation algorithm increases.  Intuitively, imputation
 accuracy \textit{increases} when more complete attributes and complete tuples are available;
 correspondingly, the information loss \textit{decreases} with more complete values to work
-with. The inverse square loss can be seen as a first approximation to the learning guarantees of
-regression trees. \todo{Micah: Probably need to look into this more carefully since I don't
-know much about the learning guarantees of regression trees!} Since we conceive that
+with. The inverse square loss can be seen as a heuristic first approximation to the learning guarantees of
+regression trees. Since we conceive that
 alternate imputation strategies could be used, the analyst would provide a corresponding
 loss with a reasonable parameterization.
-
-\todo{Micah: Notation not super clear to me. I'm guessing $|Q'|$ is the number of tuples total, but
-$Q'$ is a query plan, and I would interpret it's cardinality as perhaps the height of the
-tree or number of elements in the tree, not in terms of underlying relation. Similarly, I'm
-not sure how to define $\text{MissingCount}(\cdot)$ above.}
 
 \subsection{Search space}
 \label{sec:search-space}

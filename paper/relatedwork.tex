@@ -1,19 +1,15 @@
 \section{Related Work}
 
-\todo{Micah: Should this section follow the introduction? A lot of this stuff
-becomes repetitive as we wouldn't be able to develop the body of the paper
-without having already made these citations.}
-
 \subsection{Missing Values and Statistics}
+
 Imputation of missing values is a widely studied field within the statistics and machine
 learning communities. As highlighted in \cite{gelman2006data}, missing data
 can appear for a variety of reasons, including both random and conditioned on
 existing values (observed and missing). Methods in the statistical community
 focus on correctly modeling relationships between the attributes to factor in
-varied forms of missingness.
-
-Burgette and Reiter (\cite{burgette2010multiple}) discuss the usage of
-sequential regression trees for imputing missing data.
+varied forms of missingness. For example, Burgette and Reiter
+(\cite{burgette2010multiple}) discuss the usage of sequential regression trees
+for imputing missing data.
 
 In \cite{akande2015empirical}, Akande et al analyze the performance of various
 multiple imputation techniques on the American Community Survey dataset
@@ -37,6 +33,11 @@ see attributes with missing values for attributes it must operate on and users s
 missing data - eliminates
 the need to handle null value semantics, while guaranteeing soundness (modulo
 imputation strategy) of the query evaluation.
+
+Database system developers and others have worked on techniques to automatically
+detect dirty values, whether missing or otherwise, and rectify the errors is
+possible. A survey of methods and systems is provided in
+\cite{hellerstein2008quantitative}.
 
 BayesDB \cite{mansinghka2015bayesdb} provides users with a simple interface to 
 leverage statistical inference techniques on a database. Non-experts
