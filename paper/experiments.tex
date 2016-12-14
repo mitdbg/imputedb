@@ -41,18 +41,19 @@ dataset and write various ad-hoc queries.
 \begin{table}
   \centerfloat
   \input{runtimes}
-    \caption{Error ($\epsilon$, planning time ($t_p$), and running time ($t_r$)i or queries
+    \caption{Base error, change in error and and running time for queries
     with different imputation levels. Base error is the root-mean-square error (RMSE) between the query run on clean
-    data and the query run on dirty data without imputation.}
+    data and the query run on dirty data without imputation. Change in error is relative to the base error.}
   \label{fig:experiments}
 \end{table}
 
 Table~\ref{fig:experiments} provides a summary of our experimental results.
 We run each query in four configurations: without imputation on clean data, without imputation on dirty data, and with imputation on dirty data for $\alpha = 0$ and $\alpha = 1$.
 When a query returns a relation of the same ``shape'' (same number of tuples and same schema) on both clean and dirty data, we can compute an error value.
-For our experiments, we report root-mean-square error (RMSE).
+For our experiments, we report root-mean-square error (RMSE) for the base error (i.e. the error in the dirty data without imputation with respect to the clean data) and the change
+in RMSE for the imputed plans.
 For imputations, we run queries using the two extreme values of $\alpha$: 0 and 1, representing a focus on runtime and on information loss, respectively.
-For each query, the table displays the error between the query run on clean data and the query run on dirty data with imputation and the running time in seconds.
+For each query, the table displays the base error, the change in error in both imputation scenarios, and the running time in seconds.
 
 Planning times are not shown, as they are fractions of a second for all of the queries that we tested.
 The overall low planning times highlight the practicality of our algorithm, despite the exponential complexity.
