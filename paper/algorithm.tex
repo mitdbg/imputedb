@@ -56,8 +56,25 @@ regression trees. Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
 
-\todo{is it necessary to add a fudge factor to the loss calculation, for generality, and set
-it at 1.0 for our paper?}
+To compute $\text{Time}(Q)$, we retain the heuristics used by SimpleDB for the time
+complexity of the typical relational operators, and add new formulations for \textit{Drop}
+and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and its time
+complexity can be expressed as a function of the number of heap pages read and the IO cost
+per page.
+
+Evaluation of the time complexity for \textit{Impute} is more thorny, as the properties of
+different decision tree building algorithms can vary significantly, the underlying IO cost
+is not easily extracted (especially in the case that the entire stream of tuples does not
+fit in memory), and the CPU cost dominates (in contrast to the other operators, which may
+not even consider CPU cost explicitly). For example, \cite{martin1995time} find that the
+time complexity of the \textit{build tree} algorithm for one commonly-used class of
+decision trees is a function of the number of classes, several overhead constants, the
+parameterization of the partition and heuristic functions, and the \textit{arity} (the
+number of subsets considered for each split). Indeed, the \textit{build tree} phase often
+does not even dominate computation, as post-processing steps like pruning, which are vital
+in achieving good performance, can have cost exponential in the height of the tree. In
+practice, we find that a simple parameterization can be acceptable (yield intelligent query
+plans), though the range of $\alpha$ that does promote tradeoffs is condensed.
 
 \subsection{Imputation placement}
 \label{sec:placement}
