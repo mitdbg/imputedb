@@ -5,7 +5,17 @@ This plan must not emit any tuples which contain null values, regardless of the 
 Additionally, the traditional relational operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate) must never observe a null value in any attribute that they directly operate on.
 
 \subsection{Imputation operators}
-We introduce two new relational operators to perform imputation: impute ($\mu$) and drop ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of attributes and $R$ is a relation. Impute uses a machine learning method to replace all null values with non-null values for attributes in $C$ in the relation $R$. Drop simply removes from $R$ all tuples which have a null value for some attribute in $C$. Both operators guarantee that the resulting relation will contain no null values for attributes in $C$. 
+We introduce two new relational operators to perform imputation: \textit{Impute} ($\mu$) and
+\textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
+attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
+replace all null values with non-null values for attributes in $C$ in the relation $R$.
+\textit{Drop} simply removes from $R$ all tuples which have a null value for some attribute in $C$.
+Both operators guarantee that the resulting relation will contain no null values for
+attributes in $C$.  
+
+\subsection{Search space}
+\label{sec:search-space}
+To reduce the size of the query plan search space, only plans that fit the following template are considered. First, all filters are pushed to the leaves of the query tree, immediately after the scans. Joins are performed after filtering, and only left-deep plans are considered. Any group-by/aggregate will be performed after the final join. Finally, projections are placed at the root of the query tree. The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before/after traditional operators.
 
 \subsection{Cost model}
 \label{sec:cost-model}
@@ -24,7 +34,8 @@ Our runtime cost model is the cost model used in SimpleDB, though modern systems
 have more sophisticated approaches.
 
 For each sub-query, using the histogram information, we keep track of the estimated number of
-null values in a column  ($\text{MissingCount}(c, Q)$). We use this estimate to compute
+null values in a column  ($\text{MissingCount}(c, Q)$), given the histograms associated with
+the sub-query. We use this estimate to compute
 $\text{Loss}(Q)$ as follows.
 
 \begin{align*}
@@ -45,9 +56,8 @@ regression trees. Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
 
-\subsection{Search space}
-\label{sec:search-space}
-To reduce the size of the query plan search space, only plans that fit the following template are considered. First, all filters are pushed to the leaves of the query tree, immediately after the scans. Joins are performed after filtering, and only left-deep plans are considered. Any group-by/aggregate will be performed after the final join. Finally, projections are placed at the root of the query tree. The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before/after traditional operators.
+\todo{is it necessary to add a fudge factor to the loss calculation, for generality, and set
+it at 1.0 for our paper?}
 
 \subsection{Imputation placement}
 \label{sec:placement}
@@ -89,15 +99,18 @@ iteratively estimating predictive models of one missing attribute conditional on
 complete attributes and the other missing attributes. The individual predictive models can
 be customized by the analyst to the problem at hand. Decision tree algorithms, like CART,
 are found to be effective \cite{akande2015empirical} in empirical studies in general-purpose
-routines and are widely used in epidemiological domains \cite{burgette2010multiple}.  
+routines and are widely used in epidemiological domains \cite{burgette2010multiple}. Though
+we provide quantitative results for the CE-CART implementation, ImputeDB is designed to be
+agnostic to the choice of imputation algorithm, and additional algorithms --- with
+associated time and loss functions --- could be insert without any change in design.
 
 These imputation algorithms are rarely used in isolation --- rather, the ultimate goal is to
 perform statistical analysis of the complete data. To this end, the technique of
 \textit{multiple imputation} can be used, in which multiple distinct copies of the complete
 data are generated and estimators are computed by averaging over the multiple datasets. In
 ImputeDB, we cannot assume the user desires multiple copies of the query result, though we
-note that in further work, multiple imputation could be used within ImputeDB to generate
-lower-variance estimates of some aggregates, like averages.
+note that in further work, multiple imputation could be used within ImputeDB to reduce the
+variance of estimates of some aggregates, like averages.
 
 Our algorithm proceeds by iteratively fitting regression trees to a subset of the data and
 the target imputation columns. In each iteration, the missing values of a column are
@@ -115,14 +128,15 @@ don't need to consider the potential nature of the missing data.
 It is worth noting that given the nature of the imputation strategy used here, imputation
 operators become blocking in our system. An extension of ImputeDB could consider regression
 algorithms that learn in an online nature; this would reduce the cost of the imputation at
-the possible expense of quality.
+the possible expense of quality. Again, given the imputation strategy-agnostic design of
+ImputeDB, this would not pose a problem.
 
 \begin{algorithm}
     \input{algorithms/cart.tex}
 \end{algorithm}
 
 \subsection{Complexity}
-Our optimization algorithm builds off the approach taken by System R\cite{blasgen1981system}, therefore our algorithm still operates in exponential time. Indeed, 
+Our optimization algorithm builds off the approach taken by System R \cite{blasgen1981system}, therefore our algorithm still operates in exponential time. Indeed, 
 note that if we remove our restriction on types of imputation($\delta_{min}, \mu_{min}, \mu_{max}$), and allow any arbitrary subset of attributes to be imputed,
 then every single operator in the query plan has a number of imputations exponential in the number of dirty columns. Our restriction, instead, increases the number
 of plans (in the worst case) at each operator by a factor of 3. Of course, this implies that in the worst case (where all dirty sets tracked are distinct throughout the query plan),

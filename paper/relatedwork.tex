@@ -15,8 +15,8 @@ In \cite{akande2015empirical}, Akande et al analyze the performance of various
 multiple imputation techniques on the American Community Survey dataset
 (Sec~\ref{subsec:datasets}). The computational difficulties of imputing on large base
 tables are well known and can limit approaches. For example, Akande finds that
-one approaches (MI-GLM) crashes when attempting to impute on data that
-includes variables with potentially large domains (ten categories specifically).
+one approach (MI-GLM) is prohibitively expensive when attempting to impute on data that
+includes variables with potentially large domains (ten categories in their case).
 In contrast, \ProjectName{} allows users to specify a tradeoff between
 information loss and computational complexity (in terms of time). Furthermore,
 the query planner's imputation is guided by the requirements of each specific
@@ -47,8 +47,8 @@ Experts can further customize strategies and express domain knowledge to
 improve performance and accuracy.
 
 While BayesDB can be used for value imputation, this step is not framed
-within the context of query planning, but rather as an explicit step, using the
-\verb|INFER| operation. 
+within the context of query planning, but rather as an explicit statistical
+inference step within the query language, using the \verb|INFER| operation. 
 
 BayesDB provides a great alternative for bridging the gap between
 traditional databases and sophisticated modeling software. \ProjectName{}, in

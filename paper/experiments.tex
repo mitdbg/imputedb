@@ -1,6 +1,6 @@
 \section{Experiments}
 
-To evaluate the performance of our system, we generated plans for queries on two data sets: the American Community Survey and a synthetic dataset.
+To evaluate the performance of our system, we generate plans for queries on two data sets: the American Community Survey and a synthetic dataset.
 \subsection{Data sets} \label{subsec:datasets}
 
 The American Community Survey (ACS) provides a number of public data sets collected by the U.S. Census Bureau.
@@ -23,7 +23,7 @@ across the table.
 
 \subsection{Queries}
 
-We collected a set of queries (Figure~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
+We collected a set of queries (Table~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
 
 The queries on the ACS data all consist only of selections, filters, and aggregations.
 The ACS data is contained in a single table, so there are relatively few join queries that are interesting on this data set and remain relevant for analysts, rather
@@ -41,23 +41,27 @@ dataset and write various ad-hoc queries.
 \begin{table}
   \centerfloat
   \input{runtimes}
-  \caption{Running time and error for queries with different imputation levels. Base error is the RMSE between the query run on clean data and the query run on dirty data without imputation.}
+    \caption{Error ($\epsilon$, planning time ($t_p$), and running time ($t_r$)i or queries
+    with different imputation levels. Base error is the RMSE between the query run on clean
+    data and the query run on dirty data without imputation. \todo{Micah: Not clear to me
+    what the symbol means.}}
   \label{fig:experiments}
 \end{table}
 
-Figure~\ref{fig:experiments} provides a summary of our experimental results.
+Table~\ref{fig:experiments} provides a summary of our experimental results.
 We run each query in four configurations: without imputation on clean data, without imputation on dirty data, and with imputation on dirty data for $\alpha = 0$ and $\alpha = 1$.
 When a query returns a relation of the same ``shape'' (same number of tuples and same schema) on both clean and dirty data, we can compute an error value.
 For our experiments, we report root-mean-square error (RMSE).
 For imputations, we run queries using the two extreme values of $\alpha$: 0 and 1, representing a focus on runtime and on information loss, respectively.
 For each query, the table displays the error between the query run on clean data and the query run on dirty data with imputation and the running time in seconds.
 
-Planning times are not shown, as they are fractions of a second for all of the queries that we tested.
+Planning times are not shown\todo{they are shown...}, as they are fractions of a second for all of the queries that we tested.
 The overall low planning times highlight the practicality of our algorithm, despite the exponential complexity.
 Running times clearly vary based on $\alpha$, allowing users to tune their query performance as desired.
 
 We can group our queries into five categories: sum/count queries, average queries, min/max queries, selection queries, and join queries on synthetic data.
 
+\todo{consider giving up on getting the references to work?}
 \begin{itemize}
 \item For sum and count queries (\ref{q1}, \ref{q2}, \ref{q4}), imputation does a good job of reducing the error.
 For each of these queries, we can reduce total error by several orders of magnitude.
