@@ -71,7 +71,7 @@ public class RunQueries {
 		} catch (BadErrorException e) {}
 		dirty.close();
 		
-		for (double a = 0.9; a <= 1.0; a += 0.01) {
+		for (double a = 0.0; a <= 1.0; a += 1.0) {
 			final double aa = a;
 			startPlan = Instant.now();
 			DbIterator imputedDirty = planQuery(dirtyQuery, x -> new ImputedLogicalPlan(aa));
@@ -89,8 +89,8 @@ public class RunQueries {
 				imputeErr = clean.error(imputedDirty);
 			} catch (BadErrorException e) {}
 			
-			outFile.write(String.format("\"%s\",%f,%f,%s,%s,%f\n", query, baseErr, imputeErr, 
-					Duration.between(startPlan, endPlan), Duration.between(startRun, endRun), a));
+			outFile.write(String.format("\"%s\",%f,%f,%d,%d,%f\n", query, baseErr, imputeErr,
+					Duration.between(startPlan, endPlan).getSeconds(), Duration.between(startRun, endRun).getSeconds(), a));
 			
 			imputedDirty.close();
 		}

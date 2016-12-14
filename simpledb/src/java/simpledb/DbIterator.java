@@ -81,7 +81,7 @@ public interface DbIterator extends Serializable {
 			}
 			count++;
 		}
-		return Math.sqrt(err) / count;
+		return Math.sqrt(err / count);
 	}
 	
 	public default void print(PrintStream strm) throws DbException, TransactionAbortedException {
