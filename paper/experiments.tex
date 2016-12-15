@@ -41,7 +41,7 @@ dataset and write various ad-hoc queries.
 \begin{table}
   \centerfloat
   \input{runtimes}
-    \caption{Base error, change in error and and running time for queries
+    \caption{Base error, percent change in error and and running time for queries
     with different imputation levels. Base error is the root-mean-square error (RMSE) between the query run on clean
     data and the query run on dirty data without imputation. Change in error is relative to the base error.}
   \label{fig:experiments}
@@ -80,7 +80,7 @@ These values are unlikely to be the result of imputation and are also unlikely t
 
 Finally, we performed CE-CART imputation on the entirety of the ACS table, in order to compare our system to the traditional, pre-processing approach to imputation.
 We were unable to complete the full imputation due to resource constraints, but the process ran for more than one hour without terminating.
-This time compares favorably to our maximum of 55 seconds for a query with imputation on the ACS data.
+This time compares favorably to our maximum of 72 seconds for a query with imputation on the ACS data.
 Given the varying needs of database users, \ProjectName{} clearly allows flexibility without a significant performance hit.
 
 

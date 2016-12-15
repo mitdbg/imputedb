@@ -12,11 +12,13 @@ def err_to_str(err):
     else:
         return '%.2e' % float(err)
 
-def err_diff_to_str(err1, err2):
-    if err1 == 'null' or err2 == 'null':
+def err_diff_to_str(err, base_err):
+    if err == 'null' or base_err == 'null':
         return r'\multicolumn{1}{c}{--}'
+    if float(base_err) == 0.0:
+        return '0'
     else:
-        return '%.2e' % (float(err1) - float(err2))
+        return str(round(((float(err) - float(base_err)) / abs(float(base_err)) * 100)))
 
 def get_first_row(df, l):
     for (_, row) in df.iterrows():
@@ -56,7 +58,7 @@ def main():
         writel(f, r'\multicolumn{2}{c}{} & \multicolumn{2}{c}{Imputed ($\alpha=0.0$)} & \multicolumn{2}{c}{Imputed ($\alpha=1.0$)} \\')
         writel(f, r'\cmidrule(r){3-4}')
         writel(f, r'\cmidrule(l){5-6}')
-        writel(f, r'\# & \multicolumn{1}{c}{Base error} & \multicolumn{1}{c}{Error} & \multicolumn{1}{c}{Time (s)} & \multicolumn{1}{c}{Error} & \multicolumn{1}{c}{Time (s)} \\')
+        writel(f, r'\# & \multicolumn{1}{c}{Base error} & \multicolumn{1}{c}{Error \%$\Delta$} & \multicolumn{1}{c}{Time (s)} & \multicolumn{1}{c}{Error \%$\Delta$} & \multicolumn{1}{c}{Time (s)} \\')
         writel(f, r'\midrule')
         for query in df['query'].unique():
             ctr = qidx[query]
