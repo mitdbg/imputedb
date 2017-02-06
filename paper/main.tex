@@ -1,4 +1,5 @@
-\documentclass{article}
+\documentclass{vldb}
+\usepackage{balance}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
@@ -8,7 +9,7 @@
 \usepackage{xcolor}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
-\usepackage[style=ieee]{biblatex}
+\usepackage[style=numeric,firstinits=true]{biblatex}
 \usepackage{booktabs}
 \usepackage{siunitx}
 \usepackage{hyperref} % load after other packages
@@ -81,6 +82,7 @@ In order to study the placement of an imputation step, we create a logical imput
 \input{experiments}
 \input{conclusion}
 
+\balance
 \printbibliography
 
 \end{document}
