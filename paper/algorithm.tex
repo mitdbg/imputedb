@@ -28,6 +28,7 @@ To reduce the size of the query plan search space, only plans that fit the follo
 \end{itemize}
   
 The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before/after traditional operators.
+\todo{add a schematic of a standard query plan}
 
 \subsection{Cost model}
 \label{sec:cost-model}
@@ -39,10 +40,7 @@ These cardinality estimates are impacted not just by filtering or joining, as in
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 For simplicity, each of the logical nodes in a query plan points to a set of histograms.
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for new operation in the plan.
-Algorithm~\ref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
-
-Our runtime cost model is the cost model used in SimpleDB, though modern systems
-have more sophisticated approaches.
+Algorithm~\ref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans
 
 For each sub-query, we keep track of the estimated number of
 null values in a column  ($\textsc{Missing}(c, Q)$) by using the histograms associated with
@@ -67,9 +65,13 @@ regression trees. Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
 
-To compute $\text{Time}(Q)$, we retain the heuristics used by SimpleDB for the time
-complexity of the typical relational operators, and add new formulations for \textit{Drop}
-and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and its time
+To compute $\text{Time}(Q)$, we retain a simple set of heuristics used by a standard 
+database for the time. Scan costs are estimated based on the number of tuples, 
+page size, and an unit-less IO cost per page. Join costs are estimated as a function
+of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
+Filtering, projecting, and aggregating are all done in memory and have low computational overhead
+so we assume negligible time costs for those operations. We extend these heuristics to 
+account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and its time
 complexity can be expressed as a function of the number of heap pages read and the IO cost
 per page.
 
@@ -174,6 +176,7 @@ ImputeDB, this would not pose a problem.
 \end{algorithm}
 
 \subsection{Complexity}
+\todo{this section needs to be cleaned up/clarified}
 Our optimization algorithm builds off the approach taken by System R \cite{blasgen1981system}, therefore our algorithm still operates in exponential time. Indeed, 
 note that if we remove our restriction on types of imputation($\delta_{min}, \mu_{min}, \mu_{max}$), and allow any arbitrary subset of attributes to be imputed,
 then every single operator in the query plan has a number of imputations exponential in the number of dirty columns. Our restriction, instead, increases the number
