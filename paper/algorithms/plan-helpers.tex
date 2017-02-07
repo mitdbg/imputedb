@@ -1,60 +1,75 @@
 %\begin{algorithm}
   \begin{algorithmic}
-    \Require{$q$ is a query plan, $C_{req}$ is a set of attributes that must be imputed.}
-    \Ensure{Returns a set of query plans such that $\Call{Dirty}{q'} \cap C_{req} = \emptyset$.}
-    \Function{AddImpute}{$q, C_{req}$}
-    \State $C_{min} \gets \Call{Dirty}{q} \cap C_{req}$
-    \If{$\Call{Dirty}{q} = \emptyset$}
-    	\State \Return $\{ q \}$
-   \ElsIf{$C_{min} = \emptyset$}
-    	\State \Return $\{ \mu_{\Call{Dirty}{q}}(q), q \}$
+    \Require{$q$ is a query plan. $C_{req}$ is the set of attributes that must be imputed in the output of this query plan. $C_{vis}$ is the set of attributes which are visible in the output of the overall query.}
+    \Ensure{A set of query plans $Q$ with added imputation.}
+    \Function{AddImpute}{$q, C_{req}, C_{vis}$}
+    \State $D_{must} \gets \Call{Dirty}{q} \cap C_{req}$
+    \State $D_{may} \gets D_{must} \cup (\Call{Dirty}{q} \cap C_{vis})$
+    \State $Q \gets \emptyset$
+    \If{$D_{must} = \emptyset$}
+    \State $Q \gets Q \cup \{q\}$
     \Else
-    \State \Return $\{\mu_{\Call{Dirty}{q}}(q), \mu_{C_{min}}(q), \delta_{C_{min}}(q)\}$
+    \State $Q \gets Q \cup \{\mu_{D_{must}}(q),\ \delta_{D_{must}}(q)\}$
     \EndIf
+
+    \If{$D_{may} \neq \emptyset$}
+    \State $Q \gets Q \cup \{\mu_{D_{may}}(q)\}$
+    \EndIf
+    
+    \State \Return $Q$
     \EndFunction
     
-    \State
-
-    \Require{$Q$ is a set of query plans.}
-    \Ensure{Returns an optimal query plan for each distinct dirty set in $Q$.}
-    \Function{OptRel}{$Q$}
-    \State $D \gets \{\Call{Dirty}{q} ~|~ q \in Q\}$
-    \State \Return $\{\argmin_{q \in Q \land \Call{Dirty}{q} = d} \Call{Cost}{q} ~|~ d \in D\}$
-    \EndFunction
-
     \State
 
     \Require{$t$ is a table and $\phi$ is a filter predicate.}
-    \Ensure{Returns a set of optimal query plans for scanning and filtering $t$, with distinct dirty sets.}
-    \Function{OptFilter}{$t, \phi$}
-    \State \Return $\Call{OptRel}{\{  \sigma_{\phi}(q) | q \in \Call{AddImpute}{t, \Call{Attrs}{\phi}} \} }$
+    \Ensure{A set of plans for filtering $t$ with $\phi$.}
+    \Function{OptFilter}{$t, \phi, C_{vis}$}
+    \State \Return $\{\sigma_{\phi}(q)\ |\ q \in \Call{AddImpute}{t, \Call{Attrs}{\phi}, C_{vis}}\}$
+    \EndFunction
+
+    \State
+
+    \Require{$q$ is a query plan, $G$ is a set of grouping attributes, $A$ is an aggregation function, and $C_{vis}$ is a set of visible attributes.}
+    \Ensure{A set of plans for grouping \& aggregating with $G$ and $A$.}
+    \Function{OptGroupBy}{$q, G, A, C_{vis}$}
+    \State $C \gets G \cup \Call{Attrs}{A}$
+    \State $Q' \gets \Call{AddImpute}{q, C, C_{vis}}$
+    \State \Return $\{\Call{GroupBy}{q', G, A} ~|~ q' \in Q'\}$
+    \EndFunction
+
+    \State
+
+    \Require{$q$ is a query plan, $P$ is a set of projection attributes.}
+    \Ensure{A set of plans with the attributes in $P$ projected.}
+    \Function{OptProject}{$q, P$}
+    \State \Return $\{\pi_P(q') ~|~ q' \in \Call{AddImpute}{q, P, P}\}$
     \EndFunction
 
     \State
     
-  
-    \Require{$Q$ is a map from tables and dirty sets to optimal query plans (possibly with imputations), and $\Psi$ relates query plans with join predicates.}
-    \Ensure{Returns a map from dirty sets to optimal query plans involving all necessary joins}
-    \Function{OptJoin}{$Q, \Psi$}
-    \For{$size \in 1...|\Psi|$}
-    	\State $S \gets subset(\Psi, size)$
-	\For{$\psi \in S$}
-		\State $S' \gets S \setminus \psi$
-			\If{$joins(S', \psi)$} 
-				\State $S'_{plans} \gets Q(\Call{Rels}{S'})$
-				\State $t \gets \Call{Rels}{\psi} \setminus \Call{Rels}{S'}$
-				\State $t_{plans} \gets Q(t)$
-				\For {$l, r \in S'_{plans} \times t_{plans}$}
-					\State $P_l \gets \Call{AddImpute}{l, \Call{Attrs}{\psi}}$
-					\State $P_r \gets \Call{AddImpute}{r, \Call{Attrs}{\psi}}$
-					\State \Call{Update}{Q, $\Call{OptRel}{ \{p_l \bowtie_{\psi} p_r | p_l \in P_l, p_r \in P_r \} }$}
-				\EndFor
-		\EndIf
-	\EndFor
+    \Require{A set of tables $T$, a plan cache $Q$ containing at least one query plan for each table in $T$, and a relation $J : T \times \Psi \times T$ between tables and join predicates.}
+    \Ensure{An updated plan cache $Q'$ which contains at least one plan that combines all of the tables in $T$.}
+    \Function{OptJoin}{$Q, T, J, C_{vis}$}
+    \For{$size \in 2...|T|$}
+    \For{$S \in \{\text{all length}\ size\ \text{subsets of}\ T\}$}
+    \For{$t \in S$}
+    \State $S' \gets S \setminus \{t\}$
+    \For{$(t, \psi, t') \in J$ where $t' \in S'$}
+    \State $C \gets \Call{Attrs}{\psi}$
+    \State $L \gets \{\Call{AddImpute}{q, C, C_{vis}} ~|~ q \in Q[t] \}$
+    \State $R \gets \{\Call{AddImpute}{q, C, C_{vis}} ~|~ q \in Q[S'] \}$
+    \State $Q[S] \lhd \{l \bowtie_\psi r ~|~ l \in L, r \in R\}$
     \EndFor
-    \State \Return{Q(\Call{Rels}{$\Phi$})}
+    \EndFor
+    \EndFor
+    \EndFor
     \EndFunction
   \end{algorithmic}
   \caption{Base algorithms for query planning with imputations.}
   \label{algo:plan-helpers}
 %\end{algorithm}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:
