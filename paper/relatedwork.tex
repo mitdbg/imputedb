@@ -60,7 +60,34 @@ is partially based on the seminal work developed for System R's query planning\c
 However, in contrast to System R, \ProjectName{} performs additional histogram transformations to account
 for the changing nature of missing values.
 
-\todo{add more related work that highlights novelty}
+\subsection{Forecasting and Databases}
+\cite{parisi2011embedding} introduces the idea of incorporating time-series forecast operators into
+databases, along with the necessary relational algebra extensions. Their work explores the theoretical
+properties of forecast operators and generalizes them into a family of operators, distinguished by
+the type of predictions returned. They highlight the use of forecasting for replacing missing values.
+In their follow on work\cite{parisi2013temporal}, they identify various equivalence and containment
+relationships when using forecast operators, which could be used to perform query plan transformations that guarantee the same result. They
+explore forecast-first and forecast-last plans, which perform forecasting operations before and after traditional
+relational operators, respectively.
+
+In contrast to this work, \ProjectName{} is targeted at generic value imputation, not necessarily tailored to 
+time-series. The optimizer is not based on equivalence transformations, nor are there guarantees of equal
+results under different conditions. Instead, the optimizer allows users to pick their tradeoff between
+runtime cost and information loss. The search space considered by our optimizer is broader, not just
+forecast-first/forecast-last plans, but rather imputation operators can be placed anywhere in the query plan
+(with some restrictions). The novelty of our contribution lies in the successful incorporation of
+imputation operations in non-trivial query plans with cost-based optimization.
+
+\cite{duan2007processing} describes the Fa system and its declarative language for time-series forecasting. Their
+system automatically searches the space of attribute combinations/transformations and statistical models
+to produce forecasts within a given accuracy threshold. Accuracy estimates are determined using
+standard techniques, such as k-fold cross-validation. 
+
+\ProjectName{} provides a declarative language, as
+an extension to standard SQL, but in contrast to Fa, \ProjectName{} is not searching the space of possible
+imputation models, but rather the space of query plans that incorporate imputation operators. Another major point
+of distinction between \ProjectName{} and Fa is that the latter doesn't consider tradeoffs between accuracy and computation time, 
+but rather returns the most accurate forecast (with some stopping criterion).
 
 
 
