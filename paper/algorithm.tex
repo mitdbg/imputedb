@@ -28,7 +28,16 @@ To reduce the size of the query plan search space, only plans that fit the follo
 \end{itemize}
   
 The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before/after traditional operators.
-\todo{add a schematic of a standard query plan}
+Figure \ref{fig:query-schematic} shows a simple schematic of what a query involving three tables might look like, absent any imputation operators.
+
+
+\begin{figure}
+\Tree [.$\pi$ [.$GroupBy$ [.$\bowtie$ [.$\bowtie$ [.$\sigma$ $t_1$ ] [.$\sigma$ $t_2$ ] ] [.$\sigma$ $t_3$ ] ] ] ]
+\caption{Query plan schematic for the type of traditional plans explored (absent imputation operators)}
+\label{fig:query-schematic}
+\end{figure}
+
+
 
 \subsection{Cost model}
 \label{sec:cost-model}
