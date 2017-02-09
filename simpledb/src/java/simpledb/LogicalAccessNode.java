@@ -17,8 +17,6 @@ public class LogicalAccessNode extends ImputedPlan {
 	public final String alias;
 	public final int tableId;
 
-	private static final double LOSS_FACTOR = 1.01;
-
 	public LogicalAccessNode(TransactionId tid, LogicalScanNode scan, ImputationType imp, LogicalFilterNode filter)
 	throws ParsingException, BadImputation {
 		this(tid, scan, imp, filterToSingletonSet(filter));

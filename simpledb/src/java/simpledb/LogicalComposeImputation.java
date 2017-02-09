@@ -12,8 +12,6 @@ import static simpledb.ImputationType.MINIMAL;
  * include joins.
  */
 public class LogicalComposeImputation extends ImputedPlan {
-	private static final double LOSS_FACTOR = 1.01;
-
 	private final DbIterator physicalPlan;
 	private final ImputedPlan subplan;
 	private final Set<QuantifiedName> dirtySet;
