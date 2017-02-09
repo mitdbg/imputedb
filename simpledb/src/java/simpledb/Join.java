@@ -6,11 +6,16 @@ import java.util.*;
  * The Join operator implements the relational join operation.
  */
 public class Join extends Operator {
+	private static enum Type { NESTED_LOOPS, HASH };
     private static final long serialVersionUID = 1L;
     
     private final JoinPredicate pred;
     private DbIterator child1, child2;
     private Tuple t1 = null;
+    private final Type type;
+    
+    private HashMap<Field, ArrayList<Tuple>> table;
+    private Iterator<Tuple> matches = null;
 
     /**
      * Constructor. Accepts to children to join and the predicate to join them
@@ -27,6 +32,22 @@ public class Join extends Operator {
         pred = p;
         this.child1 = child1;
         this.child2 = child2;
+        
+        switch(pred.getOperator()) {
+		case EQUALS:
+		case LIKE:
+			type = Type.HASH;
+			break;
+		case GREATER_THAN:
+		case GREATER_THAN_OR_EQ:
+		case LESS_THAN:
+		case LESS_THAN_OR_EQ:
+		case NOT_EQUALS:
+			type = Type.NESTED_LOOPS;
+			break;
+		default:
+			throw new RuntimeException("Unexpected join predicate.");
+        }
     }
 
     public JoinPredicate getJoinPredicate() {
@@ -72,6 +93,19 @@ public class Join extends Operator {
         super.open();
         child1.open();
         child2.open();
+        
+        if (type == Type.HASH) {
+        	table = new HashMap<>();
+        	int joinAttrIdx = pred.getField2();
+			while (child2.hasNext()) {
+				Tuple t = child2.next();
+				Field joinAttr = t.getField(joinAttrIdx);
+				if (!table.containsKey(joinAttr)) {
+					table.put(joinAttr, new ArrayList<Tuple>());
+				}
+				table.get(joinAttr).add(t);
+			}
+        }
     }
 
     @Override
@@ -106,31 +140,72 @@ public class Join extends Operator {
      * @see JoinPredicate#filter
      */
     @Override
-    protected Tuple fetchNext() throws TransactionAbortedException, DbException {    	
-    	while (true) {
-    		// If we don't have a working tuple from the outer relation, get one.
-    		// If nothing's available, we're done.
-    		if (t1 == null) {
-    			if (child1.hasNext()) {
-    				t1 = child1.next();
-    			} else {
-    				return null;
-    			}
-    		}
-    		
-    		while (true) {
-	    		if (child2.hasNext()) {
-	    			Tuple t2 = child2.next();
-	    			if (pred.filter(t1, t2)) {
-	    				return new Tuple(t1, t2);
-	    			}
-	    		} else {
-	    			t1 = null;
-	    			child2.rewind();
-	    			break;
-	    		}
-    		}
-    	}
+    protected Tuple fetchNext() throws TransactionAbortedException, DbException {
+    	switch (type) {
+		case HASH:
+			if (table.size() == 0) { return null; }
+			
+			// Iterate over the outer relation and select matching tuples from the table.
+			while (true) {
+				// If we don't have a working tuple from the outer relation, get one.
+				// If nothing's available, we're done.
+				if (t1 == null) {
+					if (child1.hasNext()) {
+						t1 = child1.next();
+					} else {
+						return null;
+					}
+				}
+				
+				if (matches == null) {
+					ArrayList<Tuple> m = table.get(t1.getField(pred.getField1()));
+					if (m == null) {
+						t1 = null;
+						continue;
+					}
+					matches = m.iterator();
+				}
+
+				while (true) {
+					if (matches.hasNext()) {
+						Tuple t2 = matches.next();
+						return new Tuple(t1, t2);
+					} else {
+						t1 = null;
+						matches = null;
+						break;
+					}
+				}
+			}
+		case NESTED_LOOPS:
+			// Iterate over the outer relation and select matching tuples from the table.
+			while (true) {
+				// If we don't have a working tuple from the outer relation, get one.
+				// If nothing's available, we're done.
+				if (t1 == null) {
+					if (child1.hasNext()) {
+						t1 = child1.next();
+					} else {
+						return null;
+					}
+				}
+
+				while (true) {
+					if (child2.hasNext()) {
+						Tuple t2 = child2.next();
+						if (pred.filter(t1, t2)) {
+							return new Tuple(t1, t2);
+						}
+					} else {
+						t1 = null;
+						child2.rewind();
+						break;
+					}
+				}
+			}
+		default:
+			throw new RuntimeException("Unexpected type.");
+    	}   	
     }
 
     @Override

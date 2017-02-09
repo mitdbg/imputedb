@@ -91,7 +91,15 @@ public class SystemTestUtil {
     public static ArrayList<Integer> tupleToList(Tuple tuple) {
         ArrayList<Integer> list = new ArrayList<Integer>();
         for (int i = 0; i < tuple.getTupleDesc().numFields(); ++i) {
-            int value = ((IntField)tuple.getField(i)).getValue();
+            Field field = tuple.getField(i);
+            int value;
+            if (field instanceof IntField) {
+            	value = ((IntField)field).getValue();
+            } else if (field instanceof DoubleField) {
+            	value = (int) ((DoubleField)field).getValue();
+            } else {
+            	throw new RuntimeException("Unexpected field type.");
+            }
             list.add(value);
         }
         return list;

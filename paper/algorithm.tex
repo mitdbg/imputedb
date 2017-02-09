@@ -117,12 +117,48 @@ Imputation operators can be placed at any point in the query plan, but to meet t
 Note that \textsc{Dirty} over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null, but the dirty set would be unchanged. We choose to over-approximate to ensure that all null values are explicitly imputed or dropped.
 
 \subsection{Query planning}
-The input to our query planner is a tuple $(T, \Phi, \Psi, P, G, A)$: a set of tables $T$, a set of filter predicates $\phi_t, t \in T$, a set of join predicates $\psi_{(t_1, t_2)}, t_1, t_2 \in T$, a set of attributes $P$, and an optional set of attributes $G$ and aggregation function $A \in \{\text{Max}, \text{Min}, \text{Sum}, \text{Avg}, \text{Count}\}$.
+The input to our query planner is a tuple $(T, F, J, P, G, A)$:
+\begin{itemize}
+\item A set of tables $T$.
+\item A relation $F: T \times \Phi$ between tables and filter predicates.
+\item A relation $J : T \times \Psi \times T$ between tables and join predicates.
+\item A set of projection attributes $P$.
+\item An optional set of grouping attributes $G$ and aggregator function $A$.
+\end{itemize}
 
 The query planner must select a join ordering in addition to placing imputation operators as described in Section~\ref{sec:placement}.
 
-To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all columns in the relation, regardless of which are required.  Algorithm~\ref{algo:plan-helpers} presents
-a series of helper functions used by the top level planner, shown in Algorithm~\ref{algo:top-level-planner}.
+Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
+At a high level, a plan cache is a mapping from a set of tables to a set of optimal plans that perform the required joins and filters over these tables.
+We store multiple plans rather than a single best plan because each plan has a distinct set of dirty attributes.
+
+\begin{figure}
+  \begin{align*}
+    \llbracket Q[T] \rrbracket &= \begin{cases}
+      P & (T, P) \in Q \\
+      \emptyset & \text{otherwise} \\
+    \end{cases} \\
+    \llbracket Q[T] \lhd p \rrbracket &= \begin{aligned}
+                                           Q \cup \{(T,\ \argmin_{q \in P}\ \textsc{Cost}(q))\}\ \text{where} \\
+                                           P = \left\{q ~|~ \begin{aligned}
+                                                                     q \in \llbracket Q[T] \rrbracket \cup \{p\}, \\
+                                                                     \textsc{Dirty}(q) = \textsc{Dirty}(p) 
+                                                                   \end{aligned}
+                                           \right\}
+                                         \end{aligned}
+    % \in 
+  \end{align*}
+  \caption{Semantics of the plan cache.}
+\end{figure}
+
+The query planner (Algorithm~\ref{algo:top-level-planner}), operates as follows.
+First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan.
+This set will be used to determine which attributes are imputed.
+Then, it constructs a plan cache 
+
+To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
+
+Algorithm~\ref{algo:plan-helpers} presents a series of helper functions used by the top level planner, shown in Algorithm~\ref{algo:top-level-planner}.
 
 \begin{algorithm}
 \input{algorithms/plan-helpers.tex}

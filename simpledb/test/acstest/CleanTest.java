@@ -14,6 +14,7 @@ import Zql.ZStatement;
 import Zql.ZqlParser;
 import simpledb.*;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class CleanTest {
 	@ClassRule public static final AcsTestRule testDb = new AcsTestRule();
