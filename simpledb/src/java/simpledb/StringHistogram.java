@@ -69,7 +69,8 @@ public class StringHistogram {
         if (tup.getField(index).isMissing()) {
             hist.incrCtMissing();
         } else {
-            hist.addValue(tup, index);
+            int val = stringToInt(((StringField) tup.getField(index)).getValue());
+            hist.addValue(val);
         }
     }
 
