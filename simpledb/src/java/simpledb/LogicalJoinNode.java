@@ -19,14 +19,20 @@ public class LogicalJoinNode {
     public String f2PureName;
     
     public String f2QuantifiedName;
+    
+    public final QuantifiedName f1Name, f2Name;
 
     /** The join predicate */
     public Predicate.Op p;
 
     public LogicalJoinNode() {
+    	throw new RuntimeException("Seriously don't use this.");
     }
 
     public LogicalJoinNode(String table1, String table2, String joinField1, String joinField2, Predicate.Op pred) {
+    	f1Name = new QuantifiedName(table1, joinField1);
+    	f2Name = new QuantifiedName(table2, joinField2);
+    	
         t1Alias = table1;
         t2Alias = table2;
         String[] tmps = joinField1.split("[.]");

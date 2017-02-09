@@ -4,7 +4,6 @@ import java.util.*;
 
 import static simpledb.ImputationType.DROP;
 import static simpledb.ImputationType.MAXIMAL;
-import static simpledb.ImputationType.MINIMAL;
 
 /**
  * Adding imputation on top of a plan that already has imputed values along its
@@ -42,73 +41,37 @@ public class LogicalComposeImputation extends ImputedPlan {
 		return this.tableStats;
 	}
 
-	public static ImputedPlan create(ImputedPlan subplan, ImputationType imp, Set<QuantifiedName> required,
-			Map<String, Integer> tableMap) throws BadImputation {
-		// don't change anything if there are no dirty columns
-		if (subplan.getDirtySet().isEmpty()) {
-			return subplan;
-		}
+	public static ImputedPlan create(ImputedPlan subplan, ImputationType imp, Set<QuantifiedName> impute, Map<String, Integer> tableMap) {
+		assert !Collections.disjoint(subplan.getDirtySet(), impute); // No-op imputations aren't allowed.
 
-		if (Collections.disjoint(subplan.getDirtySet(), required) && (imp == MINIMAL || imp == DROP)) {
-			return subplan;
-		}
+		final Set<QuantifiedName> dirtySet = new HashSet<>(subplan.getDirtySet()); // compute new dirty set
+		dirtySet.removeAll(impute);
 
-		// which ones do we actually need to impute
-		Set<QuantifiedName> impute = new HashSet<>();
-		impute.addAll(subplan.getDirtySet());
-		impute.retainAll(required);
+		final TupleDesc schema = subplan.getPlan().getTupleDesc();
+		final double totalData = subplan.cardinality() * schema.numFields();
+		final Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
 
-		final Set<QuantifiedName> dirtySet = new HashSet<>();
-		dirtySet.addAll(subplan.getDirtySet());
-
-		TupleDesc schema = subplan.getPlan().getTupleDesc();
-		double totalData = subplan.cardinality() * schema.numFields();
-
-		DbIterator physicalPlan;
-		double loss, time;
-		// table stats for subplan
-		TableStats subplanTableStats = subplan.getTableStats();
-		// holds tablestats adjusted for imputation
-		TableStats adjustedTableStats;
+		TableStats subplanTableStats = subplan.getTableStats(); // table stats for subplan
 
 		switch (imp) {
 		case DROP: {
-			Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
-			physicalPlan = new Drop(toNames(impute), subplan.getPlan());
-			dirtySet.removeAll(impute);
-			loss = estimateNumNulls(subplan, imputeIndices);
-			time = subplan.cardinality();
-			adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
+			final DbIterator physicalPlan = new Drop(toNames(impute), subplan.getPlan());
+			final double loss = estimateNumNulls(subplan, imputeIndices);
+			final double time = subplan.cardinality();
+			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
 		}
-		case MINIMAL: {
-			Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
+		case MAXIMAL:
+		case MINIMAL: 
 			Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
-			physicalPlan = imputeOp;
-			dirtySet.removeAll(impute);
-			loss = estimateNumNulls(subplan, imputeIndices) * (1 / Math.sqrt(totalData));
-			int numComplete = schema.numFields() - dirtySet.size();
-			time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
-			adjustedTableStats = subplanTableStats.adjustForImpute(MINIMAL, imputeIndices);
+			final DbIterator physicalPlan = imputeOp;
+			final double loss = estimateNumNulls(subplan, imputeIndices) * (1 / Math.sqrt(totalData));
+			final int numComplete = schema.numFields() - dirtySet.size();
+			final double time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
+			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
-		}
-		case MAXIMAL: {
-			Set<QuantifiedName> i = subplan.getDirtySet();
-			Collection<Integer> imputeIndices = schema.fieldNamesToIndices(i);
-			Impute imputeOp = new ImputeRegressionTree(toNames(i), subplan.getPlan());
-			physicalPlan = imputeOp;
-			dirtySet.clear();
-			loss = estimateNumNulls(subplan, imputeIndices) * (1 / Math.sqrt(totalData));
-			int numComplete = schema.numFields() - dirtySet.size();
-			time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
-			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
-			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
-		}
 		case NONE:
-			if (impute.isEmpty()) {
-				return subplan;
-			}
-			throw new BadImputation();
+			throw new RuntimeException("NONE is no longer a valid ImputationType.");
 		default:
 			throw new RuntimeException("Unexpected ImputationType.");
 		}
