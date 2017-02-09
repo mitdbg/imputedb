@@ -3,7 +3,6 @@ package simpledb;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Iterator;
-import simpledb.TupleDesc.TDItem;
 
 public class QueryPlanVisualizer {
 

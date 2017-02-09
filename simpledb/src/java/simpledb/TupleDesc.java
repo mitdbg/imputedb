@@ -6,34 +6,7 @@ import java.util.*;
 /**
  * TupleDesc describes the schema of a tuple.
  */
-public class TupleDesc implements Serializable {
-    /**
-     * A help class to facilitate organizing the information of each field
-     * */
-    public static class TDItem implements Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        /**
-         * The type of the field
-         * */
-        public final Type fieldType;
-        
-        /**
-         * The name of the field
-         * */
-        public final String fieldName;
-
-        public TDItem(Type t, String n) {
-            this.fieldName = n;
-            this.fieldType = t;
-        }
-
-        public String toString() {
-            return fieldName + "(" + fieldType + ")";
-        }
-    }
-    
+public class TupleDesc implements Serializable, Iterable<TDItem> {
     private final TDItem[] schema;
     private final int size;
 
