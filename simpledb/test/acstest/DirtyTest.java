@@ -19,6 +19,7 @@ import Zql.ZStatement;
 import Zql.ZqlParser;
 import simpledb.*;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class DirtyTest {
 	@Parameters(name = "{index}: {0}")
