@@ -432,32 +432,17 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		ImputedPlan bestPlan = null;
 		if (aggField != null) {
 			for (Entry<Set<QualifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
-				for (ImputationType imp : ImputationType.values()) {
-					try {
-						LogicalAggregateNode plan = new LogicalAggregateNode(entry.getValue(), imp, groupByField, aggOp, aggField, tableMap);
-						if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
-							bestPlan = plan;
-						}
-					} catch (BadImputation e) {}
+				for (ImputedPlan plan : addImputes(entry.getValue(), globalRequired, globalRequired)) {
+					if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
+						bestPlan = plan;
+					}
 				}
 			}
 		}
 		else {
 			// Otherwise impute other outfields and select lowest cost plan
-
-			// retrieve quantified names of out fields
-			Set<QualifiedName> required = new HashSet<>();
-			for(int fieldIx : outFields) {
-				// TODO: hackish!
-				String fieldNm = td.getFieldName(fieldIx);
-				String[] aliasAndAttr = fieldNm.split("\\.");
-				required.add(new QualifiedName(aliasAndAttr[0], aliasAndAttr[1]));
-			}
-
-			// search over possible plans
 			for (Entry<Set<QualifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
-				for (ImputationType imp : ImputationType.values()) {
-					ImputedPlan plan = LogicalComposeImputation.create(entry.getValue(), imp, required, null);
+				for (ImputedPlan plan : addImputes(entry.getValue(), globalRequired, globalRequired)) {
 					if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
 						bestPlan = plan;
 					}
