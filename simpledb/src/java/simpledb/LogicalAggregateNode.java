@@ -6,9 +6,9 @@ public class LogicalAggregateNode extends ImputedPlan {
 	private final ImputedPlan plan;
 	private final DbIterator physicalPlan;
 	
-	public LogicalAggregateNode(ImputedPlan subplan, ImputationType imp, QuantifiedName groupByField,
-			Aggregator.Op aggOp, QuantifiedName aggField, Map<String, Integer> tableMap) throws BadImputation {
-		HashSet<QuantifiedName> required = new HashSet<>();
+	public LogicalAggregateNode(ImputedPlan subplan, ImputationType imp, QualifiedName groupByField,
+			Aggregator.Op aggOp, QualifiedName aggField, Map<String, Integer> tableMap) throws BadImputation {
+		HashSet<QualifiedName> required = new HashSet<>();
 
 		// group-by keys needs only to be imputed when its actually used
 		// e.g. select avg(c1) from t doesn't have a group-by key to impute
@@ -38,7 +38,7 @@ public class LogicalAggregateNode extends ImputedPlan {
 	}
 
 	@Override
-	public Set<QuantifiedName> getDirtySet() {
+	public Set<QualifiedName> getDirtySet() {
 		throw new RuntimeException("Not implemented.");
 	}
 

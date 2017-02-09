@@ -20,7 +20,7 @@ public class LogicalJoinNode {
     
     public String f2QuantifiedName;
     
-    public final QuantifiedName f1Name, f2Name;
+    public final QualifiedName f1Name, f2Name;
 
     /** The join predicate */
     public Predicate.Op p;
@@ -30,8 +30,8 @@ public class LogicalJoinNode {
     }
 
     public LogicalJoinNode(String table1, String table2, String joinField1, String joinField2, Predicate.Op pred) {
-    	f1Name = new QuantifiedName(table1, joinField1);
-    	f2Name = new QuantifiedName(table2, joinField2);
+    	f1Name = new QualifiedName(table1, joinField1);
+    	f2Name = new QualifiedName(table2, joinField2);
     	
         t1Alias = table1;
         t2Alias = table2;

@@ -8,7 +8,7 @@ import static simpledb.ImputationType.MINIMAL;
 
 public class LogicalAccessNode extends ImputedPlan {
 	private final DbIterator physicalPlan;
-	private final HashSet<QuantifiedName> dirtySet;
+	private final HashSet<QualifiedName> dirtySet;
 	private final double loss;
 	private final double time;
 	private TableStats tableStats;
@@ -41,13 +41,13 @@ public class LogicalAccessNode extends ImputedPlan {
 		}
 
 		/* Get the dirty set of the base table. */
-		HashSet<QuantifiedName> tableDirtySet = DirtySet.ofBaseTable(scan.t, scan.alias);
+		HashSet<QualifiedName> tableDirtySet = DirtySet.ofBaseTable(scan.t, scan.alias);
 
 		/* Get the required set of the predicate. */
-		HashSet<QuantifiedName> required = new HashSet<QuantifiedName>();
+		HashSet<QualifiedName> required = new HashSet<QualifiedName>();
 		if (filters != null) {
 			for(LogicalFilterNode filter : filters) {
-				required.add(new QuantifiedName(filter.tableAlias, filter.fieldPureName));
+				required.add(new QualifiedName(filter.tableAlias, filter.fieldPureName));
 			}
 		}
 
@@ -89,7 +89,7 @@ public class LogicalAccessNode extends ImputedPlan {
 			pp = new ImputeRegressionTree(DirtySet.toAttrs(tableDirtySet), pp);
 			loss = subplanTableStats.estimateTotalNull() * (1 / Math.sqrt(totalData));
 			time = subplanTableStats.estimateScanCost() + subplanTableStats.estimateImputeCost((Impute) pp, numDirtyMaximal, numComplete);
-			dirtySet = new HashSet<QuantifiedName>();
+			dirtySet = new HashSet<QualifiedName>();
 			adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, requiredIdx);
 			break;
 		case MINIMAL:
@@ -183,7 +183,7 @@ public class LogicalAccessNode extends ImputedPlan {
 		return physicalPlan;
 	}
 
-	public HashSet<QuantifiedName> getDirtySet() {
+	public HashSet<QualifiedName> getDirtySet() {
 		return dirtySet;
 	}
 

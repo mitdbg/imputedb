@@ -2,11 +2,11 @@ package simpledb;
 
 import java.util.*;
 
-public class QuantifiedName {
+public class QualifiedName {
 	public final String tableAlias;
 	public final String attrName;
 
-	public QuantifiedName(String tableAlias, String attrName) {
+	public QualifiedName(String tableAlias, String attrName) {
 		this.tableAlias = tableAlias;
 		this.attrName = attrName;
 	}
@@ -31,7 +31,7 @@ public class QuantifiedName {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		QuantifiedName other = (QuantifiedName) obj;
+		QualifiedName other = (QualifiedName) obj;
 		if (attrName == null) {
 			if (other.attrName != null) {
 				return false;
@@ -54,9 +54,9 @@ public class QuantifiedName {
 		return tableAlias + "." + attrName;
 	}
 
-	public static Collection<String> toNames(Collection<QuantifiedName> attrs) {
+	public static Collection<String> toNames(Collection<QualifiedName> attrs) {
 		ArrayList<String> names = new ArrayList<>();
-		for(QuantifiedName attr : attrs) {
+		for(QualifiedName attr : attrs) {
 			names.add(attr.toString());
 		}
 		return names;

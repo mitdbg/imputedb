@@ -170,13 +170,13 @@ public class TupleDesc implements Serializable, Iterable<TDItem> {
      * @throws NoSuchElementException
      *             if no field with a matching name is found.
      */
-    public int fieldNameToIndex(QuantifiedName name) throws NoSuchElementException {
+    public int fieldNameToIndex(QualifiedName name) throws NoSuchElementException {
     	return fieldNameToIndex(name.toString());
     }
 
-    public Collection<Integer> fieldNamesToIndices(Collection<QuantifiedName> names) throws NoSuchElementException {
+    public Collection<Integer> fieldNamesToIndices(Collection<QualifiedName> names) throws NoSuchElementException {
         List<Integer> indices = new ArrayList<>();
-        for(QuantifiedName name : names) {
+        for(QualifiedName name : names) {
             indices.add(fieldNameToIndex(name));
         }
         return indices;

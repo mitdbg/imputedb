@@ -32,7 +32,7 @@ public class LoggedImputedPlanCache extends ImputedPlanCache {
 	}
 	
 	@Override
-	void addPlan(Set<String> ts, Set<QuantifiedName> dirtySet, ImputedPlan newPlan, double lossWeight) {
+	void addPlan(Set<String> ts, Set<QualifiedName> dirtySet, ImputedPlan newPlan, double lossWeight) {
 		super.addPlan(ts, dirtySet, newPlan, lossWeight);
 		
 		writer.print("Tables: ");
@@ -55,7 +55,7 @@ public class LoggedImputedPlanCache extends ImputedPlanCache {
 	}
 	
 	@Override
-	void addJoinPlan(Set<String> ts, Set<QuantifiedName> dirtySet, Set<LogicalJoinNode> joins, ImputedPlan newPlan, double lossWeight) {
+	void addJoinPlan(Set<String> ts, Set<QualifiedName> dirtySet, Set<LogicalJoinNode> joins, ImputedPlan newPlan, double lossWeight) {
 		super.addJoinPlan(ts, dirtySet, joins, newPlan, lossWeight);
 		
 		writer.print("Tables: ");

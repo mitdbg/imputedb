@@ -13,7 +13,7 @@ import static simpledb.ImputationType.MAXIMAL;
 public class LogicalComposeImputation extends ImputedPlan {
 	private final DbIterator physicalPlan;
 	private final ImputedPlan subplan;
-	private final Set<QuantifiedName> dirtySet;
+	private final Set<QualifiedName> dirtySet;
 	private final double loss;
 	private final double time;
 	private TableStats tableStats;
@@ -26,7 +26,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 	 * @param loss
 	 * @param time
 	 */
-	private LogicalComposeImputation(TableStats tableStats, DbIterator physicalPlan, ImputedPlan subplan, Set<QuantifiedName> dirtySet,
+	private LogicalComposeImputation(TableStats tableStats, DbIterator physicalPlan, ImputedPlan subplan, Set<QualifiedName> dirtySet,
 			double loss, double time) {
 		super();
 		this.physicalPlan = physicalPlan;
@@ -41,10 +41,10 @@ public class LogicalComposeImputation extends ImputedPlan {
 		return this.tableStats;
 	}
 
-	public static ImputedPlan create(ImputedPlan subplan, ImputationType imp, Set<QuantifiedName> impute, Map<String, Integer> tableMap) {
+	public static ImputedPlan create(ImputedPlan subplan, ImputationType imp, Set<QualifiedName> impute, Map<String, Integer> tableMap) {
 		assert !Collections.disjoint(subplan.getDirtySet(), impute); // No-op imputations aren't allowed.
 
-		final Set<QuantifiedName> dirtySet = new HashSet<>(subplan.getDirtySet()); // compute new dirty set
+		final Set<QualifiedName> dirtySet = new HashSet<>(subplan.getDirtySet()); // compute new dirty set
 		dirtySet.removeAll(impute);
 
 		final TupleDesc schema = subplan.getPlan().getTupleDesc();
@@ -85,7 +85,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 		return physicalPlan;
 	}
 
-	public Set<QuantifiedName> getDirtySet() {
+	public Set<QualifiedName> getDirtySet() {
 		return dirtySet;
 	}
 
@@ -97,9 +97,9 @@ public class LogicalComposeImputation extends ImputedPlan {
 		return tableStats.totalTuples();
 	}
 
-	private static Set<String> toNames(Set<QuantifiedName> attrs) {
+	private static Set<String> toNames(Set<QualifiedName> attrs) {
 		Set<String> names = new HashSet<>();
-		for (QuantifiedName attr : attrs) {
+		for (QualifiedName attr : attrs) {
 			names.add(attr.toString());
 		}
 		return names;

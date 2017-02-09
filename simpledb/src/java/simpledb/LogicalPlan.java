@@ -35,11 +35,11 @@ public class LogicalPlan {
      */
     protected HashMap<String,Integer> tableMap;
     
-    protected QuantifiedName groupByField;
+    protected QualifiedName groupByField;
     protected Op aggOp;
-    protected QuantifiedName aggField;
+    protected QualifiedName aggField;
     protected boolean oByAsc;
-    protected QuantifiedName oByField;
+    protected QualifiedName oByField;
     
     private String query;
     private HashMap<String,DbIterator> subplanMap;
@@ -103,7 +103,7 @@ public class LogicalPlan {
      */
     public void addFilter(String field, Predicate.Op p, String
         constantValue) throws ParsingException{ 
-        QuantifiedName f = disambiguateName(field);
+        QualifiedName f = disambiguateName(field);
         LogicalFilterNode lf = new LogicalFilterNode(f.tableAlias, f.attrName, p, constantValue);
         filters.addElement(lf);
     }
@@ -120,7 +120,7 @@ public class LogicalPlan {
      *      or is not in one of the tables added via {@link #addScan}
     */
     public void addJoin(String joinField1, String joinField2, Predicate.Op pred) throws ParsingException {
-    	QuantifiedName j1 = disambiguateName(joinField1), j2 = disambiguateName(joinField2);
+    	QualifiedName j1 = disambiguateName(joinField1), j2 = disambiguateName(joinField2);
         if (j1.tableAlias.equals(j2.tableAlias))
             throw new ParsingException("Cannot join on two fields from same table");
         LogicalJoinNode lj = new LogicalJoinNode(j1.tableAlias, j2.tableAlias, j1.attrName, j2.attrName, pred);
@@ -141,7 +141,7 @@ public class LogicalPlan {
      *      or is not in one of the tables added via {@link #addScan}
      */
     public void addJoin( String joinField1, DbIterator joinField2, Predicate.Op pred) throws ParsingException {
-        QuantifiedName j = disambiguateName(joinField1);
+        QualifiedName j = disambiguateName(joinField1);
         LogicalSubplanJoinNode lj = new LogicalSubplanJoinNode(j.tableAlias, j.attrName, joinField2, pred);
         System.out.println("Added subplan join on " + joinField1);
         joins.addElement(lj);
@@ -166,7 +166,7 @@ public class LogicalPlan {
      * @throws ParsingException 
     */
     public void addProjectField(String fname, String aggOp) throws ParsingException {
-        QuantifiedName f = disambiguateName(fname);
+        QualifiedName f = disambiguateName(fname);
         System.out.println("Added select list field " + fname);
         if (aggOp != null) {
             System.out.println("\t with aggregator " + aggOp);
@@ -206,15 +206,15 @@ public class LogicalPlan {
      *  @throws ParsingException if the field cannot be found in any of the tables, or if the
      *   field is ambiguous (appears in multiple tables)
      */
-    private QuantifiedName disambiguateName(String name) throws ParsingException {
+    private QualifiedName disambiguateName(String name) throws ParsingException {
         String[] fields = name.split("[.]");
         if (fields.length == 2 && (!fields[0].equals("null")))
-            return new QuantifiedName(fields[0], fields[1]);
+            return new QualifiedName(fields[0], fields[1]);
         if (fields.length > 2) 
             throw new ParsingException("Field " + name + " is not a valid field reference.");
         if (fields.length == 2)
             name = fields[1];
-        if (name.equals("*")) return new QuantifiedName("null", name);
+        if (name.equals("*")) return new QualifiedName("null", name);
         //now look for occurrences of name in all of the tables
         Iterator<LogicalScanNode> tableIt = tables.iterator();
         String tableName = null;
@@ -234,7 +234,7 @@ public class LogicalPlan {
             }
         }
         if (tableName != null)
-            return new QuantifiedName(tableName, name);
+            return new QualifiedName(tableName, name);
         else
             throw new ParsingException("Field " + name + " does not appear in any tables.");
 

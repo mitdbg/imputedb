@@ -16,12 +16,12 @@ public class LogicalImputedJoinNode extends ImputedPlan {
     /** The name of the field in t1 to join with. It's the pure name of a field, rather that alias.field. */
     public final String f1PureName;
 
-    public final QuantifiedName f1QuantifiedName;
+    public final QualifiedName f1QuantifiedName;
 
     /** The name of the field in t2 to join with. It's the pure name of a field.*/
     public final String f2PureName;
 
-    public final QuantifiedName f2QuantifiedName;
+    public final QualifiedName f2QuantifiedName;
 
     private final TransactionId tid;
 
@@ -30,7 +30,7 @@ public class LogicalImputedJoinNode extends ImputedPlan {
     private final ImputedPlan table2;
 
     // dirty set
-    private final HashSet<QuantifiedName> dirtySet;
+    private final HashSet<QualifiedName> dirtySet;
 
     // physical plan
     private final DbIterator physicalPlan;
@@ -70,8 +70,8 @@ public class LogicalImputedJoinNode extends ImputedPlan {
         else
             f2PureName = joinField2;
         p = pred;
-        this.f1QuantifiedName = new QuantifiedName(t1Alias, f1PureName);
-        this.f2QuantifiedName = new QuantifiedName(t2Alias, f2PureName);
+        this.f1QuantifiedName = new QualifiedName(t1Alias, f1PureName);
+        this.f2QuantifiedName = new QualifiedName(t2Alias, f2PureName);
 
         // create physical plan
         int ixfield1 = table1.getPlan().getTupleDesc().fieldNameToIndex(f1QuantifiedName.toString());
@@ -80,7 +80,7 @@ public class LogicalImputedJoinNode extends ImputedPlan {
         physicalPlan = new Join(joinPred, table1.getPlan(), table2.getPlan());
 
         // add dirty set info
-        dirtySet = new HashSet<QuantifiedName>();
+        dirtySet = new HashSet<QualifiedName>();
         // add dirty set of table 1
         dirtySet.addAll(table1.getDirtySet());
         // add dirty set of table 2
@@ -163,7 +163,7 @@ public class LogicalImputedJoinNode extends ImputedPlan {
         return physicalPlan;
     }
 
-    public HashSet<QuantifiedName> getDirtySet() {
+    public HashSet<QualifiedName> getDirtySet() {
         return dirtySet;
     }
 

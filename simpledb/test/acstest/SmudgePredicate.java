@@ -9,7 +9,7 @@ import simpledb.DbIterator;
 import simpledb.Field;
 import simpledb.IntField;
 import simpledb.Operator;
-import simpledb.QuantifiedName;
+import simpledb.QualifiedName;
 import simpledb.TransactionAbortedException;
 import simpledb.Tuple;
 import simpledb.TupleDesc;
@@ -32,7 +32,7 @@ class SmudgePredicate extends Operator {
 		this.shouldDirty = shouldDirty;
 	}
 	
-	public SmudgePredicate(DbIterator child, QuantifiedName dirtyName, double dirtyPerc, Predicate<Tuple> shouldDirty) {
+	public SmudgePredicate(DbIterator child, QualifiedName dirtyName, double dirtyPerc, Predicate<Tuple> shouldDirty) {
 		this(child, child.getTupleDesc().fieldNameToIndex(dirtyName), dirtyPerc, shouldDirty);
 	}
 	

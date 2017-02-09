@@ -21,10 +21,10 @@ public class LogicalFilterNode {
     
     public String fieldQuantifiedName;
     
-    public final QuantifiedName fieldName;
+    public final QualifiedName fieldName;
     
     public LogicalFilterNode(String table, String field, Predicate.Op pred, String constant) {
-    	fieldName = new QuantifiedName(table, field);
+    	fieldName = new QualifiedName(table, field);
         tableAlias = table;
         p = pred;
         c = constant;

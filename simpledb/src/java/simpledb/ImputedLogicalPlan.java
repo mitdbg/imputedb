@@ -90,7 +90,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		};
 	}
 	
-	private void optimizeFilters(TransactionId tid, ImputedPlanCache cache, Set<QuantifiedName> globalRequired) throws ParsingException {
+	private void optimizeFilters(TransactionId tid, ImputedPlanCache cache, Set<QualifiedName> globalRequired) throws ParsingException {
 		// Accumulate all filters on each table.
 		HashMap<String, Set<LogicalFilterNode>> filterMap = new HashMap<>();
 		for (LogicalFilterNode filter : filters) {
@@ -148,7 +148,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	 *             when stats or filter selectivities is missing a table in the
 	 *             join, or or when another internal error occurs
 	 */
-	private void optimizeJoins(TransactionId tid, ImputedPlanCache cache, Set<QuantifiedName> globalRequired) throws ParsingException {
+	private void optimizeJoins(TransactionId tid, ImputedPlanCache cache, Set<QualifiedName> globalRequired) throws ParsingException {
 		if (joins.isEmpty()) {
 			return;
 		}
@@ -182,7 +182,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	 *             when stats, filterSelectivities, or pc object is missing
 	 *             tables involved in join
 	 */
-	private void computePlan(TransactionId tid, int joinToRemove, BitSet joinSet, ImputedPlanCache pc, Set<QuantifiedName> globalRequired) throws ParsingException {
+	private void computePlan(TransactionId tid, int joinToRemove, BitSet joinSet, ImputedPlanCache pc, Set<QualifiedName> globalRequired) throws ParsingException {
 		// join node from standard simpledb planner, not imputed, just used for
 		// convenience
 		LogicalJoinNode j = joins.get(joinToRemove);
@@ -197,13 +197,13 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		news.clear(joinToRemove);
 
 		// possible plans to arrive at left and right sides of the join
-		Map<Set<QuantifiedName>, ImputedPlan> leftPlans;
-		Map<Set<QuantifiedName>, ImputedPlan> rightPlans;
+		Map<Set<QualifiedName>, ImputedPlan> leftPlans;
+		Map<Set<QualifiedName>, ImputedPlan> rightPlans;
 
 		// attributes that must be imputed for join
-		Set<QuantifiedName> required = new HashSet<>();
-		required.add(new QuantifiedName(j.t1Alias, j.f1PureName));
-		required.add(new QuantifiedName(j.t2Alias, j.f2PureName));
+		Set<QualifiedName> required = new HashSet<>();
+		required.add(new QualifiedName(j.t1Alias, j.f1PureName));
+		required.add(new QualifiedName(j.t2Alias, j.f2PureName));
 
 		// names of table in already performed join
 		Set<String> leftTables = new HashSet<>();
@@ -290,15 +290,15 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	 * @return
 	 * @throws BadImputation 
 	 */
-	private List<ImputedPlan> addImputes(ImputedPlan plan, Set<QuantifiedName> local, Set<QuantifiedName> global) {
+	private List<ImputedPlan> addImputes(ImputedPlan plan, Set<QualifiedName> local, Set<QualifiedName> global) {
 		// must = Dirty(plan) & local
 		// all local requirements that are currently dirty
-		Set<QuantifiedName> must = new HashSet<>(local);
+		Set<QualifiedName> must = new HashSet<>(local);
 		must.retainAll(plan.getDirtySet());
 		
 		// may = must | (Dirty(plan) & global)
 		// all forced attributes + all global requirements that are currently dirty
-		Set<QuantifiedName> may = new HashSet<>(global);
+		Set<QualifiedName> may = new HashSet<>(global);
 		may.retainAll(plan.getDirtySet());
 		may.addAll(must);
 		
@@ -321,7 +321,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	public DbIterator physicalPlan(TransactionId tid, Map<String, TableStats> baseTableStats, boolean explain)
 			throws ParsingException {
 		// Determine the global imputation requirements.
-		Set<QuantifiedName> globalRequired = new HashSet<QuantifiedName>();
+		Set<QualifiedName> globalRequired = new HashSet<QualifiedName>();
 		for (LogicalFilterNode filter : filters) {
 			globalRequired.add(filter.fieldName);
 		}
@@ -336,13 +336,13 @@ public class ImputedLogicalPlan extends LogicalPlan {
 				for (LogicalScanNode table : tables) {
 					TupleDesc td = Database.getCatalog().getTupleDesc(table.t);
 					for (TDItem ti : td) {
-						QuantifiedName name = new QuantifiedName(table.alias, ti.fieldName);
+						QualifiedName name = new QualifiedName(table.alias, ti.fieldName);
 						globalRequired.add(name);
 					}
 				}
 			} else {
 				String[] aliasAndAttr = select.fname.split("\\.");
-				globalRequired.add(new QuantifiedName(aliasAndAttr[0], aliasAndAttr[1]));
+				globalRequired.add(new QualifiedName(aliasAndAttr[0], aliasAndAttr[1]));
 			}
 			
 			if (select.aggOp != null) {
@@ -366,14 +366,14 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			throw new RuntimeException(e1);
 		}
 		
-		optimizeFilters(tid, cache);
+		optimizeFilters(tid, cache, globalRequired);
 		optimizeJoins(tid, cache, globalRequired);
 
 		final Set<String> allTables = new HashSet<>();
 		for (LogicalScanNode scan : tables) {
 			allTables.add(scan.alias);
 		}
-		final Map<Set<QuantifiedName>, ImputedPlan> bestPlans = cache.getBestPlans(allTables);
+		final Map<Set<QualifiedName>, ImputedPlan> bestPlans = cache.getBestPlans(allTables);
 
 		// The a tuple description for the output of the join. (all the plans
 		// should
@@ -430,7 +430,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		// Add an aggregation node if this plan has an aggregation.
 		ImputedPlan bestPlan = null;
 		if (aggField != null) {
-			for (Entry<Set<QuantifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
+			for (Entry<Set<QualifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
 				for (ImputationType imp : ImputationType.values()) {
 					try {
 						LogicalAggregateNode plan = new LogicalAggregateNode(entry.getValue(), imp, groupByField, aggOp, aggField, tableMap);
@@ -445,16 +445,16 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			// Otherwise impute other outfields and select lowest cost plan
 
 			// retrieve quantified names of out fields
-			Set<QuantifiedName> required = new HashSet<>();
+			Set<QualifiedName> required = new HashSet<>();
 			for(int fieldIx : outFields) {
 				// TODO: hackish!
 				String fieldNm = td.getFieldName(fieldIx);
 				String[] aliasAndAttr = fieldNm.split("\\.");
-				required.add(new QuantifiedName(aliasAndAttr[0], aliasAndAttr[1]));
+				required.add(new QualifiedName(aliasAndAttr[0], aliasAndAttr[1]));
 			}
 
 			// search over possible plans
-			for (Entry<Set<QuantifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
+			for (Entry<Set<QualifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
 				for (ImputationType imp : ImputationType.values()) {
 					ImputedPlan plan = LogicalComposeImputation.create(entry.getValue(), imp, required, null);
 					if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
