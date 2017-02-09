@@ -2,34 +2,76 @@
 \todo{we of course need to rewrite this whole section}
 To evaluate the performance of our system, we generate plans for queries on two data sets: the American Community Survey and a synthetic dataset.
 \subsection{Data sets} \label{subsec:datasets}
+\subsubsection{Center for Disease Control: Surveys}
+For our first set of experiments, we use survey data collected by the 
+Center for Disease Control (CDC) in the United States. In particular, we
+experiment on a set of tables collected as part of the National
+Health and Nutrition Examination Survey (NHANES), a series of studies
+conducted by the CDC on a national sample of several thousand individuals\cite{nhanes}.
+The data consists on survey responses, physical examinations, and laboratory
+results, amongst others. Our dataset corresponds to the 2013-2014 NHANES
+and is available for direct download on the CDC's organization site on 
+kaggle.com, a popular data science website.
 
-The American Community Survey (ACS) provides a number of public data sets collected by the U.S. Census Bureau.
-We used a cleaned version of the 2012 Public Use Microdata Sample (PUMS) data kindly provided by the authors of~\cite{akande2015empirical}.
-The cleaning procedure is described in detail in~\cite{akande2015empirical}, but to summarize, the following data were removed:
+There are a total of 6 tables associated with the NHANES data set. For purposes
+of our experiments, we use three tables:
+
 \begin{itemize}
-\item Rows corresponding to vacant houses or single occupant households.
-\item Identification variables (e.g. area codes, serial numbers).
-\item Flag variables.
-\item Continuous variables.
+	\item Demographics: outlines demographic information of subjects
+	\item Examinations: physical exam results
+	\item Laboratory: laboratory exam results
 \end{itemize}
-The final data set consists of a single table with 671,153 rows and 37 columns, where all column entries are integers.
 
-In order to evaluate our implementation, we created a dirtied variant of the ACS data by randomly eliminating
-10\% of the fields across the table.
+The original tables have a large number of attributes, in some cases providing more granular
+tests results or alternative metrics. In order to simplify the presentation and
+exploration of queries, we focused on a subset of the attributes for each table.
+Table~\ref{table:nhanes-description} shows the attributes selected, along with the
+percentage of nulls. It is worth noting that for readability, we have replaced the
+NHANES variable names with self-explanatory attribute names.
 
-In order to evaluate additional queries, we constructed a synthetic table, consisting of 10,000 rows and 10 columns, with
-all values drawn from a uniform distribution between 0 and 100. To create a dirtied variant of the synthetic data, we randomly deleted 30\% of the fields
-across the table.
+\begin{table}
+    \centering
+    \begin{subtable}{0.5\textwidth}
+        \centering
+       \input{tables/cdc_demo}
+        \caption{Demographics}
+    \end{subtable}
+    \begin{subtable}{0.5\textwidth}
+        \centering
+        \input{tables/cdc_labs}
+        \caption{Laboratory Results}
+    \end{subtable}
+       \begin{subtable}{0.5\textwidth}
+        \centering
+        \input{tables/cdc_exams}
+        \caption{Physical Results}
+    \end{subtable}
+    \caption{Missing values in CDC NHANES 2013-2014 data}
+\end{table}
+
+All tables used consists of 10 attributes. The laboratory and examinations data,
+referred to as \textit{labs} and \textit{exams} in our queries, consists of 9813 rows,
+while the demographics data (\textit{demo}) has 10175 rows.
+
+\subsubsection{Some Other TBD dataset}
+\todo{write data description for this}
 
 \subsection{Queries}
-
 We collected a set of queries (Table~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
 
-The queries on the ACS data all consist only of projections, selections, and aggregations.
-The ACS data is contained in a single table, so there are relatively few join queries that are interesting on this data set and remain relevant for analysts, rather
-than contrived solely for the purpose of experimentation.
-However, even with select, filter, and aggregate, there are interesting choices to make with imputation placement. In order to explore joins, we leverage the synthetic
-dataset and write various ad-hoc queries.
+The queries on the CDC NHANES data consists not only of projections and selections,
+but also interesting joins and aggregations. Our aim was to craft meaningful queries
+that would provide performance figures relevant to practitioners who may use
+similar datasets.
+
+Query~\ref{q1} calculates the average weight for users based on their income data.
+To do so, it joins demographics and physical examination data. Query~\ref{q2}
+compares cholesterol levels for individuals who are both ends of the income
+spectrum and who satisfy a minimum weight requirement. Query~\ref{q3}
+extracts the maximum blood lead levels for subjects who satisfy a particular
+waist circumference requirement.
+
+\todo{describe further queries on other data set}
 
 \begin{table*}
   \centerfloat

@@ -20,7 +20,7 @@ public class SimpleDb {
 			try {
 				if (args.length < 3 || args.length > 5) {
 					System.err.println("Usage: simpledb convert FILE NUM_COLUMNS");
-					System.err.println("Usage: simpledb convert FILE TYPE_STRING [FIELD_SEP]");
+					System.err.println("Usage: simpledb convert FILE NUM_COLUMNS TYPE_STRING [FIELD_SEP]");
 					System.exit(-1);
 				}
 				
