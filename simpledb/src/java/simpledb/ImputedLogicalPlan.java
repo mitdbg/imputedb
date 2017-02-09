@@ -104,31 +104,32 @@ public class ImputedLogicalPlan extends LogicalPlan {
 
 		// Create an access node for each table to be scanned/filtered.
 		for (LogicalScanNode scan : tables) {
-			String tableAlias = scan.alias;
-			Set<LogicalFilterNode> filters = filterMap.get(tableAlias);
+			LogicalImputedScanNode scanPlan = new LogicalImputedScanNode(tid, scan);
+			
+			HashSet<String> tablesInPlan = new HashSet<>();
+			tablesInPlan.add(scan.alias);
 
-			ArrayList<LogicalAccessNode> candidates = new ArrayList<LogicalAccessNode>();
-			if (!DirtySet.ofBaseTable(scan.t, scan.alias).isEmpty()) {
-				try {
-					candidates.add(new LogicalAccessNode(tid, scan, ImputationType.DROP, filters));
-				} catch (BadImputation e) {}
-				try {
-					candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MINIMAL, filters));
-				} catch (BadImputation e) {}
-				try {
-					candidates.add(new LogicalAccessNode(tid, scan, ImputationType.MAXIMAL, filters));
-				} catch (BadImputation e) {}
-			}
-
-			try {
-				candidates.add(new LogicalAccessNode(tid, scan, ImputationType.NONE, filters));
-			} catch (BadImputation e) {}
-
-			/* Select the best candidate for each distinct dirty set. */
-			for (LogicalAccessNode node : candidates) {
-				HashSet<String> tables = new HashSet<>();
-				tables.add(tableAlias);
-				cache.addPlan(tables, node.getDirtySet(), node, lossWeight);
+			Set<LogicalFilterNode> filters = filterMap.get(scan.alias);
+			
+			// If there's no filters, add the scan plan as is.
+			if (filters == null) { 
+				cache.addPlan(tablesInPlan, scanPlan.getDirtySet(), scanPlan, lossWeight);
+			} 
+			
+			// Otherwise, impute as needed and add on the required filters.
+			else {
+				/* Get the required set of the predicate. */
+				HashSet<QualifiedName> localRequired = new HashSet<QualifiedName>();
+				for(LogicalFilterNode filter : filters) {
+					localRequired.add(new QualifiedName(filter.tableAlias, filter.fieldPureName));
+				}
+				
+				List<ImputedPlan> imputedScans = addImputes(scanPlan, localRequired, globalRequired);
+				
+				for (ImputedPlan imputedScan : imputedScans) {
+					ImputedPlan filterPlan = new LogicalImputedFilterNode(tid, imputedScan, filters);
+					cache.addPlan(tablesInPlan, filterPlan.getDirtySet(), filterPlan, lossWeight);
+				}
 			}
 		}
 	}
@@ -364,7 +365,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 			throw new RuntimeException(e1);
-		}
+		}		
 		
 		optimizeFilters(tid, cache, globalRequired);
 		optimizeJoins(tid, cache, globalRequired);
