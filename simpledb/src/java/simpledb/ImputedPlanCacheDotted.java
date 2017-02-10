@@ -22,7 +22,7 @@ public class ImputedPlanCacheDotted extends ImputedPlanCache {
 	
 	private void writePlan(Set<QualifiedName> dirtySet, ImputedPlan plan, double lossWeight) {
 		StringBuilder prefix = new StringBuilder();
-		prefix.append(lossWeight);
+		prefix.append(plan.cost(lossWeight));
 		prefix.append(" ");
 		for (QualifiedName name : new TreeSet<QualifiedName>(dirtySet)) {
 			prefix.append(name.toString());
