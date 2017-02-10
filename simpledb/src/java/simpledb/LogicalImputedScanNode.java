@@ -32,7 +32,7 @@ public class LogicalImputedScanNode extends ImputedPlan {
 
 	@Override
 	public double cost(double lossWeight) {
-		return getTableStats().estimateScanCost();
+		return (1 - lossWeight) * getTableStats().estimateScanCost();
 	}
 
 	@Override
