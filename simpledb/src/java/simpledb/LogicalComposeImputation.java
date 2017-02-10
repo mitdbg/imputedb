@@ -88,9 +88,15 @@ public class LogicalComposeImputation extends ImputedPlan {
 	public Set<QualifiedName> getDirtySet() {
 		return dirtySet;
 	}
-
-	public double cost(double lossWeight) {
-		return lossWeight * loss + (1 - lossWeight) * time + subplan.cost(lossWeight);
+	
+	@Override
+	protected double loss() {
+		return subplan.loss() + loss;
+	}
+	
+	@Override
+	protected double time() {
+		return subplan.time() + time;
 	}
 
 	public double cardinality() {

@@ -145,10 +145,30 @@ public class LogicalImputedJoinNode extends ImputedPlan {
         // merge the histograms
         return stats1.merge(stats2);
     }
-
-    // TODO FIX: should this be the same as before? I don't think so....
-    public double cost(double lossWeight) {
-        return table1.cost(lossWeight) + table1.cardinality() * table2.cost(lossWeight) + table1.cardinality() * table2.cardinality();
+    
+    @Override
+    protected double loss() {
+    	return table1.loss() + table2.loss();
+    }
+    
+    @Override
+    protected double time() {
+    	switch(p) {
+    	// Hash join
+		case EQUALS:
+		case LIKE:
+			return table1.time() + table2.time();
+			
+		// Nested loops join
+		case GREATER_THAN:
+		case GREATER_THAN_OR_EQ:
+		case LESS_THAN:
+		case LESS_THAN_OR_EQ:
+		case NOT_EQUALS:
+			return table1.time() + table1.cardinality() * table2.time();
+		default:
+			throw new RuntimeException("Unexpected predicate.");
+    	}
     }
 
 

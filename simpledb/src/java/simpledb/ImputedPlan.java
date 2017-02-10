@@ -14,9 +14,16 @@ import java.util.Set;
  * Each ImputedPlan carries a copy of its table statistics. These are modified according to imputation/selection/joins.
  */
 public abstract class ImputedPlan {
-  public abstract Set<QualifiedName> getDirtySet();
-  public abstract DbIterator getPlan();
-  public abstract double cost(double lossWeight);
-  public abstract double cardinality();
-  public abstract TableStats getTableStats();
+	protected abstract double loss();
+	protected abstract double time();
+	
+	public abstract Set<QualifiedName> getDirtySet();
+	public abstract DbIterator getPlan();
+	public abstract double cardinality();
+	public abstract TableStats getTableStats();
+
+	public double cost(double lossWeight) {
+		assert 0.0 <= lossWeight && lossWeight <= 1.0;
+		return lossWeight * loss() + (1 - lossWeight) * time();
+	}
 }

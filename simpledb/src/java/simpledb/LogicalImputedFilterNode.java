@@ -73,10 +73,15 @@ public class LogicalImputedFilterNode extends ImputedPlan {
 	public Set<QualifiedName> getDirtySet() {
 		return subplan.getDirtySet();
 	}
-
-	// TODO: Filters should probably not be zero-cost.
-	public double cost(double lossWeight) {
-		return subplan.cost(lossWeight);
+	
+	@Override
+	protected double loss() {
+		return subplan.loss();
+	}
+	
+	@Override
+	protected double time() {
+		return subplan.time();
 	}
 
 	public double cardinality() {
