@@ -181,3 +181,6 @@ TSWLatexianTemp*
 
 *.pdf
 auto/
+/.metadata/
+/.recommenders/
+_region_.tex
