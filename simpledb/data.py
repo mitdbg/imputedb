@@ -64,9 +64,35 @@ labs_columns = {
   'LBDB12'   : 'vitamin_b12'          # numeric
 }
 
+## FCC data
+# https://github.com/FreeCodeCamp/2016-new-coder-survey/tree/master/clean-data
+# Note that clean above doesn't mean without missing values, but
+# they do perform some normalizations in category labels etc
+fcc_columns = [
+   'Age',
+   'AttendedBootcamp',
+   'BootcampFinish',
+   'BootcampFullJobAfter',
+   'BootcampPostSalary',
+   'BootcampLoanYesNo',
+   'CommuteTime',
+   'ChildrenNumber',
+   'CityPopulation',
+   'CountryCitizen',
+   'Gender',
+   'HoursLearning',
+   'Income',
+   'MoneyForLearning',
+   'MonthsProgramming',
+   'StudentDebtOwe',
+   'SchoolDegree'
+ ]
+fcc_columns = dict(zip(fcc_columns, map(lambda x: x.lower(), fcc_columns)))
+
 
 def read_csv(path, col_map):
-  df = pd.read_csv(path)
+  # avoid deciding type before, these files are dirty and small
+  df = pd.read_csv(path, low_memory=False)
   return df[col_map.keys()].rename(columns = col_map)
 
 def get_float_cols(df):
@@ -108,6 +134,25 @@ def get_schema(nm, df):
   types = get_types(df)
   schema_cols = ", ".join(["%s %s" % (col, typ) for col, typ in zip(df.columns, types)])
   return "%s(%s)" % (nm, schema_cols)
+
+def string_to_integer(df):
+  to_str = df.columns[df.dtypes == object].tolist()
+  rewrite = {}
+  for col in to_str:
+    vals = sorted(list(set(df[col])))
+    enum_map = {c : i for i, c in enumerate(vals)}
+    df[col] = df[col].map(lambda x: enum_map[x])
+    rewrite[col] = enum_map
+  return df, rewrite
+  
+def enum_to_string(enum):
+  msg = ""
+  for col, mapping in enum.iteritems():
+    msg += "Enumeration for %s\n" % col
+    for s, i in mapping.iteritems():
+      msg += "%s:%d\n" % (s, i)
+  return msg
+  
   
 ### Postgres
 def add_to_postgres(db_name, dfs):
@@ -120,10 +165,12 @@ def add_to_postgres(db_name, dfs):
     print e.message
   cdc_engine = create_engine('postgresql://localhost/%s' % db_name)
   for nm, df in dfs.iteritems():
+    df, _ = string_to_integer(df)
     df.to_sql(nm, cdc_engine)
 
 def sample_queries(db_name):
   # couple of sample queries
+  # cdc
   # average weight based on household income category
   query1 = "select income, avg(weight) from demo inner join exams using (id) group by income"
 
@@ -139,16 +186,42 @@ def sample_queries(db_name):
 
   # max blood lead for people with above average waist circumference
   query3 = "select max(blood_lead) from exams inner join labs using(id) where   waist_circumference >= 87"
+  
+  #fcc
+  # what is the average income for participant who went
+  # to a bootcamp vs not
+  query4 = "select attendedbootcamp, avg(income) from fcc where attendedbootcamp <= 1 group by attendedbootcamp"
+  
+  # what is the average age for women who were learning to program
+  # in the US (we replaced strings with codes)
+  query5 = "select avg(age) from fcc where gender = 2 and countrycitizen = 158"
+  
+
+  # what learning budget to students who owe money in student debt
+  # have? break it out by school degree
+  query6 = "select schooldegree, avg(moneyforlearning) from fcc where studentdebtowe > 0 and schooldegree >= 0 group by schooldegree"
+  
   example_engine = create_engine('postgresql://localhost/%s' % db_name)
-  print explain(example_engine, query1)
-  print explain(example_engine, query2)
-  print explain(example_engine, query3)
+  queries = [query1, query2, query3, query4, query5, query6]
+  for i, q in enumerate(queries):
+    print "Query %d" % i
+    print explain(example_engine, q)
+    print "========================"
+    
 
 ### simpledb
 def to_simpledb(dfs, prec, jar, path, suffix):
   schemas = []
   for name, df in dfs.iteritems():
+    # make floats ints
     df = float_fixed_precision(df, prec)
+    # make strings ints
+    df, enum = string_to_integer(df)
+    if len(enum):
+      # need to write out the numeration
+      enum_info = enum_to_string(enum)
+      with open(os.path.join(path, name + suffix + '.catalog'), 'w') as f:
+        f.write(enum_info)
     csv_path = os.path.join(path, name + suffix + '.csv')
     # no suffix for the dat files, since those need to match schema name
     dat_path = os.path.join(path, name + '.dat')
@@ -166,6 +239,7 @@ def read_csv_data(path):
     'demo' : ('demographic.csv', demo_columns),      # cdc data
     'exams' : ('examination.csv', exams_columns),    # cdc data
     'labs' : ('labs.csv', labs_columns),             # cdc data
+    'fcc'  : ('fcc.csv', fcc_columns)                # fcc data
   }
   dfs = {}
   for name, (file_nm, cols) in info.iteritems():
