@@ -359,13 +359,13 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		}
 		
 		// Construct an empty plan cache.
-		LoggedImputedPlanCache cache;
+		ImputedPlanCache cache;
 		try {
-			cache = new LoggedImputedPlanCache(new File("query_plans.log"));
+			cache = new ImputedPlanCacheDotted(new File("query_plans/"));
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 			throw new RuntimeException(e1);
-		}		
+		}
 		
 		optimizeFilters(tid, cache, globalRequired);
 		optimizeJoins(tid, cache, globalRequired);

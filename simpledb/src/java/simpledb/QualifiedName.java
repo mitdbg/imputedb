@@ -2,7 +2,7 @@ package simpledb;
 
 import java.util.*;
 
-public class QualifiedName {
+public class QualifiedName implements Comparable<QualifiedName> {
 	public final String tableAlias;
 	public final String attrName;
 
@@ -60,5 +60,14 @@ public class QualifiedName {
 			names.add(attr.toString());
 		}
 		return names;
+	}
+
+	@Override
+	public int compareTo(QualifiedName o) {
+		int c1 = tableAlias.compareTo(o.tableAlias);
+		if (c1 != 0) {
+			return c1;
+		}
+		return attrName.compareTo(attrName);
 	}
 }
