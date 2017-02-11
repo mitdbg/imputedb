@@ -1,13 +1,16 @@
 \section{Experiments}
 \todo{we of course need to rewrite this whole section}
-To evaluate the performance of our system, we generate plans for queries on two data sets: the American Community Survey and a synthetic dataset.
+To evaluate the performance of our system, we generate plans for queries
+for two separate survey-based data sets, showing that our system
+is ideal for early dataset exploration.
+
 \subsection{Data sets} \label{subsec:datasets}
 \subsubsection{Center for Disease Control: Surveys}
 For our first set of experiments, we use survey data collected by the 
 Center for Disease Control (CDC) in the United States. In particular, we
 experiment on a set of tables collected as part of the National
 Health and Nutrition Examination Survey (NHANES), a series of studies
-conducted by the CDC on a national sample of several thousand individuals\cite{nhanes}.
+conducted by the CDC on a national sample of several thousand individuals\cite{cdc-data}.
 The data consists on survey responses, physical examinations, and laboratory
 results, amongst others. Our dataset corresponds to the 2013-2014 NHANES
 and is available for direct download on the CDC's organization site on 
@@ -47,14 +50,36 @@ NHANES variable names with self-explanatory attribute names.
         \caption{Physical Results}
     \end{subtable}
     \caption{Missing values in CDC NHANES 2013-2014 data}
+    \label{table:nhanes-description} 
 \end{table}
 
 All tables used consists of 10 attributes. The laboratory and examinations data,
 referred to as \textit{labs} and \textit{exams} in our queries, consists of 9813 rows,
 while the demographics data (\textit{demo}) has 10175 rows.
 
-\subsubsection{Some Other TBD dataset}
-\todo{write data description for this}
+\subsubsection{freeCodeCamp: 2016 New Coder Survey}
+For our second set of experiments, we chose to use data collected
+by freeCodeCamp as a part of a survey of new software developers
+(both professional and amateur). freeCodeCamp is an open-source
+community that intends to help users learn how to program. In addition,
+to providing training material for users, it also pairs users with
+nonprofits to develop software solutions. Their \textit{2016 New Coder Survey} consists of responses by over 15,000 people to 48 different
+questions. The survey targeted users who were in one way or another
+related to coding organizations.
+
+For our purposes, we use a version of the data that has been 
+pre-processed, but where plenty of missing values remain. It is
+worth noting that given the table design (where many attributes
+are related), many of these missing values are to be
+expected. The dataset we started with had 15,620 rows and 113
+columns. We chose 17 attributes, which are outlined in Table~\ref{table:fcc-description}, along with the percentage of missing values.
+
+\begin{table}
+   \centering
+    \input{tables/fcc}
+    \caption{Missing values in FCC Survey Data}
+   \label{table:fcc-description} 
+\end{table}
 
 \subsection{Queries}
 We collected a set of queries (Table~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
