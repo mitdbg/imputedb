@@ -1,27 +1,31 @@
 %\begin{algorithm}
   \begin{algorithmic}
-    \Require{$H$ is a map from attribute names to histograms, $op$ is an operator node in a logical query plan}
-    \Ensure{Returns an updated histogram, such that the distribution of data matches the original $H$}
+    \Require{$\mathbb{H}$ is a map from attribute names to histograms, $op$ is an operator node in a logical query plan}
+    \Ensure{Returns an updated map $\mathbb{H'}$}
     
-    \Function{UpdateHistogram}{$H, op$}
+    \Function{UpdateHistograms}{$\mathbb{H}, op$}
     	\If{$op \not\in \{\delta, \mu, \sigma, \bowtie \}$}
-		\Return{H}
+		\Return{$\mathbb{H}$}
 	\EndIf
-	\State $H' \gets \Call{Copy}{H}$
+	\State $\mathbb{H'} \gets \Call{Copy}{\mathbb{H}}$
     	\If{op = $\delta_C$}
 		\For{$c \in C$}
-			\State $H'[c][null] \gets 0$
+			\State $\mathbb{H'}[c][null] \gets 0$
 		\EndFor
 	\ElsIf{op = $\mu_C$}
 		\For{$c \in C$}
-			\State \Call{Add}{$H'[c], H'[c][null]$} 	\Comment{Adds to histogram based on distribution}
+			\State \Call{Add}{$\mathbb{H'}[c], \mathbb{H'}[c][null]$}
 		\EndFor
 	\ElsIf{op = $\sigma$}
-		\State \Call{ScaleBy}{$H',  \Call{Selectivity}{\sigma}$} 	\Comment{Scales all buckets by constant factor}
+		\For{$c \in dom(\mathbb{H'})$}
+			\State \Call{ScaleBy}{$\mathbb{H'}[c],  \Call{Selectivity}{\sigma}$} 
+		\EndFor
 	\ElsIf{op = $\bowtie_\phi$}
-		\State \Call{ScaleTo}{$H', \Call{Cardinality}{\bowtie_{\phi}}$} 	\Comment{Scales all buckets to sum to constant}
+		\For{$c \in dom(\mathbb{H'})$}
+			\State \Call{ScaleTo}{$\mathbb{H'}[c], \Call{Cardinality}{\bowtie_{\phi}}$}
+		\EndFor
 	\EndIf
-	\Return{$H'$}
+	\Return{$\mathbb{H'}$}
     \EndFunction
   \end{algorithmic}
   \caption{An algorithm for in-plan histogram updates}
