@@ -347,14 +347,10 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			}
 			
 			if (select.aggOp != null) {
+				globalRequired.add(aggField);
 				if (groupByField != null) {
 					globalRequired.add(groupByField);
 				}
-			}
-		}
-		if (aggField != null) {
-			if (groupByField != null) {
-				globalRequired.add(groupByField);
 			}
 		}
 		
@@ -433,6 +429,8 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		if (aggField != null) {
 			for (Entry<Set<QualifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
 				for (ImputedPlan plan : addImputes(entry.getValue(), globalRequired, globalRequired)) {
+					// add aggregate
+					plan = new LogicalAggregateNode(plan, groupByField, aggOp, aggField);
 					if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
 						bestPlan = plan;
 					}
