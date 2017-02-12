@@ -96,14 +96,34 @@ spectrum and who satisfy a minimum weight requirement. Query~\ref{q3}
 extracts the maximum blood lead levels for subjects who satisfy a particular
 waist circumference requirement.
 
-\todo{describe further queries on other data set}
+In Query~\ref{q4}, we calculate the average income for survey participants,
+based on their bootcamp attendance. Query~\ref{q5} estimates the average
+age of women from the Uniter States who participated. Query~\ref{q6} 
+calculates the average amount of money survey participants with student debt destined to
+learning based on their school degree. Finally, in Query~\ref{q7}, we join the FCC data with a reference table provided
+by the World Bank which summarizes GDP per Capita across various
+countries\cite{worldbank-data}. The query calculates the average GDP-per-capita for participants based on whether or not they
+attended a bootcamp. 
 
-\begin{table*}
-  \centerfloat
-  \input{queries}
+Note that for all queries we have enumerated strings and encoded them with
+an appropriate integer value.
+
+\begin{table}
+\centering
+ \begin{subtable}{\linewidth}
+  \input{queries-cdc}
+  \caption{Queries on CDC data}
+  \label{fig:queries-cdc}
+ \end{subtable}
+ ~
+ \begin{subtable}{\linewidth}
+ \input{queries-fcc}
+ \caption{Queries on FCC data}
+ \label{fig:queries-fcc}
+ \end{subtable}
   \caption{Queries used in our experiments.}
   \label{fig:queries}
-\end{table*}
+\end{table}
 
 \begin{table}
   \centerfloat
