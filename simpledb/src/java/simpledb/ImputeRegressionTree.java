@@ -78,16 +78,17 @@ public class ImputeRegressionTree extends Impute {
                     completeFieldsIndices.add(i);
                 }
             }
-            for (int j=0; j<buffer.size(); j++){
-                Tuple t = buffer.get(j);
-                Iterator<Integer> it = completeFieldsIndices.iterator();
-                while (it.hasNext()){
-                    int i = it.next();
-                    if (t.getField(i).isMissing()){
-                        it.remove();
-                    }
-                }
-            }
+            // Can we populate the missing bit array above and then re-use that here?
+			Iterator<Integer> it = completeFieldsIndices.iterator();
+			while (it.hasNext()){
+				int i = it.next();
+				for (int j=0; j<buffer.size(); j++){
+					if (buffer.get(j).getField(i).isMissing()){
+						it.remove();
+						continue;
+					}
+				}
+			}
 
             // Populate Instances object
             List<Integer> allFieldsToInclude = new ArrayList<Integer>(completeFieldsIndices);
