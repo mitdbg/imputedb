@@ -5,6 +5,7 @@
 # Can also load into postgres instead
 
 import argparse
+from collections import defaultdict
 import numpy as np
 import os
 import pandas as pd
@@ -89,6 +90,15 @@ fcc_columns = [
  ]
 fcc_columns = dict(zip(fcc_columns, map(lambda x: x.lower(), fcc_columns)))
 
+### World Bank Data GDP
+# http://databank.worldbank.org/data/reports.aspx?Code=NY.GDP.PCAP.CD&id=af3ce82b&report_name=Popular_indicators&populartype=series&ispopular=y#
+
+gdp_columns = {
+  'Country Name'  : 'country',
+  '2015 [YR2015]' : 'gdp_per_capita'
+}
+
+
 
 def read_csv(path, col_map):
   # avoid deciding type before, these files are dirty and small
@@ -135,27 +145,47 @@ def get_schema(nm, df):
   schema_cols = ", ".join(["%s %s" % (col, typ) for col, typ in zip(df.columns, types)])
   return "%s(%s)" % (nm, schema_cols)
 
-def string_to_integer(df):
-  to_str = df.columns[df.dtypes == object].tolist()
-  rewrite = {}
-  for col in to_str:
-    vals = sorted(list(set(df[col])))
-    enum_map = {c : i for i, c in enumerate(vals)}
-    df[col] = df[col].map(lambda x: enum_map[x])
-    rewrite[col] = enum_map
-  return df, rewrite
-  
-def enum_to_string(enum):
-  msg = ""
-  for col, mapping in enum.iteritems():
-    msg += "Enumeration for %s\n" % col
-    for s, i in mapping.iteritems():
-      msg += "%s:%d\n" % (s, i)
-  return msg
-  
-  
+def get_str_cols(df):
+  return df.columns[df.dtypes == object].tolist()
+
+def collect_enum(df, enum):
+  ## collect enumeration values
+  str_cols = get_str_cols(df)
+  for col in str_cols:
+    keys = set(df[col])
+    missing = sorted([k for k in keys if not k in enum])
+    val = max(enum.values()) + 1 if len(enum) else 0
+    for k in missing:
+      enum[k] = val
+      val += 1
+
+def apply_enum(df, enum):
+  # applies enum and filters out
+  # any records that have a null in
+  # the cols once the enum has been applied
+  str_cols = get_str_cols(df)
+  if len(enum) == 0 or len(str_cols) == 0:
+    return df
+  robust_enum = defaultdict(lambda : np.nan, enum)
+  df = df.copy()
+  for col in str_cols:
+    df[col] = df[col].map(robust_enum)
+  # no nulls allowed in enumeration cols
+  # presumably user has collected all valid values for enumeration
+  df = df[~pd.isnull(df[str_cols]).any(axis = 1)]
+  return df.reset_index()
+ 
+def write_out_enum(path, enums):
+  if len(enums) == 0:
+    return
+  enums = sorted(enums.items(), key = lambda x:x[0])
+  with open(os.path.join(path, 'enums.txt'), 'w') as f:
+    f.write("Enumerated strings:\n")
+    for s, i in enums:
+      f.write("%s:%d\n" % (s, i))
+   
 ### Postgres
-def add_to_postgres(db_name, dfs):
+def add_to_postgres(dfs, db_name, path):
   master_db_con = db.connect(database = 'postgres')
   master_db_con.autocommit = True
   try:
@@ -164,9 +194,13 @@ def add_to_postgres(db_name, dfs):
   except db.ProgrammingError as e:
     print e.message
   cdc_engine = create_engine('postgresql://localhost/%s' % db_name)
-  for nm, df in dfs.iteritems():
-    df, _ = string_to_integer(df)
-    df.to_sql(nm, cdc_engine)
+  enums = {}
+  for df in dfs.itervalues():
+    collect_enum(df, enums)
+  write_out_enum(path, enums)
+  for name, df in dfs.iteritems():
+    df = apply_enum(df, enums)
+    df.to_sql(name, cdc_engine)
 
 def sample_queries(db_name):
   # couple of sample queries
@@ -190,19 +224,29 @@ def sample_queries(db_name):
   #fcc
   # what is the average income for participant who went
   # to a bootcamp vs not
-  query4 = "select attendedbootcamp, avg(income) from fcc where attendedbootcamp <= 1 group by attendedbootcamp"
+  query4 = "select attendedbootcamp, avg(income) from fcc group by attendedbootcamp"
   
   # what is the average age for women who were learning to program
   # in the US (we replaced strings with codes)
-  query5 = "select avg(age) from fcc where gender = 2 and countrycitizen = 158"
+  query5 = "select avg(age) from fcc where gender = 178 and countrycitizen = 158"
   
-
   # what learning budget to students who owe money in student debt
   # have? break it out by school degree
   query6 = "select schooldegree, avg(moneyforlearning) from fcc where studentdebtowe > 0 and schooldegree >= 0 group by schooldegree"
   
+  ## a query joining with a reference table
+  # what is the average GDP-per-capita for users
+  # who decided to enroll in a bootcamp versus not
+  query7 = """
+  select 
+  attendedbootcamp,
+  avg(gdp_per_capita)
+  from fcc, gdp where fcc.countrycitizen = gdp.country
+  group by attendedbootcamp
+  """
+  
   example_engine = create_engine('postgresql://localhost/%s' % db_name)
-  queries = [query1, query2, query3, query4, query5, query6]
+  queries = [query1, query2, query3, query4, query5, query6, query7]
   for i, q in enumerate(queries):
     print "Query %d" % i
     print explain(example_engine, q)
@@ -212,16 +256,16 @@ def sample_queries(db_name):
 ### simpledb
 def to_simpledb(dfs, prec, jar, path, suffix):
   schemas = []
+  enums = {}
+  # collect possible enumerations
+  for df in dfs.itervalues():
+    collect_enum(df, enums)
+  write_out_enum(path, enums)
   for name, df in dfs.iteritems():
     # make floats ints
     df = float_fixed_precision(df, prec)
-    # make strings ints
-    df, enum = string_to_integer(df)
-    if len(enum):
-      # need to write out the numeration
-      enum_info = enum_to_string(enum)
-      with open(os.path.join(path, name + suffix + '.catalog'), 'w') as f:
-        f.write(enum_info)
+    # apply enumerations
+    df = apply_enum(df, enums)
     csv_path = os.path.join(path, name + suffix + '.csv')
     # no suffix for the dat files, since those need to match schema name
     dat_path = os.path.join(path, name + '.dat')
@@ -236,10 +280,11 @@ def to_simpledb(dfs, prec, jar, path, suffix):
   
 def read_csv_data(path):
   info  = {
-    'demo' : ('demographic.csv', demo_columns),      # cdc data
-    'exams' : ('examination.csv', exams_columns),    # cdc data
-    'labs' : ('labs.csv', labs_columns),             # cdc data
-    'fcc'  : ('fcc.csv', fcc_columns)                # fcc data
+    'demo'  : ('demographic.csv', demo_columns),      # cdc data
+    'exams' : ('examination.csv', exams_columns),     # cdc data
+    'labs'  : ('labs.csv', labs_columns),             # cdc data
+    'fcc'   : ('fcc.csv', fcc_columns),               # fcc data
+    'gdp'   : ('gdp.csv', gdp_columns)                # gdp data
   }
   dfs = {}
   for name, (file_nm, cols) in info.iteritems():
@@ -267,7 +312,7 @@ def main():
 
   if args.action == 'postgres':
     db_name = 'missing_values' if args.database is None else args.database
-    add_to_postgres(db_name, read_csv_data(input_path))
+    add_to_postgres(read_csv_data(input_path), db_name, input_path)
     sample_queries(db_name)
   elif args.action == 'simpledb':
     jar = args.jar
