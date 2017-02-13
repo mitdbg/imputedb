@@ -28,11 +28,14 @@ public class ImputeRegressionTree extends Impute {
 
     // Keep track of imputed instances as well as the indices that correspond to
     // these. (Will differ from completeFieldsIndices and dropFieldsIndices if
-    // this is a partial impute.)
+    // this is a partial impute.) Variables with a '2' suffix index into the
+    // Instances object.
     private Instances imputedInstances;
     private List<Integer> completeFieldsIndices2;
     private List<Integer> dropFieldsIndices2;
-	private HashMap<Integer, Integer> fieldMap;
+
+    // Map from indices in the Instances object to indices in the Tuple buffer.
+	private HashMap<Integer, Integer> dropFieldsIndicesMap;
 
     public ImputeRegressionTree(Collection<String> dropFields, DbIterator child) {
         super(dropFields, child);
@@ -95,37 +98,10 @@ public class ImputeRegressionTree extends Impute {
      * Tuple using the imputed values from the Instance.
      */
     private void mergeInstanceIntoTuple(Instance instance, Tuple tuple) throws DbException {
-    	// Create a map from the imputed fields in the Instance to the drop fields of the Tuple.
-    	if (this.fieldMap == null){
-			this.fieldMap = new HashMap<Integer, Integer>();
-			TupleDesc td = tuple.getTupleDesc();
-			
-			boolean found = false;
-			for (int i : dropFieldsIndices2){
-				String instanceFieldName = instance.attribute(i).name();
-				
-				found=false;
-				for (int j : dropFieldsIndices){
-					String tupleFieldName = td.getFieldName(j);
-					if (tupleFieldName.equals(instanceFieldName)){
-						fieldMap.put(i, j);
-						found = true;
-						break;
-					}
-				}
-				
-				if (!found){
-					// Bad, there was somehow not a match found for one of the indices.
-					throw new DbException("Unable to merge imputed instance with tuple.");
-				}
-			}
-    	}
-    	
-
     	// Merge the tuple and the instance. Only values in dropFields will
     	// change; the other values of the tuple will be unchanged by the
     	// imputation.
-    	Iterator<Entry<Integer, Integer>> indexIt = this.fieldMap.entrySet().iterator();
+    	Iterator<Entry<Integer, Integer>> indexIt = this.dropFieldsIndicesMap.entrySet().iterator();
     	while (indexIt.hasNext()){
     		Entry<Integer, Integer> map = indexIt.next();
     		int k = map.getKey(); // index in Instance
@@ -178,28 +154,17 @@ public class ImputeRegressionTree extends Impute {
 		Instances train = WekaUtil.relationToInstances("", buffer, td, allFieldsToInclude);
 		
 		// Now, the problem is that if we haven't retained every column, our indices will be off.
-		// In this silly approach, we'll recreate the lists of indices by comparing the field names.
-		List<Integer> completeFieldsIndices2 = new ArrayList<>();
-		for (int i : completeFieldsIndices){
-			String name = td.getFieldName(i);
-			boolean added = false;
-			for (int j=0; j<train.numAttributes(); j++){
-				if (train.attribute(j).name().equals(name)){
-					completeFieldsIndices2.add(j);
-					added = true;
-					break;
-				}
-			}
-			if (!added){
-				throw new RuntimeException("Not added.");
-			}
-		}
-		List<Integer> dropFieldsIndices2 = new ArrayList<>();
+		// We'll recreate the lists of indices by comparing the field names. We
+		// don't really need to do this exercise for the completeFields because
+		// they are now the set completement of the dropFields.
+		this.dropFieldsIndices2 = new ArrayList<>();
+		this.dropFieldsIndicesMap = new HashMap<Integer, Integer>();
 		for (int i : dropFieldsIndices){
-			String name = td.getFieldName(i);
+			String fieldName = td.getFieldName(i);
 			boolean added = false;
 			for (int j=0; j<train.numAttributes(); j++){
-				if (train.attribute(j).name().equals(name)){
+				if (train.attribute(j).name().equals(fieldName)){
+					dropFieldsIndicesMap.put(j, i);
 					dropFieldsIndices2.add(j);
 					added = true;
 					break;
@@ -209,8 +174,6 @@ public class ImputeRegressionTree extends Impute {
 				throw new RuntimeException("Not added.");
 			}
 		}
-		this.completeFieldsIndices2 = completeFieldsIndices2;
-		this.dropFieldsIndices2 = dropFieldsIndices2;
 
 		// Keep track of missing values in dropFields columns. This map takes
 		// column indices in the Tuple dropFields and maps them to a set of row
@@ -242,10 +205,6 @@ public class ImputeRegressionTree extends Impute {
 				}
 			}
 		}
-
-		// // debug: print header and instances.
-		// System.out.println("\ndataset:\n");
-		// System.out.println(train);    
 
 		// Iterate creation of trees for each missing column. This is the
 		// meat of the chained-equation regression trees method.
