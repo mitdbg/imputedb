@@ -2,6 +2,8 @@ package simpledb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -94,16 +96,17 @@ public class ImputeRegressionTree extends Impute {
             List<Integer> allFieldsToInclude = new ArrayList<Integer>(completeFieldsIndices);
             allFieldsToInclude.addAll(dropFieldsIndices);
             Instances train = WekaUtil.relationToInstances("", buffer, td, allFieldsToInclude);
+            int n = train.numInstances();
             
             // Now, the problem is that if we haven't retained every column, our indices will be off.
             // In this silly approach, we'll recreate the lists of indices by comparing the field names.
             List<Integer> completeFieldsIndices2 = new ArrayList<>();
-            for (int it : completeFieldsIndices){
-                String name = td.getFieldName(it);
+            for (int i : completeFieldsIndices){
+                String name = td.getFieldName(i);
                 boolean added = false;
-                for (int ii=0; ii<train.numAttributes(); ii++){
-                    if (train.attribute(ii).name().equals(name)){
-                        completeFieldsIndices2.add(ii);
+                for (int j=0; j<train.numAttributes(); j++){
+                    if (train.attribute(j).name().equals(name)){
+                        completeFieldsIndices2.add(j);
                         added = true;
                         break;
                     }
@@ -113,12 +116,12 @@ public class ImputeRegressionTree extends Impute {
                 }
             }
             List<Integer> dropFieldsIndices2 = new ArrayList<>();
-            for (int it : dropFieldsIndices){
-                String name = td.getFieldName(it);
+            for (int i : dropFieldsIndices){
+                String name = td.getFieldName(i);
                 boolean added = false;
-                for (int ii=0; ii<train.numAttributes(); ii++){
-                    if (train.attribute(ii).name().equals(name)){
-                        dropFieldsIndices2.add(ii);
+                for (int j=0; j<train.numAttributes(); j++){
+                    if (train.attribute(j).name().equals(name)){
+                        dropFieldsIndices2.add(j);
                         added = true;
                         break;
                     }
@@ -130,25 +133,30 @@ public class ImputeRegressionTree extends Impute {
             this.completeFieldsIndices2 = completeFieldsIndices2;
             this.dropFieldsIndices2 = dropFieldsIndices2;
 
-            // Keep record of original dataset before imputation.
-            // TODO initialize bit matrix of missing values instead.
-            Instances trainCopy = new Instances(train);
+            // Keep track of missing values in dropFields columns.
+            HashMap<Integer, HashSet<Integer>> dropFieldsMissing = new HashMap<Integer, HashSet<Integer>>();
+            for (int i : dropFieldsIndices2){
+				for (int j=0; j<n; j++){
+					if (train.get(j).isMissing(i)){
+						dropFieldsMissing.get(i).add(j);
+					}
+				}
+            }
 
             // Initialize all missing values using random-in-column.
-            int n = train.numInstances();
             for (int i : dropFieldsIndices2){
                 for (int j=0; j<n; j++){
-                    if (train.get(j).isMissing(i)){
+                    if (dropFieldsMissing.get(i).contains(j)){
                         int ind = random.nextInt(n);
                         int ind0 = ind;
-                        while (trainCopy.get(ind).isMissing(i)){
+                        while (dropFieldsMissing.get(i).contains(ind)){
                             ind++;
                             if (ind == n)
                                 ind = 0;
                             if (ind == ind0)
                                 throw new DbException("Couldn't initialize impute: no non-missing values for field.");
                         }
-                        train.get(j).setValue(i, trainCopy.get(ind).value(i));
+                        train.get(j).setValue(i, train.get(ind).value(i));
                     }
                 }
             }
@@ -176,17 +184,17 @@ public class ImputeRegressionTree extends Impute {
 
                     // Replace all the originally missing values in imputationColumn with
                     // predicted values.
-                    for (int i=0; i<train.size(); i++){
-                        if (trainCopy.get(i).isMissing(imputationColumn)){
-                            try {
-                                double pred = tree.classifyInstance(train.get(i));
-                                train.get(i).setValue(imputationColumn, pred);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                throw new DbException("Failed to classify instance.");
-                            }
-                        }
-                    }
+                    Iterator<Integer> imputeTuplesIt = dropFieldsMissing.get(imputationColumn).iterator();
+                    while (imputeTuplesIt.hasNext()){
+                    	int i = imputeTuplesIt.next();
+						try {
+							double pred = tree.classifyInstance(train.get(i));
+							train.get(i).setValue(imputationColumn, pred);
+						} catch (Exception e) {
+							e.printStackTrace();
+							throw new DbException("Failed to classify instance.");
+						}
+					}
                 }
             }
             
