@@ -24,10 +24,8 @@ public class ImputedPlanCacheDotted extends ImputedPlanCache {
 		StringBuilder prefix = new StringBuilder();
 		prefix.append(plan.cost(lossWeight));
 		prefix.append(" ");
-		for (QualifiedName name : new TreeSet<QualifiedName>(dirtySet)) {
-			prefix.append(name.toString());
-			prefix.append(",");
-		}
+		prefix.append(plan.cardinality());
+		prefix.append(" ");
 		
 		try {
 			File outFile = File.createTempFile(prefix.toString(), ".dot", outDir);

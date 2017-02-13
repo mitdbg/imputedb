@@ -68,6 +68,6 @@ public class QualifiedName implements Comparable<QualifiedName> {
 		if (c1 != 0) {
 			return c1;
 		}
-		return attrName.compareTo(attrName);
+		return attrName.compareTo(o.attrName);
 	}
 }
