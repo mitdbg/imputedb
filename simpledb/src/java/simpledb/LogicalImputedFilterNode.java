@@ -81,7 +81,7 @@ public class LogicalImputedFilterNode extends ImputedPlan {
 	
 	@Override
 	protected double time() {
-		return subplan.time();
+		return subplan.time() + subplan.cardinality() * 0.01;
 	}
 
 	public double cardinality() {
