@@ -12,6 +12,10 @@
 		\For{$c \in C$}
 			\State $\mathbb{H'}[c][null] \gets 0$
 		\EndFor
+		\State $minCardinality \gets \Call{Min}{ \{ \Call{Total}{\mathbb{H'}[c]}  | c \in C \} }$
+		\For{$c \in dom(\mathbb{H'})$}
+			\State $\Call{ScaleTo}{ \mathbb{H'}[c], minCardinality }$
+		\EndFor
 	\ElsIf{op = $\mu_C$}
 		\For{$c \in C$}
 			\State \Call{Add}{$\mathbb{H'}[c], \mathbb{H'}[c][null]$}

@@ -381,7 +381,7 @@ public class IntHistogram {
 	 * Scale all buckets by a constant factor
 	 * @param factor
 	 */
-	public void scale(double factor) {
+	public void scaleBy(double factor) {
 		adjustBuckets(factor, 1, false);
 		numValues = (int) countTuples();
 	}
@@ -400,7 +400,7 @@ public class IntHistogram {
 	 * is equal to ctTuples
 	 * @param ctTuples
 	 */
-	public void distribute(double ctTuples) {
+	public void scaleTo(double ctTuples) {
 		adjustBuckets(ctTuples, countTuples(), false);
 		numValues = (int) ctTuples;
 	}
