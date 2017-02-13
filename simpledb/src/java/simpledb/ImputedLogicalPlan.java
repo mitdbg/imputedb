@@ -312,6 +312,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		}
 		
 		if (!may.isEmpty()) {
+			plans.add(LogicalComposeImputation.create(plan, ImputationType.DROP, may, tableMap));
 			plans.add(LogicalComposeImputation.create(plan, ImputationType.MAXIMAL, may, tableMap));
 		}
 

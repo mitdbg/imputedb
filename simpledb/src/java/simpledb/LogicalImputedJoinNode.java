@@ -157,7 +157,7 @@ public class LogicalImputedJoinNode extends ImputedPlan {
     	// Hash join
 		case EQUALS:
 		case LIKE:
-			return table1.time() + table2.time();
+			return table1.time() + table2.time() + (table1.cardinality() + table2.cardinality()) * 0.01;
 			
 		// Nested loops join
 		case GREATER_THAN:
@@ -165,7 +165,7 @@ public class LogicalImputedJoinNode extends ImputedPlan {
 		case LESS_THAN:
 		case LESS_THAN_OR_EQ:
 		case NOT_EQUALS:
-			return table1.time() + table1.cardinality() * table2.time();
+			return table1.time() + table1.cardinality() * table2.time() + table1.cardinality() * table2.cardinality() * 0.01;
 		default:
 			throw new RuntimeException("Unexpected predicate.");
     	}

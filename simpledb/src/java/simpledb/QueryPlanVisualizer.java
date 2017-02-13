@@ -75,8 +75,9 @@ public class QueryPlanVisualizer {
                 alias = " " + alias;
             else
                 alias = "";
+            int card = TableStats.getTableStats(tableName).estimateTableCardinality(1.0);
             thisNode.text = String
-                    .format("%1$s(%2$s)", SCAN, tableName + alias);
+                    .format("%1$s(%2$s),card:%3$d", SCAN, tableName + alias, card);
             if (SCAN.length() / 2 < parentUpperBarStartShift) {
                 thisNode.upBarPosition = currentStartPosition
                         + parentUpperBarStartShift;
