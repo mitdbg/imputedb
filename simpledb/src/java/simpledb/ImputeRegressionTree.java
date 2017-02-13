@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 import weka.core.Instance;
@@ -30,6 +32,7 @@ public class ImputeRegressionTree extends Impute {
     private Instances imputedInstances;
     private List<Integer> completeFieldsIndices2;
     private List<Integer> dropFieldsIndices2;
+	private HashMap<Integer, Integer> fieldMap;
 
     public ImputeRegressionTree(Collection<String> dropFields, DbIterator child) {
         super(dropFields, child);
@@ -60,180 +63,224 @@ public class ImputeRegressionTree extends Impute {
 
     @Override
     protected Tuple fetchNext() throws DbException, TransactionAbortedException {
+		// First, we must add all of the child tuples to the buffer.
+		while (child.hasNext()){
+			buffer.add(child.next());
+		}
+
+    	// Do the impute, if we have not already.
         if (imputedInstances == null){
-            // First, we must add all of the child tuples to the buffer.
-            while (child.hasNext()){
-                buffer.add(child.next());
-            }
-            
-            // Get set of complete columns and missing columns. The complete columns
-            // are just those -- columns without any missing data. We can't assume
-            // that the complete columns are the set complement of the dropFields.
-            // The missing columns -- the ones to impute -- are not necessarily the
-            // set of all columns that have any missing data due to allowing partial
-            // imputation. We start with the set difference of all columns with the
-            // drop fields. Then, we remove any columns that have any missing
-            // values.
-            List<Integer> completeFieldsIndices = new ArrayList<>();
-            for (int i=0; i<td.numFields(); i++){
-                if (!dropFieldsIndices.contains(i)){
-                    completeFieldsIndices.add(i);
-                }
-            }
-            // Can we populate the missing bit array above and then re-use that here?
-			Iterator<Integer> it = completeFieldsIndices.iterator();
-			while (it.hasNext()){
-				int i = it.next();
-				for (int j=0; j<buffer.size(); j++){
-					if (buffer.get(j).getField(i).isMissing()){
-						it.remove();
-						continue;
-					}
-				}
-			}
-
-            // Populate Instances object
-            List<Integer> allFieldsToInclude = new ArrayList<Integer>(completeFieldsIndices);
-            allFieldsToInclude.addAll(dropFieldsIndices);
-            Instances train = WekaUtil.relationToInstances("", buffer, td, allFieldsToInclude);
-            int n = train.numInstances();
-            
-            // Now, the problem is that if we haven't retained every column, our indices will be off.
-            // In this silly approach, we'll recreate the lists of indices by comparing the field names.
-            List<Integer> completeFieldsIndices2 = new ArrayList<>();
-            for (int i : completeFieldsIndices){
-                String name = td.getFieldName(i);
-                boolean added = false;
-                for (int j=0; j<train.numAttributes(); j++){
-                    if (train.attribute(j).name().equals(name)){
-                        completeFieldsIndices2.add(j);
-                        added = true;
-                        break;
-                    }
-                }
-                if (!added){
-                    throw new RuntimeException("Not added.");
-                }
-            }
-            List<Integer> dropFieldsIndices2 = new ArrayList<>();
-            for (int i : dropFieldsIndices){
-                String name = td.getFieldName(i);
-                boolean added = false;
-                for (int j=0; j<train.numAttributes(); j++){
-                    if (train.attribute(j).name().equals(name)){
-                        dropFieldsIndices2.add(j);
-                        added = true;
-                        break;
-                    }
-                }
-                if (!added){
-                    throw new RuntimeException("Not added.");
-                }
-            }
-            this.completeFieldsIndices2 = completeFieldsIndices2;
-            this.dropFieldsIndices2 = dropFieldsIndices2;
-
-            // Keep track of missing values in dropFields columns.
-            HashMap<Integer, HashSet<Integer>> dropFieldsMissing = new HashMap<Integer, HashSet<Integer>>();
-            for (int i : dropFieldsIndices2){
-				for (int j=0; j<n; j++){
-					if (train.get(j).isMissing(i)){
-						dropFieldsMissing.get(i).add(j);
-					}
-				}
-            }
-
-            // Initialize all missing values using random-in-column.
-            for (int i : dropFieldsIndices2){
-                for (int j=0; j<n; j++){
-                    if (dropFieldsMissing.get(i).contains(j)){
-                        int ind = random.nextInt(n);
-                        int ind0 = ind;
-                        while (dropFieldsMissing.get(i).contains(ind)){
-                            ind++;
-                            if (ind == n)
-                                ind = 0;
-                            if (ind == ind0)
-                                throw new DbException("Couldn't initialize impute: no non-missing values for field.");
-                        }
-                        train.get(j).setValue(i, train.get(ind).value(i));
-                    }
-                }
-            }
-
-            // // debug: print header and instances.
-            // System.out.println("\ndataset:\n");
-            // System.out.println(train);    
-
-            // Iterate creation of trees for each missing column. This is the
-            // meat of the chained-equation regression trees method.
-            for (int j=0; j<NUM_IMPUTATION_EPOCHS; j++){
-                for (int imputationColumn : dropFieldsIndices2){
-                    train.setClassIndex(imputationColumn);
-                
-                    // Create and train tree. Note that use of "Class"/"Classifier" everywhere is a
-                    // misnomer; the REPTree will produce numerical outputs if the "Class"
-                    // column is numerical.
-                    Classifier tree = new REPTree();
-                    try {
-                        tree.buildClassifier(train);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        throw new DbException("Failed to train classifier.");
-                    }
-
-                    // Replace all the originally missing values in imputationColumn with
-                    // predicted values.
-                    Iterator<Integer> imputeTuplesIt = dropFieldsMissing.get(imputationColumn).iterator();
-                    while (imputeTuplesIt.hasNext()){
-                    	int i = imputeTuplesIt.next();
-						try {
-							double pred = tree.classifyInstance(train.get(i));
-							train.get(i).setValue(imputationColumn, pred);
-						} catch (Exception e) {
-							e.printStackTrace();
-							throw new DbException("Failed to classify instance.");
-						}
-					}
-                }
-            }
-            
-            imputedInstances = train;
+        	doImpute();
         }
         
         // We've imputed values, so we can actually return them now.
         if (nextTupleIndex < buffer.size()){
             Tuple original = buffer.get(nextTupleIndex);
             Instance inst = imputedInstances.get(nextTupleIndex);
-
             Tuple imputed = new Tuple(original);
-
-            // Naive merge of the tuple and instance. The instance may have
-            // fewer columns and may have out-of-order columns. We can simplify
-            // because we have the guarantee that only values in dropFields will
-            // change, and every other value will stay the same.
-            for (int it : dropFieldsIndices){
-                String field = td.getFieldName(it);
-                for (int ii : dropFieldsIndices2){
-                    if (inst.attribute(ii).name().equals(field)){
-                        double value = inst.value(ii);
-                        if (td.getFieldType(it) == Type.INT_TYPE){
-                            imputed.setField(it, new IntField((int) value));
-                        } else if (td.getFieldType(it) == Type.DOUBLE_TYPE){
-                            imputed.setField(it, new DoubleField(value));
-                        } else {
-                            throw new RuntimeException("Not implemented.");
-                        }
-                    }
-                }
-            }
-            
+            mergeInstanceIntoTuple(inst, imputed);
             nextTupleIndex++;
             
             return imputed;
         } else {
             return null;
         }
+    }
+    
+    /*
+     * Merge Instance instance into Tuple tuple. We know the indices in each of
+     * these objects that corresponds to the drop fields, or the fields that
+     * have missing values and are being imputed. We first find a map between
+     * these sets of indices. Then, we update the appropriate fields of the
+     * Tuple using the imputed values from the Instance.
+     */
+    private void mergeInstanceIntoTuple(Instance instance, Tuple tuple) throws DbException {
+    	// Create a map from the imputed fields in the Instance to the drop fields of the Tuple.
+    	if (this.fieldMap == null){
+			this.fieldMap = new HashMap<Integer, Integer>();
+			TupleDesc td = tuple.getTupleDesc();
+			
+			boolean found = false;
+			for (int i : dropFieldsIndices2){
+				String instanceFieldName = instance.attribute(i).name();
+				
+				found=false;
+				for (int j : dropFieldsIndices){
+					String tupleFieldName = td.getFieldName(j);
+					if (tupleFieldName.equals(instanceFieldName)){
+						fieldMap.put(i, j);
+						found = true;
+						break;
+					}
+				}
+				
+				if (!found){
+					// Bad, there was somehow not a match found for one of the indices.
+					throw new DbException("Unable to merge imputed instance with tuple.");
+				}
+			}
+    	}
+    	
+
+    	// Merge the tuple and the instance. Only values in dropFields will
+    	// change; the other values of the tuple will be unchanged by the
+    	// imputation.
+    	Iterator<Entry<Integer, Integer>> indexIt = this.fieldMap.entrySet().iterator();
+    	while (indexIt.hasNext()){
+    		Entry<Integer, Integer> map = indexIt.next();
+    		int k = map.getKey(); // index in Instance
+    		int v = map.getValue(); // index in Tuple
+
+    		double value = instance.value(k);
+
+			if (td.getFieldType(v) == Type.INT_TYPE){
+				tuple.setField(v, new IntField((int) value));
+			} else if (td.getFieldType(v) == Type.DOUBLE_TYPE){
+				tuple.setField(v, new DoubleField(value));
+			} else {
+				throw new DbException("Field type not implemented.");
+			}
+    	}
+	}
+
+	private void doImpute() throws NoSuchElementException, DbException, TransactionAbortedException{
+		int n = buffer.size();
+		
+		// Get set of complete columns and missing columns. The complete columns
+		// are just those -- columns without any missing data. We can't assume
+		// that the complete columns are the set complement of the dropFields.
+		// The missing columns ("dropFields") -- the ones to impute -- are not
+		// necessarily the set of all columns that have any missing data due to
+		// allowing partial imputation. We start with the set difference of all
+		// columns with the drop fields. Then, we remove any columns that have
+		// any missing values.
+		List<Integer> completeFieldsIndices = new ArrayList<>();
+		for (int i=0; i<td.numFields(); i++){
+			if (!dropFieldsIndices.contains(i)){
+				completeFieldsIndices.add(i);
+			}
+		}
+		// Can we populate the missing bit array above and then re-use that here?
+		Iterator<Integer> it = completeFieldsIndices.iterator();
+		while (it.hasNext()){
+			int i = it.next();
+			for (int j=0; j<n; j++){
+				if (buffer.get(j).getField(i).isMissing()){
+					it.remove();
+					break;
+				}
+			}
+		}
+
+		// Populate Instances object
+		List<Integer> allFieldsToInclude = new ArrayList<Integer>(completeFieldsIndices);
+		allFieldsToInclude.addAll(dropFieldsIndices);
+		Instances train = WekaUtil.relationToInstances("", buffer, td, allFieldsToInclude);
+		
+		// Now, the problem is that if we haven't retained every column, our indices will be off.
+		// In this silly approach, we'll recreate the lists of indices by comparing the field names.
+		List<Integer> completeFieldsIndices2 = new ArrayList<>();
+		for (int i : completeFieldsIndices){
+			String name = td.getFieldName(i);
+			boolean added = false;
+			for (int j=0; j<train.numAttributes(); j++){
+				if (train.attribute(j).name().equals(name)){
+					completeFieldsIndices2.add(j);
+					added = true;
+					break;
+				}
+			}
+			if (!added){
+				throw new RuntimeException("Not added.");
+			}
+		}
+		List<Integer> dropFieldsIndices2 = new ArrayList<>();
+		for (int i : dropFieldsIndices){
+			String name = td.getFieldName(i);
+			boolean added = false;
+			for (int j=0; j<train.numAttributes(); j++){
+				if (train.attribute(j).name().equals(name)){
+					dropFieldsIndices2.add(j);
+					added = true;
+					break;
+				}
+			}
+			if (!added){
+				throw new RuntimeException("Not added.");
+			}
+		}
+		this.completeFieldsIndices2 = completeFieldsIndices2;
+		this.dropFieldsIndices2 = dropFieldsIndices2;
+
+		// Keep track of missing values in dropFields columns. This map takes
+		// column indices in the Tuple dropFields and maps them to a set of row
+		// indices that have missing values.
+		HashMap<Integer, HashSet<Integer>> dropFieldsMissing = new HashMap<Integer, HashSet<Integer>>();
+		for (int i : dropFieldsIndices2){
+			dropFieldsMissing.put(i, new HashSet<Integer>());
+			for (int j=0; j<n; j++){
+				if (train.get(j).isMissing(i)){
+					dropFieldsMissing.get(i).add(j);
+				}
+			}
+		}
+
+		// Initialize all missing values using random-in-column.
+		for (int i : dropFieldsIndices2){
+			for (int j=0; j<n; j++){
+				if (dropFieldsMissing.get(i).contains(j)){
+					int ind = random.nextInt(n);
+					int ind0 = ind;
+					while (dropFieldsMissing.get(i).contains(ind)){
+						ind++;
+						if (ind == n)
+							ind = 0;
+						if (ind == ind0)
+							throw new DbException("Couldn't initialize impute: no non-missing values for field.");
+					}
+					train.get(j).setValue(i, train.get(ind).value(i));
+				}
+			}
+		}
+
+		// // debug: print header and instances.
+		// System.out.println("\ndataset:\n");
+		// System.out.println(train);    
+
+		// Iterate creation of trees for each missing column. This is the
+		// meat of the chained-equation regression trees method.
+		for (int j=0; j<NUM_IMPUTATION_EPOCHS; j++){
+			for (int imputationColumn : dropFieldsIndices2){
+				train.setClassIndex(imputationColumn);
+			
+				// Create and train tree. Note that use of "Class"/"Classifier" everywhere is a
+				// misnomer; the REPTree will produce numerical outputs if the "Class"
+				// column is numerical.
+				Classifier tree = new REPTree();
+				try {
+					tree.buildClassifier(train);
+				} catch (Exception e) {
+					e.printStackTrace();
+					throw new DbException("Failed to train classifier.");
+				}
+
+				// Replace all the originally missing values in imputationColumn with
+				// predicted values.
+				Iterator<Integer> imputeTuplesIt = dropFieldsMissing.get(imputationColumn).iterator();
+				while (imputeTuplesIt.hasNext()){
+					int i = imputeTuplesIt.next();
+					try {
+						double pred = tree.classifyInstance(train.get(i));
+						train.get(i).setValue(imputationColumn, pred);
+					} catch (Exception e) {
+						e.printStackTrace();
+						throw new DbException("Failed to classify instance.");
+					}
+				}
+			}
+		}
+		
+		this.imputedInstances = train;
     }
 
     /*
