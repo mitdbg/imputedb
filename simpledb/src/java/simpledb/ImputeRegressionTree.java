@@ -19,7 +19,22 @@ public class ImputeRegressionTree extends Impute {
 
     private static final long serialVersionUID = 1L;
     private static final long GENERATOR_SEED = 6832L;
-    private static final int NUM_IMPUTATION_EPOCHS = 10;
+    private static final int NUM_IMPUTATION_EPOCHS_SLOW = 10;
+    private static final int NUM_IMPUTATION_EPOCHS_FAST = 2;
+
+    private int numImputationEpochs;
+    /**
+     * Set slow/fast imputation (just in terms of number of epochs to run the
+     * algorithm) using `-Dsimpledb.ImputeSlow`.
+     */
+    private void setNumImputationEpochs(){
+    	String imputeSpeed = System.getProperty("simpledb.ImputeSlow");
+    	if (imputeSpeed == null){
+    		numImputationEpochs = NUM_IMPUTATION_EPOCHS_FAST;
+    	} else {
+    		numImputationEpochs = NUM_IMPUTATION_EPOCHS_SLOW;
+    	}
+    }
 
     private Random random;
 
@@ -37,6 +52,7 @@ public class ImputeRegressionTree extends Impute {
 
     public ImputeRegressionTree(Collection<String> dropFields, DbIterator child) {
         super(dropFields, child);
+        setNumImputationEpochs();
         initRng();
         buffer = new ArrayList<>();
         nextTupleIndex = 0;
@@ -208,7 +224,7 @@ public class ImputeRegressionTree extends Impute {
 
 		// Iterate creation of trees for each missing column. This is the
 		// meat of the chained-equation regression trees method.
-		for (int j=0; j<NUM_IMPUTATION_EPOCHS; j++){
+		for (int j=0; j<numImputationEpochs; j++){
 			for (int imputationColumn : dropFieldsIndices2){
 				train.setClassIndex(imputationColumn);
 			
@@ -262,7 +278,7 @@ public class ImputeRegressionTree extends Impute {
 		int m_c = numComplete;
 		int m_i = numDirty;
 		int n = numTuples;
-		int k = NUM_IMPUTATION_EPOCHS;
+		int k = numImputationEpochs;
 		double T = k * m_i * n * (m_c + m_i - 1) * Math.log(n);
 		
 		return T;
