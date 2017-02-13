@@ -359,10 +359,29 @@ public class TableStats {
 		return new TableStats(schema, copyIntStats, copyNullStats);
 	}
 
+	public void printValues(IntHistogram[] stats, int[] nulls) {
+		System.out.println("Tuple estimates by attribute");
+		for(int i = 0; i < stats.length; i++) {
+			int ctNonNulls = (int) stats[i].countTuples();
+			int ctNulls = nulls[i];
+			System.out.print("Attribute " + i + ": ");
+			System.out.print(" Non-null: " + ctNonNulls);
+			System.out.print(" Null: " + ctNulls);
+			System.out.print("\tTotal: " + (ctNonNulls + ctNulls) + "\n");
+		}
+	}
+
 	/**
 	 * Adjust tablestats to reflect imputation on indices using operation imp. The null count associated
-	 * with these indices goes down to zero in all cases. For drop, that is the only change. For imputations,
-	 * the null counts are redistributed to the histogram according to the existing distribution.
+	 * with these indices goes down to zero in all cases.
+	 *
+	 * For drop, we take the attribute that had the largest number of nulls, this provides a single-attribute-based
+	 * conservative estimate of the smallest cardinality (i.e. we may have dropped even more tuples).
+	 * After setting all other necessary columns' nulls to zero, scale the entire histogram to the new count.
+	 *
+	 * For imputations,
+	 * the null counts are redistributed to the histogram according to the existing distribution, and then
+	 * the null counts are set to zero.
 	 *
 	 * Creates a new instance
 	 * @param imp imputation operation
@@ -371,19 +390,25 @@ public class TableStats {
 	 */
 	public TableStats adjustForImpute(ImputationType imp, Collection<Integer> indices) {
 		TableStats copy = copyTableStats();
-		for(int ix : indices) {
-			switch (imp) {
-				case DROP:
-					// nothing to do beside zero out
-					break;
-				case MINIMAL:
-					// intentional fall through
-					// both imputations work the same in terms of per-column histogram changes
-				case MAXIMAL:
+		switch(imp) {
+			case DROP:
+				int minCardinality = Integer.MAX_VALUE;
+				for(int ix : indices) {
+					copy.nullStats[ix] = 0;
+					int estimate = (int) copy.intStats[ix].countTuples();
+					minCardinality = (estimate < minCardinality) ? estimate : minCardinality;
+				}
+				// scale all buckets (including those not involved in imputation) to new cardinality estimate
+				copy = copy.adjustToTotal(minCardinality);
+				break;
+			case MINIMAL:
+				// intentional fall through
+			case MAXIMAL:
+				for(int ix : indices) {
 					copy.intStats[ix].addToDistribution(copy.nullStats[ix]);
-					break;
-			}
-			copy.nullStats[ix] = 0;
+					copy.nullStats[ix] = 0;
+				}
+				break;
 		}
 		copy.numTuples = copy.computeTotalTuples();
 		return copy;
@@ -401,7 +426,7 @@ public class TableStats {
 		TableStats copy = copyTableStats();
 		assert(intStats.length == nullStats.length);
 		for(int i = 0; i < copy.intStats.length; i++) {
-			copy.intStats[i].scale(selectivity);
+			copy.intStats[i].scaleBy(selectivity);
 			copy.nullStats[i] = (int) (copy.nullStats[i] * selectivity);
 		}
 		// update number of tuples
@@ -428,8 +453,8 @@ public class TableStats {
 			int cleanNull = (int) dirtyNull;
 			// assign new null count
 			copy.nullStats[i] = cleanNull;
-			// distribute remainder amongst non-nulls, based on existing histogram
-			copy.intStats[i].distribute(totalCount - cleanNull);
+			// scaleTo remainder amongst non-nulls, based on existing histogram
+			copy.intStats[i].scaleTo(totalCount - cleanNull);
 		}
 		// update number of tuples
 		copy.numTuples = copy.computeTotalTuples();
