@@ -401,7 +401,7 @@ public class TableStats {
 		TableStats copy = copyTableStats();
 		assert(intStats.length == nullStats.length);
 		for(int i = 0; i < copy.intStats.length; i++) {
-			copy.intStats[i].scale(selectivity);
+			copy.intStats[i].scaleBy(selectivity);
 			copy.nullStats[i] = (int) (copy.nullStats[i] * selectivity);
 		}
 		// update number of tuples
@@ -428,8 +428,8 @@ public class TableStats {
 			int cleanNull = (int) dirtyNull;
 			// assign new null count
 			copy.nullStats[i] = cleanNull;
-			// distribute remainder amongst non-nulls, based on existing histogram
-			copy.intStats[i].distribute(totalCount - cleanNull);
+			// scaleTo remainder amongst non-nulls, based on existing histogram
+			copy.intStats[i].scaleTo(totalCount - cleanNull);
 		}
 		// update number of tuples
 		copy.numTuples = copy.computeTotalTuples();

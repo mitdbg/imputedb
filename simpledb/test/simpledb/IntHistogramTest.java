@@ -222,7 +222,7 @@ public class IntHistogramTest {
 
 		// scaling
 		IntHistogram hScaled = h.copyHistogram();
-		hScaled.scale(0.5);
+		hScaled.scaleBy(0.5);
 		for(int i = 0; i < hScaled.getBuckets().length; i++) {
 			double val = (i == 0) ? 2.0 : 0.0;
 			Assert.assertTrue(hScaled.getBuckets()[i] == val);
@@ -243,7 +243,7 @@ public class IntHistogramTest {
 
 		// forcing distribution to value
 		IntHistogram hTotal = hAdded.copyHistogram();
-		hTotal.distribute(100.0);
+		hTotal.scaleTo(100.0);
 		for(int i = 0; i < hTotal.getBuckets().length; i++) {
 			double val = (i == 0 || i == hTotal.getBuckets().length - 1) ? 50.0 : 0.0;
 			Assert.assertTrue(hTotal.getBuckets()[i] == val);
