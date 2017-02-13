@@ -330,6 +330,18 @@ public class Parser {
         return query;
     }
 
+    public Query handleQueryStatementSilent(ZQuery s, TransactionId tId)
+            throws TransactionAbortedException, DbException, IOException,
+            simpledb.ParsingException, Zql.ParseException {
+        Query query = new Query(tId);
+        LogicalPlan lp = parseQueryLogicalPlan(tId, s);
+        DbIterator physicalPlan = lp.physicalPlan(tId,
+                TableStats.getStatsMap(), explain);
+        query.setPhysicalPlan(physicalPlan);
+        query.setLogicalPlan(lp);
+        return query;
+    }
+
     public Query handleInsertStatement(ZInsert s, TransactionId tId)
             throws TransactionAbortedException, DbException, IOException,
             simpledb.ParsingException, Zql.ParseException {

@@ -116,6 +116,27 @@ public class SimpleDb {
 				e.printStackTrace();
 			}
 
+		} else if (args[0].equals("experiment")) {
+			if (args.length != 8) {
+				System.err.println("Usage: java -jar <JAR> experiment <minAlpha> <maxAlpha> <step> <iters> <catalog> <queries> <output-dir>");
+				System.exit(1);
+			}
+
+			double minAlpha = Double.parseDouble(args[1]);
+			double maxAlpha = Double.parseDouble(args[2]);
+			double step = Double.parseDouble(args[3]);
+			int iters = Integer.parseInt(args[4]);
+			String catalog = args[5];
+			String queries = args[6];
+			String outputDir = args[7];
+
+			ExperimentRunner runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters, catalog, queries, outputDir);
+			try {
+				runner.runExperiments();
+			} catch (Exception e) {
+				System.err.println("Failed to run experiments: " + e.getMessage());
+				e.printStackTrace();
+			}
 		} else if (args[0].equals("draw")) {
 			if (args.length != 5) {
 				System.out.println("Usage: simpledb draw catalog query_file output_prefix alpha");
