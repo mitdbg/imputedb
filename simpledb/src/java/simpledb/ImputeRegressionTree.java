@@ -28,13 +28,11 @@ public class ImputeRegressionTree extends Impute {
 
     // Keep track of imputed instances as well as the indices that correspond to
     // these. (Will differ from completeFieldsIndices and dropFieldsIndices if
-    // this is a partial impute.) Variables with a '2' suffix index into the
-    // Instances object.
+    // this is a partial impute.)
     private Instances imputedInstances;
-    private List<Integer> completeFieldsIndices2;
+	// Indexes into the Instances object
     private List<Integer> dropFieldsIndices2;
-
-    // Map from indices in the Instances object to indices in the Tuple buffer.
+	// Map from indices in the Instances object to indices in the Tuple buffer.
 	private HashMap<Integer, Integer> dropFieldsIndicesMap;
 
     public ImputeRegressionTree(Collection<String> dropFields, DbIterator child) {
@@ -42,10 +40,9 @@ public class ImputeRegressionTree extends Impute {
         initRng();
         buffer = new ArrayList<>();
         nextTupleIndex = 0;
-
         imputedInstances = null;
-        completeFieldsIndices2 = null;
         dropFieldsIndices2 = null;
+        dropFieldsIndicesMap = null;
     }
     
     private void initRng(){
@@ -54,19 +51,24 @@ public class ImputeRegressionTree extends Impute {
 
     @Override
     public void rewind() throws DbException, TransactionAbortedException {
-        child.rewind();
+    	super.rewind();
         initRng();
         buffer.clear();
         nextTupleIndex = 0;
-
         imputedInstances = null;
-        completeFieldsIndices2 = null;
+        
+        // We have to reset these variables, even though we don't have to reset
+        // dropFields or dropFieldsIndices, because a different sequence of
+        // tuples (if that's even possible from child.rewind()) could lead to a
+        // different set of completeFields due to presence/absence of missing
+        // values. The resulting indices in the Instance object may then differ.
         dropFieldsIndices2 = null;
+        dropFieldsIndicesMap = null;
     }
 
     @Override
     protected Tuple fetchNext() throws DbException, TransactionAbortedException {
-		// First, we must add all of the child tuples to the buffer.
+		// Block, adding all of the child tuples to the buffer.
 		while (child.hasNext()){
 			buffer.add(child.next());
 		}
@@ -120,8 +122,6 @@ public class ImputeRegressionTree extends Impute {
 	}
 
 	private void doImpute() throws NoSuchElementException, DbException, TransactionAbortedException{
-		int n = buffer.size();
-		
 		// Get set of complete columns and missing columns. The complete columns
 		// are just those -- columns without any missing data. We can't assume
 		// that the complete columns are the set complement of the dropFields.
@@ -133,18 +133,16 @@ public class ImputeRegressionTree extends Impute {
 		List<Integer> completeFieldsIndices = new ArrayList<>();
 		for (int i=0; i<td.numFields(); i++){
 			if (!dropFieldsIndices.contains(i)){
-				completeFieldsIndices.add(i);
-			}
-		}
-		// Can we populate the missing bit array above and then re-use that here?
-		Iterator<Integer> it = completeFieldsIndices.iterator();
-		while (it.hasNext()){
-			int i = it.next();
-			for (int j=0; j<n; j++){
-				if (buffer.get(j).getField(i).isMissing()){
-					it.remove();
-					break;
+				boolean isComplete = true;
+				for (int j=0; j<buffer.size(); j++){
+					if (buffer.get(j).getField(i).isMissing()){
+						isComplete = false;
+						break;
+					}
 				}
+
+				if (isComplete)
+					completeFieldsIndices.add(i);
 			}
 		}
 
@@ -156,22 +154,24 @@ public class ImputeRegressionTree extends Impute {
 		// Now, the problem is that if we haven't retained every column, our indices will be off.
 		// We'll recreate the lists of indices by comparing the field names. We
 		// don't really need to do this exercise for the completeFields because
-		// they are now the set completement of the dropFields.
-		this.dropFieldsIndices2 = new ArrayList<>();
-		this.dropFieldsIndicesMap = new HashMap<Integer, Integer>();
-		for (int i : dropFieldsIndices){
-			String fieldName = td.getFieldName(i);
-			boolean added = false;
-			for (int j=0; j<train.numAttributes(); j++){
-				if (train.attribute(j).name().equals(fieldName)){
-					dropFieldsIndicesMap.put(j, i);
-					dropFieldsIndices2.add(j);
-					added = true;
-					break;
+		// they are now the set complement of the dropFields.
+		if (dropFieldsIndices2 == null){
+			this.dropFieldsIndices2 = new ArrayList<>();
+			this.dropFieldsIndicesMap = new HashMap<Integer, Integer>();
+			for (int i : dropFieldsIndices){
+				String fieldName = td.getFieldName(i);
+				boolean added = false;
+				for (int j=0; j<train.numAttributes(); j++){
+					if (train.attribute(j).name().equals(fieldName)){
+						dropFieldsIndicesMap.put(j, i);
+						dropFieldsIndices2.add(j);
+						added = true;
+						break;
+					}
 				}
-			}
-			if (!added){
-				throw new RuntimeException("Not added.");
+				if (!added){
+					throw new RuntimeException("Not added.");
+				}
 			}
 		}
 
@@ -181,7 +181,7 @@ public class ImputeRegressionTree extends Impute {
 		HashMap<Integer, HashSet<Integer>> dropFieldsMissing = new HashMap<Integer, HashSet<Integer>>();
 		for (int i : dropFieldsIndices2){
 			dropFieldsMissing.put(i, new HashSet<Integer>());
-			for (int j=0; j<n; j++){
+			for (int j=0; j<buffer.size(); j++){
 				if (train.get(j).isMissing(i)){
 					dropFieldsMissing.get(i).add(j);
 				}
@@ -190,19 +190,19 @@ public class ImputeRegressionTree extends Impute {
 
 		// Initialize all missing values using random-in-column.
 		for (int i : dropFieldsIndices2){
-			for (int j=0; j<n; j++){
-				if (dropFieldsMissing.get(i).contains(j)){
-					int ind = random.nextInt(n);
-					int ind0 = ind;
-					while (dropFieldsMissing.get(i).contains(ind)){
-						ind++;
-						if (ind == n)
-							ind = 0;
-						if (ind == ind0)
-							throw new DbException("Couldn't initialize impute: no non-missing values for field.");
-					}
-					train.get(j).setValue(i, train.get(ind).value(i));
+			Iterator<Integer> dropFieldsMissingRowIt = dropFieldsMissing.get(i).iterator();
+			while (dropFieldsMissingRowIt.hasNext()){
+				int j = dropFieldsMissingRowIt.next();
+				int ind = random.nextInt(buffer.size());
+				int ind0 = ind;
+				while (dropFieldsMissing.get(i).contains(ind)){
+					ind++;
+					if (ind == buffer.size())
+						ind = 0;
+					if (ind == ind0)
+						throw new DbException("Couldn't initialize impute: no non-missing values for field.");
 				}
+				train.get(j).setValue(i, train.get(ind).value(i));
 			}
 		}
 
