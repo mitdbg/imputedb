@@ -152,9 +152,17 @@ public class ImputeTest extends SimpleDbTestBase {
     }
     @Test public void imputeRegressionTree() throws Exception {
         System.out.println("Regression tree test");
+        long start1 = System.currentTimeMillis();
         doImpute2(new ImputeRegressionTree(dropFields1, scan1), scan1copy);
+        long start2 = System.currentTimeMillis();
         doImpute2(new ImputeRegressionTree(dropFields2, scan2), scan2copy);
+        long start3 = System.currentTimeMillis();
         doImpute2(new ImputeRegressionTree(dropFields3, scan3), scan3copy);
+        long end = System.currentTimeMillis();
+        
+        System.out.println("\tTest 1: " + (start2-start1) + " (ms)");
+        System.out.println("\tTest 2: " + (start3-start1) + " (ms)");
+        System.out.println("\tTest 3: " + (end-start1) + " (ms)");
     }
     
     // Test that we can iterate through the tuples returned by the Impute

@@ -68,6 +68,11 @@ public abstract class Impute extends Operator {
         super.open();
         child.open();
     }
+    
+    @Override
+    public void rewind() throws DbException, TransactionAbortedException {
+    	child.rewind();
+    }
 
     @Override
     public TupleDesc getTupleDesc() {
