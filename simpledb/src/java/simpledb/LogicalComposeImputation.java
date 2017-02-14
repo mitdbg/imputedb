@@ -57,7 +57,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 		case DROP: {
 			final DbIterator physicalPlan = new Drop(toNames(impute), subplan.getPlan());
 			final double loss = 1.0;
-			final double time = 0.0;
+			final double time = 0.01 * subplan.cardinality();
 			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
 		}
