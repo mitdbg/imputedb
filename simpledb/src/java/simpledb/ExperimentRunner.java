@@ -126,6 +126,7 @@ public class ExperimentRunner {
         List<String> lines = Files.readAllLines(this.queriesPath);
         StringBuilder sb = new StringBuilder();
         for(String line : lines) {
+            sb.append(" "); // add blanks space to avoid combining terms across lines
             sb.append(line);
         }
         String text = sb.toString();
