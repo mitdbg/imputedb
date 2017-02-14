@@ -127,13 +127,20 @@ public class LogicalImputedJoinNode extends ImputedPlan {
     private TableStats estimateJoinedTableStats()  {
         // estimated cardinality of joined table, follows approach in selinger
         double cardEstimate;
+        boolean child1HasJoinPK = isPkey(t1Alias, f1PureName);
+        boolean child2HasJoinPK = isPkey(t2Alias, f2PureName);
+        double child1card = table1.cardinality();
+        double child2card = table2.cardinality();
+        
         if (p.equals(Predicate.Op.EQUALS)) {
-            if (isPkey(t1Alias, f1PureName)) {
-                cardEstimate = table2.cardinality();
-            } else if (isPkey(t2Alias, f2PureName)) {
-                cardEstimate = table1.cardinality();
+        	if (child1HasJoinPK && child2HasJoinPK) {
+            	cardEstimate = Math.min(child1card, child2card);
+            } else if (child1HasJoinPK) {
+            	cardEstimate = child1card;
+            } else if (child2HasJoinPK) {
+            	cardEstimate = child2card;
             } else {
-                cardEstimate = Math.max(table1.cardinality(), table1.cardinality());
+            	cardEstimate = Math.max(child1card, child2card);
             }
         } else {
             cardEstimate = table1.cardinality() * table2.cardinality() * 0.3;
