@@ -3,6 +3,8 @@ package simpledb;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import simpledb.Utility.AvgAgg;
+
 public class LogicalImputedScanNode extends ImputedPlan {
 	private final DbIterator physicalPlan;
 	private final int tableId;
@@ -36,8 +38,8 @@ public class LogicalImputedScanNode extends ImputedPlan {
 	}
 	
 	@Override
-	protected double loss() {
-		return 0.0;
+	protected AvgAgg loss() {
+		return AvgAgg.EMPTY;
 	}
 
 	@Override

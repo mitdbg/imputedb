@@ -3,6 +3,8 @@ package simpledb;
 import java.util.HashSet;
 import java.util.Map;
 
+import simpledb.Utility.AvgAgg;
+
 /**
  * Performs a join between two plans that have imputations along their respective trees.
  * */
@@ -154,8 +156,8 @@ public class LogicalImputedJoinNode extends ImputedPlan {
     }
     
     @Override
-    protected double loss() {
-    	return table1.loss() + table2.loss();
+    protected AvgAgg loss() {
+    	return table1.loss().add(table2.loss());
     }
     
     @Override

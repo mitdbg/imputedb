@@ -2,6 +2,8 @@ package simpledb;
 
 import java.util.*;
 
+import simpledb.Utility.AvgAgg;
+
 import static simpledb.ImputationType.DROP;
 import static simpledb.ImputationType.MAXIMAL;
 
@@ -90,8 +92,8 @@ public class LogicalComposeImputation extends ImputedPlan {
 	}
 	
 	@Override
-	protected double loss() {
-		return subplan.loss() + loss;
+	protected AvgAgg loss() {
+		return subplan.loss().add(loss);
 	}
 	
 	@Override

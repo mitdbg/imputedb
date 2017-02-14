@@ -2,6 +2,8 @@ package simpledb;
 
 import java.util.*;
 
+import simpledb.Utility.AvgAgg;
+
 public class LogicalImputedFilterNode extends ImputedPlan {
 	private final DbIterator physicalPlan;
 	private final TableStats tableStats;
@@ -75,7 +77,7 @@ public class LogicalImputedFilterNode extends ImputedPlan {
 	}
 	
 	@Override
-	protected double loss() {
+	protected AvgAgg loss() {
 		return subplan.loss();
 	}
 	

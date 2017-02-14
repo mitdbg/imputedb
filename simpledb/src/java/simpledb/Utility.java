@@ -6,6 +6,32 @@ import java.util.UUID;
 
 /** Helper methods used for testing and implementing random features. */
 public class Utility {
+	public static class AvgAgg {
+		private final int count;
+		private final double total;
+		
+		public AvgAgg(double total, int count) {
+			super();
+			this.count = count;
+			this.total = total;
+		}
+		
+		public static final AvgAgg EMPTY = new AvgAgg(0, 0);
+		
+		public AvgAgg add(double v) {
+			return new AvgAgg(total + v, count + 1);
+		}
+		
+		public AvgAgg add(AvgAgg loss) {
+			return new AvgAgg(total + loss.total, count + loss.count);
+		}
+		
+		public double get() {
+			if (count == 0) { return 0.0; }
+			return total / count;
+		}
+	}
+	
     /**
      * @return a Type array of length len populated with Type.INT_TYPE
      */

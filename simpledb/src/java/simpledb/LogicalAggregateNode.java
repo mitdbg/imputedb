@@ -2,6 +2,8 @@ package simpledb;
 
 import java.util.*;
 
+import simpledb.Utility.AvgAgg;
+
 public class LogicalAggregateNode extends ImputedPlan {
 	private final ImputedPlan plan;
 	private final DbIterator physicalPlan;
@@ -34,7 +36,7 @@ public class LogicalAggregateNode extends ImputedPlan {
 	}
 
 	@Override
-	protected double loss() {
+	protected AvgAgg loss() {
 		return plan.loss();
 	}
 	

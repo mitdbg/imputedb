@@ -1,6 +1,7 @@
 package simpledb;
 
 import java.util.Set;
+import simpledb.Utility.AvgAgg;
 
 /**
  * Generic type to extend for relations that have been imputed. We want to have a union of these types,
@@ -14,7 +15,7 @@ import java.util.Set;
  * Each ImputedPlan carries a copy of its table statistics. These are modified according to imputation/selection/joins.
  */
 public abstract class ImputedPlan {
-	protected abstract double loss();
+	protected abstract AvgAgg loss();
 	protected abstract double time();
 	
 	public abstract Set<QualifiedName> getDirtySet();
@@ -24,6 +25,6 @@ public abstract class ImputedPlan {
 
 	public double cost(double lossWeight) {
 		assert 0.0 <= lossWeight && lossWeight <= 1.0;
-		return lossWeight * loss() + (1 - lossWeight) * time();
+		return lossWeight * loss().get() + (1 - lossWeight) * time();
 	}
 }
