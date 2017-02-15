@@ -48,6 +48,47 @@ GROUP BY demo.income
 \label{fig:example-query}
 \end{figure}
 
+\begin{figure}
+  \Tree
+  [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
+    [.$g_{\text{income, AVG(white\_blood\_cell\_ct)}}$
+      [.$\mu_{\text{demo.income}}$
+        [.$\bowtie_{\text{exams.id} = \text{demo.id}}$
+          [.$\mu_{\text{labs.white\_blood\_cell\_ct}}$
+            [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
+              [.$\sigma_{\text{exams.weight} \geq 120}$ 
+                [.$\mu_{\text{exams.weight}}$ exams ] 
+              ] 
+              labs 
+            ]
+          ]
+        [.$\sigma_{\text{demo.gender} = 2}$ demo ]
+      ] 
+    ] 
+  ] 
+]
+\caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for quality.}
+\label{fig:quality-plan}
+\end{figure}
+
+\begin{figure}
+  \Tree
+  [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
+    [.$g_{\text{income, AVG(white\_blood\_cell\_ct)}}$
+      [.$\delta_{\text{demo.income, labs.white\_blood\_cell\_ct}}$
+        [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
+          [.$\bowtie_{\text{demo.id} = \text{exams.id}}$
+            [.$\sigma_{\text{demo.gender} = 2}$ demo ]
+            [.$\sigma_{\text{exams.weight} \geq 120}$ [.$\mu_{\text{exams.weight}}$ exams ] ] ] labs ] ] ] ]
+\caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for performance.}
+\label{fig:fast-plan}
+\end{figure}
+
+First, consider the plan in Fig.~\ref{fig:fast-plan}.
+This plan will be generated for the query in Fig.~\ref{example-query} when the optimizer is requested to produce the fastest possible plan, without considering the accuracy penalty.
+There are several features of this query plan that highlight the subtleties of optimizing queries which contain imputation operators.
+First, this plan will drop tuples which contain null values, rather than 
+
 \todo{add a small comment about the number of plans in the plancache
 to highlight size of search space}
 \todo{add a figure with the resulting query plan, and what its doing}
