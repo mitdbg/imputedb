@@ -108,7 +108,7 @@ attended a bootcamp.
 Note that for all queries we have enumerated strings and encoded them with
 an appropriate integer value.
 
-\begin{table}
+\begin{table*}
 \centering
  \begin{subtable}{\linewidth}
   \input{queries-cdc}
@@ -123,16 +123,16 @@ an appropriate integer value.
  \end{subtable}
   \caption{Queries used in our experiments.}
   \label{fig:queries}
-\end{table}
+\end{table*}
 
-\begin{table}
+\begin{table*}
   \centerfloat
   \input{runtimes}
     \caption{Base error, percent change in error and and running time for queries
     with different imputation levels. Base error is the root-mean-square error (RMSE) between the query run on clean
     data and the query run on dirty data without imputation. Change in error is relative to the base error.}
   \label{fig:experiments}
-\end{table}
+\end{table*}
 
 Table~\ref{fig:experiments} provides a summary of our experimental results.
 We run each query in four configurations: without imputation on clean data, without imputation on dirty data, and with imputation on dirty data for $\alpha = 0$ and $\alpha = 1$.
