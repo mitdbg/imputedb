@@ -1,21 +1,25 @@
 \section{Algorithm}
 
-Our optimizer searches a restricted space (Sec.~\ref{sec:search-space}) of query plans for a plan that minimizes a metric (Sec.~\ref{sec:cost-model}) which combines the runtime cost of the query and the quality of the results.
-This plan must not emit any tuples which contain null values, regardless of the state of the base tables.
-Additionally, the traditional relational operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate) must never observe a null value in any attribute that they directly operate on.
+Our optimizer searches a restricted space (Sec.~\ref{sec:search-space}) of query plans containing imputation operators (Sec.~\ref{sec:operators}) for a plan that minimizes a metric (Sec.~\ref{sec:cost-model}) which combines the runtime cost of the query and the estimated quality of the results.
+This plan is subject to two constraints (Sec.~\ref{sec:placement}).
+First, it must not emit any tuples which contain null values, regardless of the state of the base tables.
+Second, the traditional relational operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) must never observe a null value in any attribute that they operate on directly.
+Our planning algorithm is agnostic to the type of imputation used (Sec.~\ref{sec:imputation}), as it is treated as a black-box operation.
 
 \subsection{Imputation operators}
+\label{sec:operators}
 We introduce two new relational operators to perform imputation: \textit{Impute} ($\mu$) and
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
 replace all null values with non-null values for attributes in $C$ in the relation $R$.
+The imputation algorithm is discussed in detail in Sec.~\ref{sec:imputation}.
 \textit{Drop} simply removes from $R$ all tuples which have a null value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no null values for
 attributes in $C$.  
 
 \subsection{Search space}
 \label{sec:search-space}
-To reduce the size of the query plan search space, only plans that fit the following template are considered.
+To keep the query plan search space tractable, only plans that fit the following template are considered.
 
 \begin{itemize}
 \item All filters are pushed to the leaves of the query tree, immediately after scanning a table. We use a pre-processing step which conjoins together filters which operate on the same table, so we can assume that each table has at most one relevant filter.
@@ -27,29 +31,27 @@ To reduce the size of the query plan search space, only plans that fit the follo
 \item Projections are placed at the root of the query tree.
 \end{itemize}
   
-The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before/after traditional operators.
-Figure \ref{fig:query-schematic} shows a simple schematic of what a query involving three tables might look like, absent any imputation operators.
-
+The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before and after traditional operators.
+Figure~\ref{fig:query-schematic} shows the layout of a query involving three tables, absent any imputation operators.
 
 \begin{figure}
-\Tree [.$\pi$ [.$GroupBy$ [.$\bowtie$ [.$\bowtie$ [.$\sigma$ $t_1$ ] [.$\sigma$ $t_2$ ] ] [.$\sigma$ $t_3$ ] ] ] ]
-\caption{Query plan schematic for the type of traditional plans explored (absent imputation operators)}
+\Tree [.$\pi$ [.$g$ [.$\bowtie$ [.$\bowtie$ [.$\sigma$ $t_1$ ] [.$\sigma$ $t_2$ ] ] [.$\sigma$ $t_3$ ] ] ] ]
+\caption{Query plan schematic for the type of traditional plans explored (absent imputation operators).}
 \label{fig:query-schematic}
 \end{figure}
 
-
-
 \subsection{Cost model}
 \label{sec:cost-model}
-We rank query plans using a cost model \[\textsc{Cost}(Q) = (1 - \alpha) \times \textsc{Time}(Q) + \alpha \times \textsc{Loss}(Q).\] $\textsc{Time}(Q)$ is an estimate of the runtime of the query derived from table statistics and selectivity estimation of the query predicates. $\textsc{Loss}(Q)$ is an estimate of the amount of error introduced by the imputation procedure. $\alpha$ is a tunable parameter that determines whether the optimizer focuses on quality or on performance. $\alpha = 1.0$ means that the optimal query should be as accurate as possible (at the expense of performance), $\alpha=0.0$ means that the optimal query should be as fast
-as possible (at the expense of accuracy).
+\todo{Explain that loss is now averaged}
+\todo{Do we want to keep the behavior that imputation increases in quality with the number of cells, or switch to number of tuples.}
+We rank query plans using a cost model \[\textsc{Cost}(q) = (1 - \alpha) \times \textsc{Time}(q) + \alpha \times \textsc{Loss}(q).\] $\textsc{Time}(q)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. $\textsc{Loss}(q)$ is an estimate of the amount of error introduced by the imputation procedure. $\alpha$ is a tunable parameter that determines whether the optimizer focuses on quality or on performance. $\alpha = 1.0$ means that the optimal query should have the highest quality imputation (at the expense of performance), $\alpha=0.0$ means that the optimal query should be as fast as possible (at the expense of imputation quality).
 
-In order to correctly estimate $\textsc{Time}(Q)$ and $\textsc{Loss}(Q)$, the system must have cardinality estimates for each sub-query in each query plan.
+The computation of $\textsc{Time}(q)$ and $\textsc{Loss}(q)$ relies on having an accurate cardinality estimate of $q$ and its sub-queries.
 These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational calculus, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 For simplicity, each of the logical nodes in a query plan points to a set of histograms.
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for new operation in the plan.
-Algorithm~\ref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans
+Algorithm~\ref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
 For each sub-query, we keep track of the estimated number of
 null values in a column  ($\textsc{Missing}(c, Q)$) by using the histograms associated with
@@ -177,6 +179,7 @@ Algorithm~\ref{algo:plan-helpers} presents a series of helper functions used by 
 \end{algorithm}
 
 \subsection{Imputation Strategies}
+\label{sec:imputation}
 
 We design our system such that any imputation strategy can be plugged in with minimal effort
 and without changes to the optimizer, so the strategy can in principle be targeted to a
