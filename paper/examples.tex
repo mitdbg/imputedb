@@ -31,9 +31,7 @@ Rather than work through
 the implications of each case, she submits a query, as shown in Figure~\ref{fig:example-query}, to ImputeDB.\@ The system, parameterized by a value indicating
 a tradeoff between information loss and runtime cost, then finds
 the optimal query plan. Figure~\ref{fig:quality-plan} and Figure~\ref{fig:fast-plan} show what this plan would be
-when optimizing for quality and performance, respectively. These two plans are found within a broader search space
-of XXXX plans. \todo{add a small comment about the number of plans in the plancache
-to highlight size of search space}.
+when optimizing for quality and performance, respectively.
 
 The differences between the two plans highlight the subtleties of optimizing queries which contain imputation operators.
 Note that imputation operators are placed in different points of the plan, operating over different columns, and indeed
