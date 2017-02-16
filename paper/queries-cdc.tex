@@ -3,16 +3,16 @@
 \toprule
 \# & \multicolumn{1}{c}{Query} \\
 \midrule
-1 & \verb|SELECT income, AVG(weight) FROM demo, exams WHERE demo.id = exams.id GROUP BY income;| \refstepcounter{queryno} \label{q1} \\
+1 & \lstinline|SELECT income, AVG(weight) FROM demo, exams WHERE demo.id = exams.id GROUP BY income;| \refstepcounter{queryno} \label{q1} \\
 2 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
-SELECT income, AVG(cholesterol) 
-FROM demo, exams, labs WHERE demo.id = exams.id AND exams.id = labs.id AND
+SELECT income, AVG(cholesterol) FROM demo, exams, labs 
+WHERE demo.id = exams.id AND exams.id = labs.id AND
 income <= 15 AND income >= 13 AND weight >= 63 GROUP BY income;
 \end{lstlisting}
 \end{minipage}
 \refstepcounter{queryno} \label{q2} \\
-3 & \verb|SELECT MAX(blood_lead) FROM exams, labs WHERE exams.id = labs.id AND waist_circumference >= 87;| \refstepcounter{queryno} \label{q3}\\
+3 & \lstinline|SELECT MAX(blood_lead) FROM exams, labs WHERE exams.id = labs.id AND waist_circumference >= 87;| \refstepcounter{queryno} \label{q3}\\
 \bottomrule
 \end{tabular}

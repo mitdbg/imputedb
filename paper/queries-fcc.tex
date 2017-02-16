@@ -2,17 +2,22 @@
 \toprule
 \# & \multicolumn{1}{c}{Query} \\
 \midrule
-4 & \verb|SELECT attendedbootcamp, AVG(income) FROM fcc GROUP BY attendedbootcamp| \refstepcounter{queryno} \label{q4} \\
+4 & \lstinline|SELECT attendedbootcamp, AVG(income) FROM fcc GROUP BY attendedbootcamp| \refstepcounter{queryno} \label{q4} \\
 5 & 
-\verb|SELECT AVG(age) FROM fcc WHERE gender = 178 AND countrycitizen = 158|
+\lstinline|SELECT AVG(age) FROM fcc WHERE gender = 178 AND countrycitizen = 158|
 \refstepcounter{queryno} \label{q5} \\
-6 & \verb|SELECT schooldegree, AVG(moneyforlearning) FROM fcc WHERE studentdebtowe > 0 AND schooldegree >= 0 GROUP BY schooldegree| \refstepcounter{queryno} \label{q6}\\
+6 & 
+\begin{minipage}{6in}
+\begin{lstlisting}[breaklines]
+SELECT schooldegree, AVG(moneyforlearning) FROM fcc 
+WHERE studentdebtowe > 0 AND schooldegree >= 0 GROUP BY schooldegree
+\end{lstlisting}
+\end{minipage}\refstepcounter{queryno} \label{q6}\\
 7 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
-SELECT attendedbootcamp, AVG(gdp_per_capita)
-FROM fcc, gdp WHERE fcc.countrycitizen = gdp.country
-GROUP BY attendedbootcamp
+SELECT attendedbootcamp, AVG(gdp_per_capita) FROM fcc, gdp 
+WHERE fcc.countrycitizen = gdp.country GROUP BY attendedbootcamp
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno} \label{q7}\\
 \bottomrule
