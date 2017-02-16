@@ -134,6 +134,7 @@ Before describing the operation of the query planner, we describe the semantics 
 At a high level, a plan cache is a mapping from a set of tables to a set of optimal plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single best plan because each plan has a distinct set of dirty attributes.
 
+\todo{formatting of plan cache semantics needs to be fixed}
 \begin{figure}
   \begin{align*}
     \llbracket Q[T] \rrbracket &= \begin{cases}
