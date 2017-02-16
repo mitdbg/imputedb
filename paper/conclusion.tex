@@ -1,20 +1,17 @@
 \section{Conclusion}
-\todo{jose: rewrite this}
-As shown in \ProjectName{}, missing values and their imputation can successfully be integrated into the relational calculus and
-existing plan optimization frameworks. We implement imputation actions, such as dropping or imputing values with a machine
+As shown in \ProjectName{}, missing values and their imputation can be successfully integrated into the relational calculus and
+existing cost-based plan optimization frameworks. We implement imputation actions, such as dropping or imputing values with a machine
 learning technique, as operators in the algebra and use a simple, but effective, cost model to consider tradeoffs in 
-information loss and time. In effect, user preferences for one or the other can be easily incorporated by adjusting a parameter.
-Simple histogram transformations
-provide incrementally updated cardinality estimates across operators in the plans, which allow us to provide more accurate cost estimates.
-By taking a dynamic programming approach, we can consider a variety of operator placements
-and input columns, while keeping planning tractable in real-world examples.
-
-In our experiments, we considered a series of analytic queries (using relevant aggregates) and set queries (with simple projections) on real-world
-American Community Survey data and synthetic data
-and showed that the chosen query plan improves accuracy of results relative to simply ignoring missing values. Furthermore,
-the variety of imputation operator placements across queries further emphasizes the lack of flexibility imposed by the coarse-grained
-pre-processing approach to imputation. By allowing different imputation strategies for different queries, we
-take a fine-grained approach to missing data, better addressing the often differing needs of database users.
+information loss and runtime. We showed that different values for the tradeoff parameter can yield substantially
+different plans, allowing the user to express their preferences for performance on a per-query basis.
+Our experiments with \textit{CDC} and \textit{freeCodeCamp} survey-based datasets
+showed that \ProjectName{} can be used successfully with real-world data, expressing standard SQL queries over data with missing values. 
+We craft a series of realistic queries, meant to resemble the kind of questions an analyst might ask during
+the data exploration phase. The plans selected for each query result in execution that
+takes a fraction of the time compared to the standard approach of imputing on the entire base tables and
+then formulating queries. Furthermore, the difference in query results between the two approaches is
+shown to be minimal. Data analysts need not commit to a specific imputation strategy and can instead
+vary this across queries.
 
 We highlight the long history of dealing with missing data both in the statistical learning and database communities.
 Similarly to existing work, we consider the impact of null values in databases and develop a simple set of invariants to 
@@ -22,6 +19,11 @@ successfully plan around them. In contrast to the statistical learning work, our
 used to impute but rather on the timing of imputation in the execution of a query. In contrast to existing database work,
 we incorporate imputation into a cost-based optimizer and hide any details
 regarding missing values inside the system, allowing users to use traditional SQL and engage in normal workloads.
+While prior work has incorporated operations such as prediction into their databases, this has been domain-specific
+in some cases, and in others, they have not integrated these operations into the planner. The novelty
+of our contribution lies in the formalization of missing value imputation for query planning, which results in performance
+gains over traditional approaches. This approach acknowledges that different users performing different queries on the same
+dataset will likely have varying imputation needs and that execution plans should appropriately reflect that variation.
 
 \subsection{Future Work}
 \todo{Jose: rewrite this}
