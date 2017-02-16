@@ -17,22 +17,31 @@ or she could fit a model on the base tables which can take advantage of existing
 If she drops the records with missing data, she will throw away the majority of her data set, as many records have missing fields.
 Fitting a model on the dataset will take more programming effort and may take a long time to run.
 
-\todo{Clarify. Can we get a little more detail on why they might change the imputation strategy?}
 To complicate matters further, the epidemiologist realizes that
 some of the steps she is interested in, including filtering and grouping,
 are impacted differently by missing data, and that these step may change
 repeatedly, as she wants to run various queries during the exploration phase.
+The imputation strategy itself may change through out time. For example, as she is getting an initial
+set of distribution statistics (such as mean and standard deviation), she may be willing to tolerate
+a simpler imputation approach, as long as she gets runtime performance in exchange. Later on,
+as more precise estimates are needed for comparing treatments or policy changes, the researcher
+may want to focus on the quality of the imputation.
 
 Rather than work through
 the implications of each case, she submits a query, as shown in Figure~\ref{fig:example-query}, to ImputeDB.\@ The system, parameterized by a value indicating
 a tradeoff between information loss and runtime cost, then finds
-the optimal query plan, as shown in Figure~\ref{xxx}.
+the optimal query plan. Figure~\ref{fig:quality-plan} and Figure~\ref{fig:fast-plan} show what this plan would be
+when optimizing for quality and performance, respectively. These two plans are found within a broader search space
+of XXXX plans. \todo{add a small comment about the number of plans in the plancache
+to highlight size of search space}.
 
-Tens of queries later, the epidemiologist has the holistic view of the
-data that they required before carefully crafting their own tailored
-imputation model. Knowing that there may be a need to explore
-this data set further, they can easily incorporate their imputation model
-into ImputeDB for future use.
+The differences between the two plans highlight the subtleties of optimizing queries which contain imputation operators.
+Note that imputation operators are placed in different points of the plan, operating over different columns, and indeed
+even influencing the order of joins. The quality-optimized plan (Figure~\ref{fig:quality-plan}) uses the impute operation, rather
+than dropping tuples with missing values. It waits to impute \verb|demo.income| until after the final join has taken place, but
+other imputations take place earlier on in the plan, some before filtering and join operations. 
+Meanwhile, the performance-optimized plan (Figure~\ref{fig:fast-plan}) performs a single impute operation (\verb|exams.weight|), and applies drops to tuples with missing values before aggregating.
+
 
 \begin{figure}
 \begin{lstlisting}[language=SQL]
@@ -84,14 +93,14 @@ GROUP BY demo.income
 \label{fig:fast-plan}
 \end{figure}
 
-First, consider the plan in Fig.~\ref{fig:fast-plan}.
-This plan will be generated for the query in Fig.~\ref{example-query} when the optimizer is requested to produce the fastest possible plan, without considering the accuracy penalty.
-There are several features of this query plan that highlight the subtleties of optimizing queries which contain imputation operators.
-First, this plan will drop tuples which contain null values, rather than 
 
-\todo{add a small comment about the number of plans in the plancache
-to highlight size of search space}
-\todo{add a figure with the resulting query plan, and what its doing}
+Tens of queries later, the epidemiologist has the holistic view of the
+data that they required before carefully crafting their own tailored
+imputation model. Knowing that there may be a need to explore
+this data set further, they can easily incorporate their imputation model
+into ImputeDB for future use.
+
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "main"
