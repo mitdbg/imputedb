@@ -1,5 +1,6 @@
-labs(white_blood_cell_ct int, blood_lead int, id int, blood_selenium int, hematocrit int, cholesterol int, triglyceride int, vitamin_b12 int, albumin int, creatine int)
+gdp(index int, gdp_per_capita int, country int)
 demo(income int, num_people_household int, marital_status int, age_yrs int, gender int, id int, time_in_us int, is_citizen int, age_months int, years_edu_children int)
+labs(white_blood_cell_ct int, blood_lead int, id int, blood_selenium int, hematocrit int, cholesterol int, triglyceride int, vitamin_b12 int, albumin int, creatine int)
 fcc(index int, countrycitizen int, schooldegree int, hourslearning int, monthsprogramming int, gender int, age int, moneyforlearning int, bootcamppostsalary int, attendedbootcamp int, childrennumber int, commutetime int, citypopulation int, income int, bootcampfinish int, bootcampfulljobafter int, bootcamploanyesno int, studentdebtowe int)
 exams(body_mass_index int, blood_pressure_secs int, cuff_size int, id int, waist_circumference int, height int, arm_circumference int, head_circumference int, blood_pressure_systolic int, weight int)
-gdp(index int, gdp_per_capita int, country int)
+acs_dirty(c0 int, c1 int, c2 int, c3 int, c4 int, c5 int, c6 int, c7 int, c8 int, c9 int, c10 int, c11 int, c12 int, c13 int, c14 int, c15 int, c16 int, c17 int, c18 int, c19 int, c20 int, c21 int, c22 int, c23 int, c24 int, c25 int, c26 int, c27 int, c28 int, c29 int, c30 int, c31 int, c32 int, c33 int, c34 int, c35 int, c36 int)

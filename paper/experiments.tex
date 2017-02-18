@@ -82,6 +82,12 @@ columns. We chose 17 attributes, which are outlined in Table~\ref{table:fcc-desc
    \label{table:fcc-description} 
 \end{table}
 
+For our final experiment, we introduce a simple aggregate query over data from the American Community Survey (ACS), which
+provides a number of public data sets collected by the U.S. Census Bureau.
+We used a cleaned version of the 2012 Public Use Microdata Sample (PUMS) data kindly provided by the authors of~\cite{akande2015empirical}.
+Given that the data had been cleaned, we uniformly introduced missing values across 40 percent of the values. The final dataset consists
+of 671,153 rows and 37 integer columns.
+
 \subsection{Queries}
 \todo{Add more queries: we want ~10 (balanced between the two datasets), explain them below}
 We collected a set of queries (Table~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
@@ -174,7 +180,20 @@ This time compares favorably to our maximum of 72 seconds for a query with imput
 Given the varying needs of database users, \ProjectName{} clearly allows flexibility without a significant performance hit.
 }
 
-\todo{Add timing comparison to ACS table since that should take longer than base on the data we have}
+In many cases, applying the imputation step at the base table simply is not an option. To illustrate the increasing difficulty of such an approach
+as datasets scale, we used a simple aggregate query over the ACS dataset (Figure~\ref{query-acs}). Applying the imputation operation to the base table
+is extremely expensive, in our case the process did not terminate within 20 minutes. In contrast, \ProjectName{} executes a quality-optimized version
+in 9 seconds and a runtime-optimized version in 1 second. This highlights the potential benefit of using our system for early data exploration.
+
+\begin{figure}
+\begin{lstlisting}
+SELECT AVG(c0) FROM acs_dirty;
+\end{lstlisting}
+\caption{A simple aggregate query on ACS data. Imputing the base table is unfeasible (did not terminate within 20min). \ProjectName's
+quality-optimized and performance-optimized query execute in 9 seconds and 1 second, respectively.
+}
+\label{query-acs}
+\end{figure}
 
 
 %%% Local Variables:

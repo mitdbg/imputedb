@@ -98,12 +98,28 @@ gdp_columns = {
   '2015 [YR2015]' : 'gdp_per_capita'
 }
 
-
-
 def read_csv(path, col_map):
   # avoid deciding type before, these files are dirty and small
   df = pd.read_csv(path, low_memory=False)
-  return df[col_map.keys()].rename(columns = col_map)
+  if not col_map is None:
+    df = df[col_map.keys()].rename(columns = col_map)
+  else:
+    # otherwise just name as c0 .... cn
+    cols = ["c%i" % c for c in range(df.shape[1])]
+    df.columns = cols
+  return df
+
+def add_nulls(df, pct):
+  print "Adding %f pct nulls" % pct
+  if pd.isnull(df).any().any():
+    return df
+  else:
+    vals = df.values.flatten().copy().astype(float)
+    n = len(vals)
+    ix = np.random.choice(n, size=int(pct * n), replace=False)
+    vals[ix] = np.nan
+    vals = vals.reshape(df.shape)
+    return pd.DataFrame(vals, columns=df.columns)
 
 def get_float_cols(df):
   return df.columns[df.dtypes == float].tolist()
@@ -266,6 +282,8 @@ def to_simpledb(dfs, prec, jar, path, suffix):
     df = float_fixed_precision(df, prec)
     # apply enumerations
     df = apply_enum(df, enums)
+    # if has no nulls naturally, then add some
+    df = add_nulls(df, 0.4)
     csv_path = os.path.join(path, name + suffix + '.csv')
     # no suffix for the dat files, since those need to match schema name
     dat_path = os.path.join(path, name + '.dat')
@@ -280,11 +298,12 @@ def to_simpledb(dfs, prec, jar, path, suffix):
   
 def read_csv_data(path):
   info  = {
-    'demo'  : ('demographic.csv', demo_columns),      # cdc data
-    'exams' : ('examination.csv', exams_columns),     # cdc data
-    'labs'  : ('labs.csv', labs_columns),             # cdc data
-    'fcc'   : ('fcc.csv', fcc_columns),               # fcc data
-    'gdp'   : ('gdp.csv', gdp_columns)                # gdp data
+    'demo'      : ('demographic.csv', demo_columns),      # cdc data
+    'exams'     : ('examination.csv', exams_columns),     # cdc data
+    'labs'      : ('labs.csv', labs_columns),             # cdc data
+    'fcc'       : ('fcc.csv', fcc_columns),               # fcc data
+    'gdp'       : ('gdp.csv', gdp_columns),               # gdp data
+    'acs_dirty' : ('acs_no_header.csv', None)             # acs data
   }
   dfs = {}
   for name, (file_nm, cols) in info.iteritems():
