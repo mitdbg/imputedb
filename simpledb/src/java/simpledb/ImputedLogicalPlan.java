@@ -318,12 +318,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	}
 	
 	private ImputedPlanCache makeCache() {
-		try {
-			return new ImputedPlanCacheDotted(new File("query_plans/"), new ImputedPlanCachePareto());
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
+		return new ImputedPlanCachePareto();
 	}
 	
 	@Override
@@ -446,6 +441,13 @@ public class ImputedLogicalPlan extends LogicalPlan {
 					aggPlans.addPlan(allTables, plan);
 				}
 			}
+		}
+		
+		try {
+			(new ImputedPlanCacheDottedWriter(new File("query_plans/"), aggPlans)).write(allTables);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 
 		DbIterator physicalPlan = null;
