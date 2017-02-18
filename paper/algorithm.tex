@@ -139,8 +139,9 @@ Before describing the operation of the query planner, we describe the semantics 
 At a high level, a plan cache is a mapping from a set of tables to a set of optimal plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single best plan because each plan has a distinct set of dirty attributes.
 
-\todo{formatting of plan cache semantics needs to be fixed}
 \begin{figure}
+\todo{formatting of plan cache semantics needs to be fixed}
+\todo{I think the cache update step is not quite right, since p seems to be a single plan, but it is really a set}
   \begin{align*}
     \llbracket Q[T] \rrbracket &= \begin{cases}
       P & (T, P) \in Q \\
@@ -159,18 +160,20 @@ We store multiple plans rather than a single best plan because each plan has a d
   \caption{Semantics of the plan cache.}
 \end{figure}
 
-\todobox{reorder these and explain algorithm, which right now is cutoff}{
-The query planner (Algorithm~\ref{algo:top-level-planner}), operates as follows.
-First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan.
-This set will be used to determine which attributes are imputed.
-Then, it constructs a plan cache 
-
 To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
 
-Algorithm~\ref{algo:plan-helpers} presents a series of helper functions used by the top level planner, shown in Algorithm~\ref{algo:top-level-planner}.
-}
+Algorithm~\ref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in Algorithm~\ref{algo:top-level-planner}.
+
+The planner operates as follows.
+First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan.
+This set will be used to determine which attributes are imputed.
+Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
+a search over imputation operations produces various possible plans, which are added to the cache. If no selections are available, a 
+simple scan is added to the plan cache. Join order is jointly optimized with imputation placements and a set of
+plans encompassing all necessary tables is produced. This set is now extended for any necessary grouping and aggregation
+operations. After a similar step has been taken for projections, the planner returns the cheapest plan from the cache.
+
 \begin{algorithm}
-\todo{fix input descriptions and small error in optjoin}
 \input{algorithms/plan-helpers.tex}
 \end{algorithm}
 

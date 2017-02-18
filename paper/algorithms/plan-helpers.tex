@@ -1,6 +1,6 @@
 %\begin{algorithm}
   \begin{algorithmic}
-    \Require{$q$ is a query plan. $C_l$ is a set of attributes that must be imputed in the output of this query plan. $C_g$ is the set of attributes which are used in the final plan.}
+    \Require{$q$ is a query plan, $C_l$ is a set of attributes that must be imputed in the output of this query plan, $C_g$ is the set of attributes which are used in the final plan.}
     \Ensure{A set of query plans $Q$ with added imputation.}
     \Function{AddImpute}{$q, C_l, C_g$}
     \State $D_{must} \gets \Call{Dirty}{q} \cap C_l$
@@ -21,7 +21,7 @@
     
     \State
 
-    \Require{$t$ is a table and $\phi$ is a filter predicate.}
+    \Require{$t$ is a table, $\phi$ is a filter predicate, $C_g$ is a set of attributes which are used in the final plan.}
     \Ensure{A set of plans for filtering $t$ with $\phi$.}
     \Function{OptFilter}{$t, \phi, C_g$}
     \State \Return $\{\sigma_{\phi}(q)\ |\ q \in \Call{AddImpute}{t, \Call{Attrs}{\phi}, C_g}\}$
@@ -29,7 +29,7 @@
 
     \State
 
-    \Require{$q$ is a query plan, $G$ is a set of grouping attributes, $A$ is an aggregation function, and $C_g$ is a set of visible attributes.}
+    \Require{$q$ is a query plan, $G$ is a set of grouping attributes, $A$ is an aggregation function, $C_g$ is a set of attributes which are used in the final plan.}
     \Ensure{A set of plans for grouping \& aggregating with $G$ and $A$.}
     \Function{OptGroupBy}{$q, G, A, C_g$}
     \State $C \gets G \cup \Call{Attrs}{A}$
@@ -47,7 +47,7 @@
 
     \State
     
-    \Require{A set of tables $T$, a plan cache $Q$ containing at least one query plan for each table in $T$, and a relation $J : T \times \Psi \times T$ between tables and join predicates.}
+    \Require{A set of tables $T$, a plan cache $Q$ containing at least one query plan for each table in $T$, and a relation $J : T \times \Psi \times T$ between tables and join predicates, $C_g$ is the set of attributes which are used in the final plan.}
     \Ensure{An updated plan cache $Q'$ which contains at least one plan that combines all of the tables in $T$.}
     \Function{OptJoin}{$Q, T, J, C_g$}
     \For{$size \in 2...|T|$}
@@ -56,8 +56,8 @@
     \State $S' \gets S \setminus \{t\}$
     \For{$(t, \psi, t') \in J$ where $t' \in S'$}
     \State $C \gets \Call{Attrs}{\psi}$
-    \State $L \gets \{\Call{AddImpute}{q, C, C_g} ~|~ q \in Q[t] \}$
-    \State $R \gets \{\Call{AddImpute}{q, C, C_g} ~|~ q \in Q[S'] \}$
+    \State $L \gets \{\Call{AddImpute}{q, C, C_g} ~|~ q \in Q[S'] \}$
+    \State $R \gets \{\Call{AddImpute}{q, C, C_g} ~|~ q \in Q[t] \}$
     \State $Q[S] \lhd \{l \bowtie_\psi r ~|~ l \in L, r \in R\}$
     \EndFor
     \EndFor
