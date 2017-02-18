@@ -3,7 +3,6 @@ package simpledb;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * The JoinOptimizer class for the extend imputation functionality. This not
@@ -113,7 +112,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			
 			// If there's no filters, add the scan plan as is.
 			if (filters == null) { 
-				cache.addPlan(tablesInPlan, scanPlan.getDirtySet(), scanPlan, lossWeight);
+				cache.addPlan(tablesInPlan, scanPlan);
 			} 
 			
 			// Otherwise, impute as needed and add on the required filters.
@@ -128,7 +127,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 				
 				for (ImputedPlan imputedScan : imputedScans) {
 					ImputedPlan filterPlan = new LogicalImputedFilterNode(tid, imputedScan, filters);
-					cache.addPlan(tablesInPlan, filterPlan.getDirtySet(), filterPlan, lossWeight);
+					cache.addPlan(tablesInPlan, filterPlan);
 				}
 			}
 		}
@@ -198,8 +197,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		news.clear(joinToRemove);
 
 		// possible plans to arrive at left and right sides of the join
-		Map<Set<QualifiedName>, ImputedPlan> leftPlans;
-		Map<Set<QualifiedName>, ImputedPlan> rightPlans;
+		Iterable<ImputedPlanCachePareto.Value> leftPlans, rightPlans;
 
 		// attributes that must be imputed for join
 		Set<QualifiedName> required = new HashSet<>();
@@ -207,9 +205,9 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		required.add(new QualifiedName(j.t2Alias, j.f2PureName));
 
 		// names of table in already performed join
-		Set<String> leftTables = new HashSet<>();
+		final Set<String> leftTables = new HashSet<>();
 		// alias for table to join in
-		Set<String> rightTables = new HashSet<>();
+		final Set<String> rightTables = new HashSet<>();
 		Set<String> allTables = new HashSet<>();
 		// just joining existing base relations
 		boolean isSimpleJoin;
@@ -219,11 +217,11 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			leftTables.add(j.t1Alias);
 			rightTables.add(j.t2Alias);
 			// this retrieves results from FilterOptimizer
-			leftPlans = pc.getBestPlans(leftTables);
-			rightPlans = pc.getBestPlans(rightTables);
+			leftPlans = pc.bestPlans(leftTables);
+			rightPlans = pc.bestPlans(rightTables);
 		} else {
 			// news is not empty -- figure best way to join j to news
-			leftTables = getTableAliases(news);
+			leftTables.addAll(getTableAliases(news));
 
 			if (!leftTables.contains(j.t1Alias) && !leftTables.contains(j.t2Alias)) {
 				// there is no join possible if existing tables joined and new
@@ -241,8 +239,8 @@ public class ImputedLogicalPlan extends LogicalPlan {
 				j = j.swapInnerOuter();
 			}
 
-			leftPlans = pc.getBestPlans(leftTables);
-			rightPlans = pc.getBestPlans(rightTables);
+			leftPlans = pc.bestPlans(leftTables);
+			rightPlans = pc.bestPlans(rightTables);
 		}
 
 		// add the top-level of tables after this join
@@ -250,28 +248,28 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		allTables.addAll(rightTables);
 
 		// possible plans with imputations for the left-hand side
-		for (ImputedPlan lplan : leftPlans.values()) {
+		for (ImputedPlanCachePareto.Value lplan : leftPlans) {
 			// joins necessary to obtain state of LHS
-			Set<LogicalJoinNode> necessaryJoins = pc.getNecessaryJoins(leftTables, lplan.getDirtySet());
+			Set<LogicalJoinNode> necessaryJoins = new HashSet<LogicalJoinNode>(lplan.joins);
 			if(!necessaryJoins.contains(j) && !necessaryJoins.contains(j.swapInnerOuter())) {
 				// we can only explore removing a given join, if the plan on the LHS doesn't use it
 				// extend information with new join
 				necessaryJoins.add(j);
 				// extended with any imputations necessary for join
-				for (ImputedPlan lplanPrime : addImputes(lplan, required, globalRequired)) {
+				for (ImputedPlan lplanPrime : addImputes(lplan.plan, required, globalRequired)) {
 					// possible plans with imputations for right-hand side
-					for (ImputedPlan rplan : rightPlans.values()) {
+					for (ImputedPlanCachePareto.Value rplan : rightPlans) {
 						// extended with any imputations necessary for join
-						for (ImputedPlan rplanPrime : addImputes(rplan, required, globalRequired)) {
+						for (ImputedPlan rplanPrime : addImputes(rplan.plan, required, globalRequired)) {
 							// create new join
 							LogicalImputedJoinNode joined = new LogicalImputedJoinNode(tid, j.t1Alias, j.t2Alias, lplanPrime,
 									rplanPrime, j.f1QuantifiedName, j.f2QuantifiedName, j.p, tableMap);
 							// add to cache as appropriate
-							pc.addJoinPlan(allTables, joined.getDirtySet(), necessaryJoins, joined, lossWeight);
+							pc.addJoinPlan(allTables, necessaryJoins, joined);
 
 							// if it was a simple join, consider swapping order
 							if (isSimpleJoin) {
-								pc.addJoinPlan(allTables, joined.getDirtySet(), necessaryJoins, joined.swapInnerOuter(), lossWeight);
+								pc.addJoinPlan(allTables, necessaryJoins, joined.swapInnerOuter());
 							}
 						}
 					}
@@ -319,6 +317,15 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		return plans;
 	}
 	
+	private ImputedPlanCache makeCache() {
+		try {
+			return new ImputedPlanCacheDotted(new File("query_plans/"), new ImputedPlanCachePareto());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+	
 	@Override
 	public DbIterator physicalPlan(TransactionId tid, Map<String, TableStats> baseTableStats, boolean explain)
 			throws ParsingException {
@@ -356,13 +363,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		}
 		
 		// Construct an empty plan cache.
-		ImputedPlanCache cache;
-		try {
-			cache = new ImputedPlanCacheDotted(new File("query_plans/"));
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-			throw new RuntimeException(e1);
-		}
+		ImputedPlanCache cache = makeCache();
 		
 		optimizeFilters(tid, cache, globalRequired);
 		optimizeJoins(tid, cache, globalRequired);
@@ -371,15 +372,18 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		for (LogicalScanNode scan : tables) {
 			allTables.add(scan.alias);
 		}
-		final Map<Set<QualifiedName>, ImputedPlan> bestPlans = cache.getBestPlans(allTables);
+		
+		Iterable<ImputedPlanCachePareto.Value> bestPlans = cache.bestPlans(allTables);
 
 		// The a tuple description for the output of the join. (all the plans
 		// should
 		// have the same schema, so it doesn't matter which we use)
-		if (bestPlans.size() == 0) {
+		TupleDesc td;
+		if (bestPlans.iterator().hasNext()) {
+			td = bestPlans.iterator().next().plan.getPlan().getTupleDesc();
+		} else {
 			throw new RuntimeException("BUG: No plans available that cover all tables.");
 		}
-		TupleDesc td = bestPlans.values().iterator().next().getPlan().getTupleDesc();
 
 		// walk the select list, to determine order in which to project output
 		// fields
@@ -426,30 +430,37 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		}
 
 		// Add an aggregation node if this plan has an aggregation.
-		ImputedPlan bestPlan = null;
+		ImputedPlanCache aggPlans = makeCache();
 		if (aggField != null) {
-			for (Entry<Set<QualifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
-				for (ImputedPlan plan : addImputes(entry.getValue(), globalRequired, globalRequired)) {
-					// add aggregate
+			for (ImputedPlanCachePareto.Value val : bestPlans) {
+				for (ImputedPlan plan : addImputes(val.plan, globalRequired, globalRequired)) {
 					plan = new LogicalAggregateNode(plan, groupByField, aggOp, aggField);
-					if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
-						bestPlan = plan;
-					}
+					aggPlans.addPlan(allTables, plan);
 				}
 			}
 		}
 		else {
 			// Otherwise impute other outfields and select lowest cost plan
-			for (Entry<Set<QualifiedName>, ImputedPlan> entry : bestPlans.entrySet()) {
-				for (ImputedPlan plan : addImputes(entry.getValue(), globalRequired, globalRequired)) {
-					if (bestPlan == null || plan.cost(lossWeight) < bestPlan.cost(lossWeight)) {
-						bestPlan = plan;
-					}
+			for (ImputedPlanCachePareto.Value val : bestPlans) {
+				for (ImputedPlan plan : addImputes(val.plan, globalRequired, globalRequired)) {
+					aggPlans.addPlan(allTables, plan);
 				}
 			}
 		}
 
-		DbIterator physicalPlan = bestPlan.getPlan();
+		DbIterator physicalPlan = null;
+		double minCost = Double.MAX_VALUE;
+		for (ImputedPlanCachePareto.Value val : aggPlans.bestPlans(allTables)) {
+			double cost = val.plan.cost(lossWeight);
+			if (cost < minCost) {
+				minCost = cost;
+				physicalPlan = val.plan.getPlan();
+			}
+		}
+		if (physicalPlan == null) {
+			throw new RuntimeException("BUG: No top-level plans available.");
+		}
+		
 		// order-by can only be used on one of the projected fields, so no need to impute again
 		if (oByField != null) {
 			physicalPlan = new OrderBy(physicalPlan.getTupleDesc().fieldNameToIndex(oByField), oByAsc, physicalPlan);

@@ -27,7 +27,7 @@ public class LogicalAggregateNode extends ImputedPlan {
 
 	@Override
 	public Set<QualifiedName> getDirtySet() {
-		throw new RuntimeException("Not implemented.");
+		return Collections.emptySet();
 	}
 
 	@Override
@@ -47,6 +47,6 @@ public class LogicalAggregateNode extends ImputedPlan {
 
 	@Override
 	public double cardinality() {
-		throw new RuntimeException("Not implemented.");
+		throw new UnsupportedOperationException();
 	}
 }

@@ -4,13 +4,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Set;
-import java.util.TreeSet;
 
-public class ImputedPlanCacheDotted extends ImputedPlanCache {
+import simpledb.AImputedPlanCache.Value;
+
+public class ImputedPlanCacheDotted implements ImputedPlanCache {
 	private final File outDir;
+	private final ImputedPlanCache cache;
 	
-	public ImputedPlanCacheDotted(File outDir) throws FileNotFoundException {
-		super();
+	public ImputedPlanCacheDotted(File outDir, ImputedPlanCache cache) throws FileNotFoundException {
+		this.cache = cache;
+		
 		if (!outDir.exists()) {
 			outDir.mkdir();
 		} else if (!outDir.isDirectory()) {
@@ -20,11 +23,17 @@ public class ImputedPlanCacheDotted extends ImputedPlanCache {
 		this.outDir = outDir;
 	}
 	
-	private void writePlan(Set<QualifiedName> dirtySet, ImputedPlan plan, double lossWeight) {
+	private void writePlan(Set<QualifiedName> dirtySet, ImputedPlan plan) {
 		StringBuilder prefix = new StringBuilder();
-		prefix.append(plan.cost(lossWeight));
+		prefix.append(plan.loss().get());
 		prefix.append(" ");
-		prefix.append(plan.cardinality());
+		prefix.append(plan.time());
+		prefix.append(" ");
+		try {
+			prefix.append(plan.cardinality());
+		} catch (UnsupportedOperationException e) {
+			prefix.append("??");
+		}
 		prefix.append(" ");
 		
 		try {
@@ -36,14 +45,24 @@ public class ImputedPlanCacheDotted extends ImputedPlanCache {
 		}
 	}
 	
-	void addJoinPlan(Set<String> ts, Set<QualifiedName> dirtySet, Set<LogicalJoinNode> joins, ImputedPlan newPlan, double lossWeight) {
-		super.addJoinPlan(ts, dirtySet, joins, newPlan, lossWeight);
-		writePlan(dirtySet, newPlan, lossWeight);
+	public void addJoinPlan(Set<String> ts, Set<LogicalJoinNode> joins, ImputedPlan newPlan) {
+		cache.addJoinPlan(ts, joins, newPlan);
+		writePlan(newPlan.getDirtySet(), newPlan);
 	}
 	
 	@Override
-	void addPlan(Set<String> ts, Set<QualifiedName> dirtySet, ImputedPlan newPlan, double lossWeight) {
-		super.addPlan(ts, dirtySet, newPlan, lossWeight);
-		writePlan(dirtySet, newPlan, lossWeight);
+	public void addPlan(Set<String> ts, ImputedPlan newPlan) {
+		cache.addPlan(ts, newPlan);
+		writePlan(newPlan.getDirtySet(), newPlan);
+	}
+
+	@Override
+	public Iterable<Value> bestPlans(Set<String> tables) {
+		return cache.bestPlans(tables);
+	}
+
+	@Override
+	public Iterable<Value> bestPlans(Set<String> tables, Set<QualifiedName> dirty) {
+		return cache.bestPlans(tables, dirty);
 	}
 }
