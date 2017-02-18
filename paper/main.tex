@@ -12,7 +12,7 @@
 \usepackage[style=numeric,firstinits=true]{biblatex}
 \usepackage{booktabs}
 \usepackage{siunitx}
-\usepackage{hyperref} % load after other packages
+\usepackage[draft]{hyperref} % load after other packages
 \usepackage{graphicx} % includegraphics
 \usepackage{listings} % code samples with syntax hl
 \usepackage{stmaryrd}
@@ -41,6 +41,7 @@
 %  stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
   stringstyle=\color{mauve},     % string literal style
   tabsize=2,	                   % sets default tabsize to 2 spaces
+  language=SQL
 }
 
 \makeatletter
@@ -81,16 +82,29 @@
 \maketitle
 
 \begin{abstract}
-In order to study the placement of an imputation step, we create a logical imputation operator (along with respective physical instances) and incorporate its placement as part of the query plan optimization process into a simple database prototype.  We introduce measures for information loss and runtime for imputation operations, which outline the main trade-offs in the imputation placement. We add these measures into our cost estimation, allowing us to intelligently place the data imputation step during query planning. We show the trade-offs between efficiency and accuracy for simple data imputation models. \end{abstract}
+Missing values abound in data analysis and often present a serious challenge for users, who
+are forced to pick between removing tuples with missing values or creating a clean duplicate of their data
+by  applying a potentially expensive imputation strategy. We show that it is possible
+to incorporate imputation into a cost-based query optimizer, performing imputation on the fly
+for each query. This allows users to immediately explore
+their data, while the system picks the optimal placement of imputation operations based
+on the specific query issued and a parameter that the user selects for evaluating the tradeoff between data
+quality and runtime performance. We incorporate the imputation operators into the relational algebra, allowing
+for traditional optimizations to take place. Our experiments evaluate this approach on two real-world survey-based datasets
+from the \textit{Center for Disease Control and Prevention} and \textit{freeCodeCamp}, showing that the 
+optimizer generates query plans that execute in a fraction of the time that it takes to impute values at the base
+tables, making exploratory data analysis using our system feasible. Furthermore, we show that the query results
+from on-the-fly imputation are comparable to those generated with the standard full-table imputation approach.
+\end{abstract}
 
 \input{introduction}
-\input{relatedwork}
 \input{examples}
+\input{relatedwork}
 \input{algorithm}
 \input{experiments}
 \input{conclusion}
-
 \balance
+\nocite{*}
 \printbibliography
 
 \end{document}

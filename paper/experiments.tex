@@ -1,6 +1,5 @@
 \section{Experiments}
-\todo{we of course need to rewrite this whole section}
-To evaluate the performance of our system, we generate plans for queries
+To evaluate the performance of our system, we generate and execute plans for queries
 for two separate survey-based data sets, showing that our system
 is ideal for early dataset exploration.
 
@@ -60,7 +59,7 @@ while the demographics data (\textit{demo}) has 10175 rows.
 \subsubsection{freeCodeCamp: 2016 New Coder Survey}
 For our second set of experiments, we chose to use data collected
 by freeCodeCamp as a part of a survey of new software developers
-(both professional and amateur). freeCodeCamp is an open-source
+(both professional and amateur)\cite{fcc-data}. freeCodeCamp is an open-source
 community that intends to help users learn how to program. In addition,
 to providing training material for users, it also pairs users with
 nonprofits to develop software solutions. Their \textit{2016 New Coder Survey} consists of responses by over 15,000 people to 48 different
@@ -82,6 +81,7 @@ columns. We chose 17 attributes, which are outlined in Table~\ref{table:fcc-desc
 \end{table}
 
 \subsection{Queries}
+\todo{Add more queries: we want ~10 (balanced between the two datasets), explain them below}
 We collected a set of queries (Table~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
 
 The queries on the CDC NHANES data consists not only of projections and selections,
@@ -134,6 +134,7 @@ an appropriate integer value.
   \label{fig:experiments}
 \end{table*}
 
+\todo{actually run experiments and rewrite this section}
 Table~\ref{fig:experiments} provides a summary of our experimental results.
 We run each query in four configurations: without imputation on clean data, without imputation on dirty data, and with imputation on dirty data for $\alpha = 0$ and $\alpha = 1$.
 When a query returns a relation of the same ``shape'' (same number of tuples and same schema) on both clean and dirty data, we can compute an error value.

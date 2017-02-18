@@ -3,40 +3,25 @@
     \Require{$H$ is histogram, represented as a map from buckets to values.$val$ is a number (integer or floating point)}
     %\Ensure{}
     
-     \Function{Total}{$H$}
-     	\State $ct \gets 0$
-	\For {$i \in dom(H)$}
-        		\State $ct \gets ct + H[i]$
-        	\EndFor
-	\Return ct
+     \Function{Total}{$H$}: 
+     	\State \textit{return count of tuples}
      \EndFunction
     
-        \Function{Add}{$H, val$}
-        	\State $ct \gets \Call{Total}{H}$
-    	\For{$i \in dom(H)$}
-		\State $H[i] \gets H[i] +  val * (H[i] / ct)$ 
-	\EndFor
-    	\Return{$H$}
+        \Function{Add}{$H, val$}:
+        \State \textit{add val to each bucket in H according to distribution}
     \EndFunction
     
 
     \Function{ScaleBy}{$H, val$}
-    	\For{$i \in dom(H)$}
-		\State $H[i] \gets H[i] * val$ 
-	\EndFor
-    	\Return{$H$}
+    	\State \textit{multiply each bucket in H by val}
     \EndFunction
     
-        \Function{ScaleTo}{$H, val$}
-        	\State $ct \gets \Call{Total}{H}$
-        	  \For{$i \in dom(H)$}
-	  	\State $H[i] \gets H[i] * val / ct$ 
-	\EndFor
-    	\Return{$H$}
+        \Function{ScaleTo}{$H, val$}:
+        \State \textit{scale each bucket in H according to distribution s.t. total(H)=val}
     \EndFunction
     
     
   \end{algorithmic}
-  \caption{Helper functions used to the in-plan histogram updates}
+  \caption{Helper functions for in-plan histogram updates}
   \label{algo:histogram-transformation-helpers}
 %\end{algorithm}
