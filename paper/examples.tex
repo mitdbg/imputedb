@@ -8,7 +8,7 @@ controlling for factors such as weight and gender.
 While careful modeling techniques will be necessary before putting
 results into the final research paper, the epidemiologist is anxious
 to get a quick and accurate view into the data. However,
-the data has been collected through CDC surveys (see Section~\ref{subsec:datasets} for details),
+the data has been collected through CDC surveys (see Sec.~\ref{subsec:datasets} for details),
 and there is a significant amount of missing data across all
 relevant attributes. The researcher must develop a strategy
 for handling the missing values. She could drop any records with
@@ -30,11 +30,11 @@ may want to focus on the quality of the imputation.
 Rather than work through
 the implications of each case, she submits a query, as shown in Figure~\ref{fig:example-query}, to ImputeDB.\@ The system, parameterized by a value indicating
 a tradeoff between information loss and runtime cost, then finds
-the optimal query plan. Figure~\ref{fig:quality-plan} and Figure~\ref{fig:fast-plan} show what this plan would be
+the optimal query plan. Figures~\ref{fig:quality-plan} and ~\ref{fig:fast-plan} show what this plan would be
 when optimizing for quality and performance, respectively.
 
 The differences between the two plans highlight the subtleties of optimizing queries which contain imputation operators.
-Note that imputation operators are placed in different points of the plan, operating over different columns, and indeed
+Note that imputation operators are placed in different points of the plan, operating over different columns, and 
 even influencing the order of joins. The quality-optimized plan (Figure~\ref{fig:quality-plan}) uses the impute operation, rather
 than dropping tuples with missing values. It waits to impute \verb|demo.income| until after the final join has taken place, but
 other imputations take place earlier on in the plan, some before filtering and join operations. 
@@ -93,9 +93,9 @@ GROUP BY demo.income
 
 
 Tens of queries later, the epidemiologist has the holistic view of the
-data that they required before carefully crafting their own tailored
+data that she required before carefully crafting her own tailored
 imputation model. Knowing that there may be a need to explore
-this data set further, they can easily incorporate their imputation model
+this data set further, she can easily incorporate their imputation model
 into ImputeDB for future use.
 
 

@@ -1,5 +1,7 @@
 \section{Experiments}
-To evaluate the performance of our system, we generate and execute plans for queries
+To evaluate the performance of our approach,  we implemented
+a prototype system in Java, following a traditional iterator model.
+For our experiments we plan and execute queries
 for two separate survey-based data sets, showing that our system
 is ideal for early dataset exploration.
 
@@ -84,19 +86,19 @@ columns. We chose 17 attributes, which are outlined in Table~\ref{table:fcc-desc
 \todo{Add more queries: we want ~10 (balanced between the two datasets), explain them below}
 We collected a set of queries (Table~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
 
-The queries on the CDC NHANES data consists not only of projections and selections,
+The queries on the CDC NHANES data consist not only of projections and selections,
 but also interesting joins and aggregations. Our aim was to craft meaningful queries
 that would provide performance figures relevant to practitioners who may use
 similar datasets.
 
-Query~\ref{q1} calculates the average weight for users based on their income data.
+Queries 1-3 are on the CDC data. Query~\ref{q1} calculates the average weight for users based on their income data.
 To do so, it joins demographics and physical examination data. Query~\ref{q2}
 compares cholesterol levels for individuals who are both ends of the income
 spectrum and who satisfy a minimum weight requirement. Query~\ref{q3}
 extracts the maximum blood lead levels for subjects who satisfy a particular
 waist circumference requirement.
 
-In Query~\ref{q4}, we calculate the average income for survey participants,
+Queries 4-7 are on the FCC data. In Query~\ref{q4}, we calculate the average income for survey participants,
 based on their bootcamp attendance. Query~\ref{q5} estimates the average
 age of women from the Uniter States who participated. Query~\ref{q6} 
 calculates the average amount of money survey participants with student debt destined to
@@ -109,6 +111,7 @@ Note that for all queries we have enumerated strings and encoded them with
 an appropriate integer value.
 
 \begin{table*}
+\todo{clean up formatting here}
 \centering
  \begin{subtable}{\linewidth}
   \input{queries-cdc}
@@ -134,7 +137,7 @@ an appropriate integer value.
   \label{fig:experiments}
 \end{table*}
 
-\todo{actually run experiments and rewrite this section}
+\todobox{actually run experiments and rewrite this section}{
 Table~\ref{fig:experiments} provides a summary of our experimental results.
 We run each query in four configurations: without imputation on clean data, without imputation on dirty data, and with imputation on dirty data for $\alpha = 0$ and $\alpha = 1$.
 When a query returns a relation of the same ``shape'' (same number of tuples and same schema) on both clean and dirty data, we can compute an error value.
@@ -170,6 +173,9 @@ Finally, we performed CE-CART imputation on the entirety of the ACS table, in or
 We were unable to complete the full imputation due to resource constraints, but the process ran for more than one hour without terminating.
 This time compares favorably to our maximum of 72 seconds for a query with imputation on the ACS data.
 Given the varying needs of database users, \ProjectName{} clearly allows flexibility without a significant performance hit.
+}
+
+\todo{Add timing comparison to ACS table since that should take longer than base on the data we have}
 
 
 %%% Local Variables:

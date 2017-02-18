@@ -7,8 +7,7 @@ different plans, allowing the user to express their preferences for performance 
 Our experiments with \textit{CDC} and \textit{freeCodeCamp} survey-based datasets
 showed that \ProjectName{} can be used successfully with real-world data, expressing standard SQL queries over data with missing values. 
 We craft a series of realistic queries, meant to resemble the kind of questions an analyst might ask during
-the data exploration phase. The plans selected for each query result in execution that
-takes a fraction of the time compared to the standard approach of imputing on the entire base tables and
+the data exploration phase. The plans selected for each query execute in a fraction of the time compared to the standard approach of imputing on the entire base tables and
 then formulating queries. Furthermore, the difference in query results between the two approaches is
 shown to be minimal. Data analysts need not commit to a specific imputation strategy and can instead
 vary this across queries.
@@ -29,7 +28,7 @@ dataset will likely have varying imputation needs and that execution plans shoul
 \ProjectName{} opens up multiple avenues for further work. We sketch out some of these
 directions.
 
-\textbf{Cost model intepretation:} While the current system
+\textbf{Cost model interpretation:} While the current system
 provides a parameter ($\alpha$) to tradeoff between imputation quality and runtime,
 there is no direct interpretation of its unit-less value. One natural extension to this work
 is to reformulate the cost-model in an interpretable fashion. 

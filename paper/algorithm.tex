@@ -32,7 +32,7 @@ To keep the query plan search space tractable, only plans that fit the following
 \end{itemize}
   
 The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before and after traditional operators.
-Figure~\ref{fig:query-schematic} shows the layout of a query involving three tables, absent any imputation operators.
+Figure~\ref{fig:query-schematic} shows a plan schematic for a query involving three tables, absent any imputation operators.
 
 \begin{figure}
 \Tree [.$\pi$ [.$g$ [.$\bowtie$ [.$\bowtie$ [.$\sigma$ $t_1$ ] [.$\sigma$ $t_2$ ] ] [.$\sigma$ $t_3$ ] ] ] ]
@@ -53,6 +53,7 @@ For simplicity, each of the logical nodes in a query plan points to a set of his
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for new operation in the plan.
 Algorithm~\ref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
+\todobox{this section must be rewritten to show new approach}{
 For each sub-query, we keep track of the estimated number of
 null values in a column  ($\textsc{Missing}(c, Q)$) by using the histograms associated with
 the sub-query. We use this estimate to compute
@@ -75,6 +76,7 @@ with. The inverse square loss can be seen as a heuristic first approximation to 
 regression trees. Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
+}
 
 To compute $\text{Time}(Q)$, we retain a simple set of heuristics used by a standard 
 database for the time. Scan costs are estimated based on the number of tuples, 
@@ -86,6 +88,8 @@ account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} 
 complexity can be expressed as a function of the number of heap pages read and the IO cost
 per page.
 
+\todobox{This seems tailored to decision trees, but we should talk more generally since
+we claim the imputation step isn't the focus}{
 Evaluation of the time complexity for \textit{Impute} is thornier, as the properties of
 different decision tree building algorithms can vary significantly, the underlying IO cost
 is not easily extracted (especially in the case that the entire stream of tuples does not
@@ -99,6 +103,7 @@ does not even dominate computation, as post-processing steps like pruning, which
 in achieving good performance, can have cost exponential in the height of the tree. In
 practice, we find that a simple parameterization can be acceptable (i.e. yield intelligent query
 plans), though the range of $\alpha$ that does promote tradeoffs is condensed.
+}
 
 \subsection{Imputation placement}
 \label{sec:placement}
@@ -154,6 +159,7 @@ We store multiple plans rather than a single best plan because each plan has a d
   \caption{Semantics of the plan cache.}
 \end{figure}
 
+\todobox{reorder these and explain algorithm, which right now is cutoff}{
 The query planner (Algorithm~\ref{algo:top-level-planner}), operates as follows.
 First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan.
 This set will be used to determine which attributes are imputed.
@@ -162,8 +168,9 @@ Then, it constructs a plan cache
 To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
 
 Algorithm~\ref{algo:plan-helpers} presents a series of helper functions used by the top level planner, shown in Algorithm~\ref{algo:top-level-planner}.
-
+}
 \begin{algorithm}
+\todo{fix input descriptions and small error in optjoin}
 \input{algorithms/plan-helpers.tex}
 \end{algorithm}
 
@@ -231,7 +238,7 @@ ImputeDB, this would not pose a problem.
 \subsection{Complexity}
 \todo{this section needs to be cleaned up/clarified}
 Our optimization algorithm builds off the approach taken by System R \cite{blasgen1981system}, therefore our algorithm still operates in exponential time. Indeed, 
-note that if we remove our restriction on types of imputation($\delta_{min}, \mu_{min}, \mu_{max}$), and allow any arbitrary subset of attributes to be imputed,
+note that if we remove our restriction on types of imputation (i.e. minimal vs maximal), and allow any arbitrary subset of attributes to be imputed,
 then every single operator in the query plan has a number of imputations exponential in the number of dirty columns. Our restriction, instead, increases the number
 of plans (in the worst case) at each operator by a factor of 3. Of course, this implies that in the worst case (where all dirty sets tracked are distinct throughout the query plan),
 we explore a number of plans that further scales the number of plans in the original algorithm by an exponential factor.
