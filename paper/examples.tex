@@ -79,7 +79,7 @@ GROUP BY demo.income
         [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
           [.$\bowtie_{\text{demo.id} = \text{exams.id}}$
             [.$\sigma_{\text{demo.gender} = 2}$ demo ]
-            [.$\sigma_{\text{exams.weight} \geq 120}$ [.$\mu_{\text{exams.weight}}$ exams ] ] ] labs ] ] ] ]
+            [.$\sigma_{\text{exams.weight} \geq 120}$ [.$\delta_{\text{exams.weight}}$ exams ] ] ] labs ] ] ] ]
 \caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for performance.}
 \label{fig:fast-plan}
 \end{figure}
