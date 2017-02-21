@@ -7,7 +7,7 @@
 \begin{lstlisting}[breaklines]
 SELECT attendedbootcamp, AVG(income) 
 FROM fcc 
-GROUP BY attendedbootcamp
+GROUP BY attendedbootcamp;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno} \label{q4} \\
 5 & 
@@ -15,7 +15,7 @@ GROUP BY attendedbootcamp
 \begin{lstlisting}[breaklines]
 SELECT AVG(age) 
 FROM fcc 
-WHERE gender = 178 AND countrycitizen = 158
+WHERE gender = 178 AND countrycitizen = 158;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno} \label{q5} \\
 6 & 
@@ -24,7 +24,7 @@ WHERE gender = 178 AND countrycitizen = 158
 SELECT schooldegree, AVG(moneyforlearning) 
 FROM fcc 
 WHERE studentdebtowe > 0 AND schooldegree >= 0 
-GROUP BY schooldegree
+GROUP BY schooldegree;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno} \label{q6}\\
 7 & 
@@ -33,7 +33,7 @@ GROUP BY schooldegree
 SELECT attendedbootcamp, AVG(gdp_per_capita) 
 FROM fcc, gdp 
 WHERE fcc.countrycitizen = gdp.country 
-GROUP BY attendedbootcamp
+GROUP BY attendedbootcamp;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno} \label{q7}\\
 \bottomrule
