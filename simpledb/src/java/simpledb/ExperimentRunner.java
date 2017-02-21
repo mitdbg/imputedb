@@ -127,11 +127,8 @@ public class ExperimentRunner {
         // write out times
         writeTime(id, alpha, iter, Duration.between(planStart, planEnd).toMillis(), Duration.between(runStart, runEnd).toMillis(), plan.hashCode());
 
-        // if its the first time, go ahead and write out results and plan
-        if (iter == 0) {
-            writeResult(id, alpha, results.toString());
-            writePlan(id, alpha, plan);
-        }
+        writeResult(id, alpha, results.toString());
+        writePlan(id, alpha, plan);
     }
 
     private String[] getQueries() throws IOException {
