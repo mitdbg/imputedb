@@ -117,20 +117,26 @@ public class SimpleDb {
 			}
 
 		} else if (args[0].equals("experiment")) {
-			if (args.length != 8) {
-				System.err.println("Usage: java -jar <JAR> experiment <minAlpha> <maxAlpha> <step> <iters> <catalog> <queries> <output-dir>");
+			if (args.length < 6) {
+				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> <minAlpha> <maxAlpha> <step> <iters>");
+				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> --base");
 				System.exit(1);
 			}
 
-			double minAlpha = Double.parseDouble(args[1]);
-			double maxAlpha = Double.parseDouble(args[2]);
-			double step = Double.parseDouble(args[3]);
+			String catalog = args[1];
+			String queries = args[2];
+			String outputDir = args[3];
 			int iters = Integer.parseInt(args[4]);
-			String catalog = args[5];
-			String queries = args[6];
-			String outputDir = args[7];
 
-			ExperimentRunner runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters, catalog, queries, outputDir);
+			ExperimentRunner runner;
+			if (args[5].equalsIgnoreCase("--base")) {
+				runner = new ExperimentRunner(iters, catalog, queries, outputDir);
+			} else {
+				double minAlpha = Double.parseDouble(args[5]);
+				double maxAlpha = Double.parseDouble(args[6]);
+				double step = Double.parseDouble(args[7]);
+				runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters, catalog, queries, outputDir);
+			}
 			try {
 				runner.runExperiments();
 			} catch (Exception e) {

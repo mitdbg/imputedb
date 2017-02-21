@@ -15,6 +15,7 @@ import java.util.*;
  */
 public class ImputedLogicalPlan extends LogicalPlan {
 	private final double lossWeight;
+	private final boolean imputeAtBaseTable;
 
 	/**
 	 * Constructor
@@ -27,6 +28,13 @@ public class ImputedLogicalPlan extends LogicalPlan {
 	public ImputedLogicalPlan(double lossWeight) {
 		super();
 		this.lossWeight = lossWeight;
+		this.imputeAtBaseTable = false;
+	}
+
+	public ImputedLogicalPlan(double lossWeight, boolean imputeAtBaseTable) {
+		super();
+		this.lossWeight = lossWeight;
+		this.imputeAtBaseTable = imputeAtBaseTable;
 	}
 
 	/**
@@ -88,7 +96,13 @@ public class ImputedLogicalPlan extends LogicalPlan {
 			}
 		};
 	}
-	
+
+	private ImputedPlan addImputeAtBase(ImputedPlan scanPlan) {
+		HashSet<QualifiedName> allDirty = new HashSet<QualifiedName>();
+		allDirty.addAll(scanPlan.getDirtySet());
+		return LogicalComposeImputation.create(scanPlan, ImputationType.MAXIMAL, allDirty, tableMap);
+	}
+
 	private void optimizeFilters(TransactionId tid, ImputedPlanCache cache, Set<QualifiedName> globalRequired) throws ParsingException {
 		// Accumulate all filters on each table.
 		HashMap<String, Set<LogicalFilterNode>> filterMap = new HashMap<>();
@@ -103,12 +117,18 @@ public class ImputedLogicalPlan extends LogicalPlan {
 
 		// Create an access node for each table to be scanned/filtered.
 		for (LogicalScanNode scan : tables) {
-			LogicalImputedScanNode scanPlan = new LogicalImputedScanNode(tid, scan);
+			ImputedPlan scanPlan = new LogicalImputedScanNode(tid, scan);
 			
 			HashSet<String> tablesInPlan = new HashSet<>();
 			tablesInPlan.add(scan.alias);
 
 			Set<LogicalFilterNode> filters = filterMap.get(scan.alias);
+
+			if (this.imputeAtBaseTable) {
+				// if we're imputing at the base table
+				// we should just add the one main impute, which takes care of everything
+				scanPlan = addImputeAtBase(scanPlan);
+			}
 			
 			// If there's no filters, add the scan plan as is.
 			if (filters == null) { 
