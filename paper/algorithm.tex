@@ -50,10 +50,11 @@ cost model averages over the losses from each such operator. We note that our lo
 We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$, if $l < l' \land t < t'$, and denote this as $\doms{p}{p'}$. 
 \end{definition}
 
-Given a query, \ProjectName{} produces a final set of possible plans
+Given a query, \ProjectName{} produces a final set of possible plans $P$ by only maintaining plans that are not dominated by others in the search space. So if
+our search space is $S$
 
 \begin{gather*}
- P= \{ p | \forall p'. \doms{p}{p'} \}
+ P= \{ p | \not\exists p' \in S. \doms{p'}{p} \}
  \end{gather*}
  
 This set outlines the best possible options for trading performance and cost for the current query, building a Pareto frontier\cite{pareto1964cours}.
@@ -67,8 +68,8 @@ Given a final set of plans $P$, and $p \in P$, we say $p$ is $\alpha$-bound, if 
 We say $p$ is $\alpha$-bound optimal if $\forall p'^\alpha \in P: \textsc{Time}(p) \leq \textsc{Time}(p')$. 
 \end{definition}
 
-Given $\alpha$ and $P$, \ProjectName{} returns the $\alpha$-bound optimal plan in $P$. Note that the $\alpha$-bound optimal plan is unique, given that
-$P$ only maintains dominating plans.
+Given $\alpha$ and $P$, \ProjectName{} returns the $\alpha$-bound optimal plan in $P$. Note that the $\alpha$-bound optimal plan is unique in $P$, given that
+$P$ does not keep any plans dominated by others in the set.
 
 So in essence, $\alpha$ is a tunable parameter that determines whether the optimizer focuses on quality or on performance, as plans that
 lose a lot of information through dropping are also the fastest. 
