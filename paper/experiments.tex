@@ -164,6 +164,7 @@ imputing a single base table, with the added flexibility of imputation tailored 
 \label{subfig:base-runtime-queries}
 \end{subfigure}
 \caption{Comparing \ProjectName{} runtimes for each query (\ref{subfig:project-runtime-queries}) with the runtime for a query when base-table imputations are used (\ref{subfig:base-runtime-queries})}
+\label{fig:runtimes}
 \end{figure}
 
 Figure~\ref{fig:plantimes} provides a summary of the planning times for each of the queries.  We exclude the planning time for queries that impute at base table, as that
@@ -195,7 +196,7 @@ in 9 seconds and a runtime-optimized version in 1 second. This highlights the po
 \begin{lstlisting}
 SELECT AVG(c0) FROM acs_dirty;
 \end{lstlisting}
-\caption{A simple aggregate query on ACS data. Imputing the base table is unfeasible (did not terminate within 20min). \ProjectName's
+\caption{A simple aggregate query on ACS data. Imputing the base table is undesirable (did not terminate within 20min). \ProjectName's
 quality-optimized and performance-optimized query execute in 9 seconds and 1 second, respectively.
 }
 \label{query-acs}
