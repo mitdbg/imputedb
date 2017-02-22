@@ -9,13 +9,13 @@ showed that \ProjectName{} can be used successfully with real-world data, expres
 We craft a series of realistic queries, meant to resemble the kind of questions an analyst might ask during
 the data exploration phase. The plans selected for each query execute in a fraction of the time compared to the standard approach of imputing on the entire base tables and
 then formulating queries. Furthermore, the difference in query results between the two approaches is
-shown to be minimal. Data analysts need not commit to a specific imputation strategy and can instead
+shown to be small in all queries considered. Data analysts need not commit to a specific imputation strategy and can instead
 vary this across queries.
 
 We highlight the long history of dealing with missing data both in the statistical learning and database communities.
 Similarly to existing work, we consider the impact of null values in databases and develop a simple set of invariants to 
-successfully plan around them. In contrast to the statistical learning work, our emphasis is not on the specific algorithm
-used to impute but rather on the timing of imputation in the execution of a query. In contrast to existing database work,
+successfully plan around them. In contrast to existing statistical learning work, our emphasis is not on the specific algorithm
+used to impute but rather on the placement of imputation steps in the execution of a query. In contrast to existing database work,
 we incorporate imputation into a cost-based optimizer and hide any details
 regarding missing values inside the system, allowing users to use traditional SQL and engage in normal workloads.
 While prior work has incorporated operations such as prediction into their databases, this has been domain-specific
@@ -38,7 +38,7 @@ of imputation taking place at various points in the plan and the composition of 
 through standard query operations.
 
 \textbf{Imputation operators:} We explored a subset of possible imputation operators.
-In particular, we explored the two variants of the drop and impute operations. The system
+In particular, we explored two variants of the \textit{Drop} and \textit{Impute} operations. The system
 could be extended to consider a broader family of operators. As the search space grows,
 there will likely be additional steps needed in order to avoid sub-optimal plans.
 

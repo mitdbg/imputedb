@@ -8,7 +8,7 @@ is ideal for early dataset exploration.
 \subsection{Data sets} \label{subsec:datasets}
 \subsubsection{Center for Disease Control: Surveys}
 For our first set of experiments, we use survey data collected by the 
-Center for Disease Control (CDC) in the United States. In particular, we
+Center for Disease Control and Prevention (CDC) in the United States. In particular, we
 experiment on a set of tables collected as part of the National
 Health and Nutrition Examination Survey (NHANES), a series of studies
 conducted by the CDC on a national sample of several thousand individuals\cite{cdc-data}.
@@ -55,8 +55,8 @@ NHANES variable names with self-explanatory attribute names.
 \end{table}
 
 All tables used consists of 10 attributes. The laboratory and examinations data,
-referred to as \textit{labs} and \textit{exams} in our queries, consists of 9813 rows,
-while the demographics data (\textit{demo}) has 10175 rows.
+referred to as \textit{labs} and \textit{exams} in our queries, consist of 9813 rows,
+while the demographics data (\textit{demo}) have 10175 rows.
 
 \subsubsection{freeCodeCamp: 2016 New Coder Survey}
 For our second set of experiments, we chose to use data collected
@@ -99,14 +99,14 @@ similar datasets.
 
 Queries 1-3 are on the CDC data. Query~\ref{q1} calculates the average weight for users based on their income data.
 To do so, it joins demographics and physical examination data. Query~\ref{q2}
-compares cholesterol levels for individuals who are both ends of the income
+compares cholesterol levels for individuals who are at both ends of the income
 spectrum and who satisfy a minimum weight requirement. Query~\ref{q3}
 extracts the maximum blood lead levels for subjects who satisfy a particular
 waist circumference requirement.
 
 Queries 4-7 are on the FCC data. In Query~\ref{q4}, we calculate the average income for survey participants,
 based on their bootcamp attendance. Query~\ref{q5} estimates the average
-age of women from the Uniter States who participated. Query~\ref{q6} 
+age of women from the United States who participated. Query~\ref{q6} 
 calculates the average amount of money survey participants with student debt destined to
 learning based on their school degree. Finally, in Query~\ref{q7}, we join the FCC data with a reference table provided
 by the World Bank which summarizes GDP per Capita across various
@@ -143,12 +143,15 @@ an appropriate integer value.
 %\end{table*}
 
 %\todobox{actually run experiments and rewrite this section}{
-All experiments were run on a Macbook Pro with 2 2.9 GHz Intel core i5 processors, 16 GB of main memory,  running OS X El Capitan.
+All experiments were run on a Macbook Pro with two 2.9 GHz Intel core i5 processors, 16 GB of main memory,  running OS X El Capitan.
 
-Figure~\ref{fig:runtimes} provides a summary of the performance results. Each query is run in two configurations: quality-optimized and runtime-optimized.
-To provide comparison, we also include a table with the average running time required to perform imputation at each of the base tables used in our analysis.
-Note that multiple queries perform joins between two or more base tables. In all cases, running a query through \ProjectName{} is cheaper than 
-imputing a single base table, with the added flexibility of imputation tailored to the query.
+Figure~\ref{fig:runtimes} provides a summary of the performance results. The first plot shows average running times for \ProjectName{}
+plans in two configurations: quality-optimized and runtime-optimized. The second plot shows, for comparison, the 
+average running times required for each query when performing imputation at the base tables.
+In all cases, running a query through \ProjectName{} is cheaper than 
+imputing a single base table, with the added advantage of imputation tailored to the query. This latter point adds
+significant flexibility to the user, who no longer needs to decide apriori what imputation strategy they have to stick to
+for all their queries.
 
 
 \begin{figure}
@@ -178,10 +181,11 @@ requires no planning. On average, planning constituted 38 percent of total runti
 
 Table~\ref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for \ProjectName{}'s query results when compared to 
 running imputation on the base tables and executing the query on the
-cleaned data. Each query was run 10 iterations in both settings and then results from the two approaches were paired up and compared tuple-wise. We average 
-absolute percentage deviations across each iteration of a query, and we report this value averaged over all iterations.
+cleaned data. Each query was run 10 iterations in both settings and then results from the two approaches were paired up and compared tuple-wise. We average tuple-wise
+absolute percentage deviations within each iteration of a query, and we report this value averaged over all iterations.
 We can see that optimizing for quality indeed reduces the SMAPE of query results. In general, the SMAPE relative to the
-base-imputation approach are low in all cases.
+base-imputation approach are low in all cases, indicating that on-the-fly imputation produces similar results to
+imputation at the base tables.
 
 \begin{table}
 \centering
@@ -191,7 +195,7 @@ base-imputation approach are low in all cases.
 \end{table}
 
 In many cases, applying the imputation step at the base table simply is not an option. To illustrate the increasing difficulty of such an approach
-as datasets scale, we used a simple aggregate query over the ACS dataset (Figure~\ref{query-acs}). Applying the imputation operation to the base table
+as datasets scale, we used a simple aggregate query over the ACS dataset in our final experiment(Figure~\ref{query-acs}). Applying the imputation operation to the base table
 is extremely expensive, in our case the process did not terminate within 20 minutes. In contrast, \ProjectName{} executes a quality-optimized version
 in 9 seconds and a runtime-optimized version in 1 second. This highlights the potential benefit of using our system for early data exploration.
 

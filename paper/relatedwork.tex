@@ -18,7 +18,8 @@ tables are well known and can limit approaches. For example, Akande finds that
 one approach (MI-GLM) is prohibitively expensive when attempting to impute on data that
 includes variables with potentially large domains (ten categories in their case).
 In contrast, \ProjectName{} allows users to specify a tradeoff between
-information loss and computational complexity (in terms of time). Furthermore,
+information loss and runtime performance, allowing users to perform queries
+directly on the entire dataset. Furthermore,
 the query planner's imputation is guided by the requirements of each specific
 query's operators, rather than requiring broad assumptions about query
 workloads.  
@@ -53,7 +54,7 @@ inference step within the query language, using the \verb|INFER| operation.
 BayesDB provides a great alternative for bridging the gap between
 traditional databases and sophisticated modeling software. \ProjectName{}, in
 contrast, aims to remain squarely in the database realm, while allowing
-users to perform queries on a potentially larger subset of their data.
+users to directly express queries on a potentially larger subset of their data.
 
 \ProjectName's cost-based query planner 
 is partially based on the seminal work developed for System R's query planning\cite{blasgen1981system}.
@@ -61,7 +62,7 @@ However, in contrast to System R, \ProjectName{} performs additional histogram t
 for the changing nature of missing values.
 
 \subsection{Forecasting and Databases}
-\cite{parisi2011embedding} introduces the idea of incorporating time-series forecast operators into
+Parisi et al\cite{parisi2011embedding} introduce the idea of incorporating time-series forecast operators into
 databases, along with the necessary relational algebra extensions. Their work explores the theoretical
 properties of forecast operators and generalizes them into a family of operators, distinguished by
 the type of predictions returned. They highlight the use of forecasting for replacing missing values.
@@ -83,11 +84,10 @@ system automatically searches the space of attribute combinations/transformation
 to produce forecasts within a given accuracy threshold. Accuracy estimates are determined using
 standard techniques, such as k-fold cross-validation. 
 
-\ProjectName{} provides a declarative language, as
-an extension to standard SQL, but in contrast to Fa, \ProjectName{} is not searching the space of possible
+Similarly to Fa, \ProjectName{} provides a declarative language, as
+a subset of standard SQL. \ProjectName{}, however, is not searching the space of possible
 imputation models, but rather the space of query plans that incorporate imputation operators. Another major point
-of distinction between \ProjectName{} and Fa is that the latter doesn't consider tradeoffs between accuracy and computation time, 
-but rather returns the most accurate forecast (with some stopping criterion).
+of distinction between \ProjectName{} and Fa is that the latter doesn't consider tradeoffs between accuracy and computation time, but rather returns the most accurate forecast (with some stopping criterion).
 
 
 
