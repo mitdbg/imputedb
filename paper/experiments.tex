@@ -176,15 +176,18 @@ requires no planning. On average, planning constituted 38 percent of total runti
 \label{fig:plantimes}
 \end{figure}
 
-Table~\ref{table:rmse} shows the Root-Mean-Squared-Error (RMSE) for \ProjectName{}'s query results when compared to running imputation on the base tables and executing the query on the
-cleaned data. Each query was run 10 iterations in both settings and then results from the two approaches were paired up and compared tuple-wise. We average the
-squared error across a single query before applying square root. We can see that optimizing for quality indeed reduces the RMSE of query results. In general, the RMSE relative to the
-base-imputation approach are acceptable.
+Table~\ref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for \ProjectName{}'s query results when compared to 
+running imputation on the base tables and executing the query on the
+cleaned data. Each query was run 10 iterations in both settings and then results from the two approaches were paired up and compared tuple-wise. We average 
+absolute percentage deviations across each iteration of a query, and we report this value averaged over all iterations.
+We can see that optimizing for quality indeed reduces the SMAPE of query results. In general, the SMAPE relative to the
+base-imputation approach are low in all cases.
 
 \begin{table}
+\centering
 \input{perf_summary.tex}
-\caption{Root-Mean-Squared-Error for queries run under different $\alpha$ parameterizations relative to results when imputing on base table}
-\label{table:rmse}
+\caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$ parameterizations relative to results when imputing on base table}
+\label{table:smape}
 \end{table}
 
 In many cases, applying the imputation step at the base table simply is not an option. To illustrate the increasing difficulty of such an approach
