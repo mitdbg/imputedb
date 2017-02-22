@@ -118,7 +118,7 @@ public class SimpleDb {
 
 		} else if (args[0].equals("experiment")) {
 			if (args.length < 6) {
-				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> <minAlpha> <maxAlpha> <step> <iters>");
+				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> <minAlpha> <maxAlpha> <step>");
 				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> --base");
 				System.exit(1);
 			}

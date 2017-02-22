@@ -6,7 +6,6 @@ import Zql.ZStatement;
 import Zql.ZqlParser;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,11 +27,12 @@ public class ExperimentRunner {
     private final int iters;
     private final Path catalogPath;
     private final Path queriesPath;
-    private final FileWriter timesFileWriter;
-    private final FileWriter resultsFileWriter;
-    private final FileWriter plansFileWriter;
+    private final Path outputBaseDir;
+    private FileWriter timesFileWriter;
+    private FileWriter resultsFileWriter;
+    private FileWriter plansFileWriter;
 
-    private ExperimentRunner(boolean imputeAtBase, double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries, String outputDir)
+    private ExperimentRunner(boolean imputeAtBase, double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries, String outputBaseDir)
             throws IOException {
         this.imputeAtBase = imputeAtBase;
         this.minAlpha = minAlpha;
@@ -41,9 +41,7 @@ public class ExperimentRunner {
         this.iters = iters;
         this.catalogPath = Paths.get(catalog);
         this.queriesPath = Paths.get(queries);
-        this.timesFileWriter = new FileWriter(new File(outputDir, "times.csv"));
-        this.resultsFileWriter = new FileWriter(new File(outputDir, "results.txt"));
-        this.plansFileWriter = new FileWriter(new File(outputDir, "plans.txt"));
+        this.outputBaseDir = Paths.get(outputBaseDir);
     }
 
     public ExperimentRunner(int iters, String catalog, String queries, String outputDir)
@@ -60,13 +58,29 @@ public class ExperimentRunner {
         Database.getCatalog().clear();
         Database.getCatalog().loadSchema(this.catalogPath.toAbsolutePath().toString());
         TableStats.computeStatistics();
+    }
+
+    /**
+     * Open FileWriters to three results files. Creates a subdirectory appropriate to the timing task for q and alpha.
+     * @param q
+     * @param alpha
+     * @throws IOException
+     */
+    private void openWriters(int q, double alpha) throws IOException{
+	Path outputDir = outputBaseDir.resolve(String.format("%02d/%03.0f", q, alpha*1000));
+	if (Files.notExists(outputDir)){
+		Files.createDirectories(outputDir);
+	}
+	this.timesFileWriter = new FileWriter(outputDir.resolve("timing.csv").toFile());
+	this.resultsFileWriter = new FileWriter(outputDir.resolve("results.txt").toFile());
+	this.plansFileWriter = new FileWriter(outputDir.resolve("plans.txt").toFile());
 
         this.timesFileWriter.write("query,alpha,iter,plan_time,run_time,plan_hash\n");
         this.resultsFileWriter.write("Query Results\n");
         this.plansFileWriter.write("Query Plans\n");
     }
 
-    public void close() throws IOException {
+    public void closeWriters() throws IOException {
         this.timesFileWriter.close();
         this.resultsFileWriter.close();
         this.plansFileWriter.close();
@@ -102,6 +116,8 @@ public class ExperimentRunner {
 
     private void run(String query, int id, double alpha, int iter)
             throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
+
+
         // time planning
         Instant planStart = Instant.now();
         DbIterator imputed  = planQuery(query, x -> new ImputedLogicalPlan(alpha, this.imputeAtBase));
@@ -148,14 +164,15 @@ public class ExperimentRunner {
             throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
         init();
         String[] queries = getQueries();
-        for (double alpha = this.minAlpha; alpha <= this.maxAlpha; alpha += this.step) {
-            for (int q = 0; q < queries.length; q++) {
+		for (int q = 0; q < queries.length; q++) {
+			for (double alpha = this.minAlpha; alpha <= this.maxAlpha; alpha += this.step) {
                 for (int i = 0; i < this.iters; i++) {
+			openWriters(q, alpha);
                     System.out.println("Running query " + q + " at alpha " + alpha + " iteration " + i);
                     run(queries[q] + ";", q, alpha, i);
+					closeWriters();
                 }
             }
         }
-        close();
     }
 }
