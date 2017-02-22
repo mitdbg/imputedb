@@ -471,14 +471,12 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		}
 
 		DbIterator physicalPlan = null;
-		double minCost = Double.MAX_VALUE;
-		for (ImputedPlanCachePareto.Value val : aggPlans.bestPlans(allTables)) {
-			double cost = val.plan.cost(lossWeight);
-			if (cost < minCost) {
-				minCost = cost;
-				physicalPlan = val.plan.getPlan();
-			}
+		ImputedPlan chosenPlan = aggPlans.getFinalPlan(lossWeight, allTables);
+
+		if (chosenPlan != null) {
+			physicalPlan = chosenPlan.getPlan();
 		}
+
 		if (physicalPlan == null) {
 			throw new RuntimeException("BUG: No top-level plans available.");
 		}

@@ -88,6 +88,16 @@ def get_rmse(refs, results):
   # the average number of missing entries
   missing = np.isnan(acc).sum(axis = 1).mean()
   return np.sqrt(np.nanmean(flat_acc)), missing
+  
+# symmetric mean absolute percentage error  
+def get_smape(refs, results):
+  metrics = []
+  for res in results:
+    for ref in refs:
+      deviations = (np.abs(res - ref) / (res + ref)).values.flatten()
+      metrics.append(np.nanmean(deviations))
+  metrics = np.array(metrics)
+  return np.nanmean(metrics), np.nanstd(metrics)
 
 
 # time data
@@ -147,13 +157,14 @@ base_results = get_query_results(os.path.join(base_dir, 'results.txt'), table_he
 perf = []
 for (query, alpha), res in experiment_results.iteritems():
   refs = [df for (q, a), dfs in base_results.iteritems() for df in dfs if q == query]
-  rmse, missing = get_rmse(refs, res)
-  perf.append((query, alpha, rmse, missing))
+  smape, std = get_smape(refs, res)
+  perf.append((query, alpha, smape, std))
 
-perf_summary = pd.DataFrame(perf, columns = ['query', 'alpha', 'rmse', 'missing'])
+perf_summary = pd.DataFrame(perf, columns = ['query', 'alpha', 'smape', 'std'])
 perf_summary = perf_summary.sort_values(['query', 'alpha'])
-perf_summary_latex = perf_summary.copy()
-perf_summary_latex.columns = ['Query', 'Alpha', 'RMSE', 'Missing Categories']
+perf_summary_latex = perf_summary.copy()[['query', 'alpha', 'smape']]
+perf_summary_latex['smape'] *= 100.0
+perf_summary_latex.columns = ['Query', 'Alpha', 'SMAPE']
 perf_summary_latex.to_latex(os.path.join(output_dir, 'perf_summary.tex'), float_format='%.2f', index=False)
 
 

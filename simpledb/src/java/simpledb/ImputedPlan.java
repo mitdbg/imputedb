@@ -27,4 +27,12 @@ public abstract class ImputedPlan {
 		assert 0.0 <= lossWeight && lossWeight <= 1.0;
 		return lossWeight * loss().get() + (1 - lossWeight) * time();
 	}
+
+	public double getLoss() {
+		return loss().get();
+	}
+
+	public double getTime() {
+		return time();
+	}
 }

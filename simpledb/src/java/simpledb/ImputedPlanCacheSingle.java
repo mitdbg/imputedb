@@ -36,4 +36,8 @@ public class ImputedPlanCacheSingle extends AImputedPlanCache {
             bestPlans.put(key, plans);
         }
 	}
+
+	public ImputedPlan getFinalPlan(double lossBound, Set<String> tables) {
+		throw new UnsupportedOperationException("This class should not be used, use pareto");
+	}
 }

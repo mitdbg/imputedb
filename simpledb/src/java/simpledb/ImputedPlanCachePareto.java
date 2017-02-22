@@ -48,4 +48,32 @@ public class ImputedPlanCachePareto extends AImputedPlanCache {
             bestPlans.put(key, plans);
         }
     }
+
+    private double getMinLoss(Set<String> tables) {
+        double minLoss = Double.MAX_VALUE;
+        for (ImputedPlanCachePareto.Value val : bestPlans(tables)) {
+            double loss = val.plan.getLoss();
+            if (loss < minLoss) {
+                minLoss = loss;
+            }
+        }
+        return minLoss;
+    }
+
+
+    public ImputedPlan getFinalPlan(double lossBound, Set<String> tables) {
+        // need to know this upfront
+        double minLoss = getMinLoss(tables);
+        double minTime = Double.MAX_VALUE;
+        ImputedPlan chosen = null;
+        for (ImputedPlanCachePareto.Value val : bestPlans(tables)) {
+            double time = val.plan.getTime();
+            double loss = val.plan.getLoss();
+            if ((loss - minLoss) <= lossBound && time < minTime) {
+                minTime = time;
+                chosen = val.plan;
+            }
+        }
+        return chosen;
+    }
 }
