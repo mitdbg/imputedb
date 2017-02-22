@@ -29,7 +29,7 @@ public class ImputedPlanCacheDottedWriter implements ImputedPlanCacheWriter {
 		for (AImputedPlanCache.Value val : cache.bestPlans(tables)) {
 			ImputedPlan plan = val.plan;
 			StringBuilder prefix = new StringBuilder();
-			prefix.append("plandot_loss=");
+			prefix.append("queryplan_loss=");
 			prefix.append(plan.loss().get());
 			prefix.append("_time=");
 			prefix.append(plan.time());
