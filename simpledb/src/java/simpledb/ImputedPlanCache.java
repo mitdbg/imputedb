@@ -12,4 +12,6 @@ public interface ImputedPlanCache {
 	void addPlan(Set<String> ts, ImputedPlan newPlanIP);
 
 	void addJoinPlan(Set<String> ts, Set<LogicalJoinNode> joins, ImputedPlan newPlanIP);
+
+	ImputedPlan getFinalPlan(double lossWeight, Set<String> tables);
 }

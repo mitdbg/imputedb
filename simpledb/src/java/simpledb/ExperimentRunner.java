@@ -48,7 +48,7 @@ public class ExperimentRunner {
 
     public ExperimentRunner(int iters, String catalog, String queries, String outputDir)
             throws IOException {
-        this(true, -1.0, -1.0, 1.0, iters, catalog, queries, outputDir);
+        this(true, 0.0, 0.0, 1.0, iters, catalog, queries, outputDir);
     }
 
     public ExperimentRunner(double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries, String outputDir)
