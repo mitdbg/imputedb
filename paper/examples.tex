@@ -1,44 +1,51 @@
 \section{Motivating Example}
-Consider an epidemiologist tasked with an initial
-exploratory analysis of data collected for individuals across
+Consider an epidemiologist tasked with an 
+exploratory analysis of data collected from individuals across
 a battery of exams. In particular, she is interested in exploring
 the relationship between income and the immune system,
 controlling for factors such as weight and gender.
 
-While careful modeling techniques will be necessary before putting
+While careful modeling will be necessary before putting
 results into the final research paper, the epidemiologist is anxious
 to get a quick and accurate view into the data. However,
 the data has been collected through CDC surveys (see Sec.~\ref{subsec:datasets} for details),
 and there is a significant amount of missing data across all
 relevant attributes. The researcher must develop a strategy
 for handling the missing values. She could drop any records with
-missing values and continue her analysis with the remaining data,
-or she could fit a model on the base tables which can take advantage of existing correlations between attributes to fill in the missing values.
-If she drops the records with missing data, she will throw away the majority of her data set, as many records have missing fields.
-Fitting a model on the dataset will take more programming effort and may take a long time to run.
+missing values and continue her analysis with the remaining data.
+She could also fit a model on the base tables, taking advantage of correlations between attributes to fill in the missing values.
+However, if she drops the records with missing data, she will throw away the majority of her data set, as many records have missing fields.
+Fitting a model on the dataset will take some up-front programming effort and may take a long time to run.
 
 To complicate matters further, the epidemiologist realizes that
 some of the steps she is interested in, including filtering and grouping,
-are impacted differently by missing data, and that these step may change
+are impacted differently by missing data, and that these steps may change
 repeatedly, as she wants to run various queries during the exploration phase.
-The imputation strategy itself may change through out time. For example, as she is getting an initial
-set of distribution statistics (such as mean and standard deviation), she may be willing to tolerate
-a simpler imputation approach, as long as she gets runtime performance in exchange. Later on,
+Finally, her preferences may change over time. For example, as she is getting an initial
+set of distribution statistics (such as mean and standard deviation), she may be willing to tolerate more error, as long as she gets runtime performance in exchange. Later on,
 as more precise estimates are needed for comparing treatments or policy changes, the researcher
-may want to focus on the quality of the imputation.
+may want to focus on the quality of the results.
 
-Rather than work through
-the implications of each case, she submits a query, as shown in Figure~\ref{fig:example-query}, to ImputeDB.\@ The system, parameterized by a value indicating
-a tradeoff between information loss and runtime cost, then finds
-the optimal query plan. Figures~\ref{fig:quality-plan} and ~\ref{fig:fast-plan} show what this plan would be
-when optimizing for quality and performance, respectively.
+Rather than work through the implications of each case, she writes her query in standard SQL and submits it to ImputeDB, which automatically performs the imputations necessary to fill in the missing data.
+An example query is shown in Fig.~\ref{fig:example-query}.
 
+She indicates her preference for performance or for accuracy by providing a configuration parameter $\alpha$ to ImputeDB in addition to her query.
+$\alpha$ is a dimensionless parameter in $[0,1]$, and it indicates the relative importance of the quality of query results and of query performance.
+So, a low $\alpha$ results in a fast query plan that may compromise accuracy, while a high $\alpha$ results in a high quality query plan that may take longer to run.
+In our intended workflow, the analyst picks a value of $\alpha$ and incrementally increases it to increase query result quality until the query takes too long to run.
+Fig.~\ref{fig:quality-plan} and Fig.~\ref{fig:fast-plan} show plans for the example query in Fig.~\ref{fig:example-query} when optimizing for quality and performance, respectively.
+
+In Fig.~\ref{fig:quality-plan} and Fig.~\ref{fig:fast-plan}, $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate.
+$\mu$ and $\delta$ are specialized imputation operators.
+$\mu$ fills in missing values using a regression model while $\delta$ simply drops tuples which contain a missing value in the specified attributes.
 The differences between the two plans highlight the subtleties of optimizing queries which contain imputation operators.
-Note that imputation operators are placed in different points of the plan, operating over different columns, and 
-even influencing the order of joins. The quality-optimized plan (Figure~\ref{fig:quality-plan}) uses the impute operation, rather
-than dropping tuples with missing values. It waits to impute \verb|demo.income| until after the final join has taken place, but
-other imputations take place earlier on in the plan, some before filtering and join operations. 
-Meanwhile, the performance-optimized plan (Figure~\ref{fig:fast-plan}) performs a single impute operation (\verb|exams.weight|), and applies drops to tuples with missing values before aggregating.
+Note that imputation operators are placed in different points of the plan, operating over different columns, and even influencing the order of joins.
+
+The quality-optimized plan (Fig.~\ref{fig:quality-plan}) uses the impute operation $\mu$, rather than dropping tuples with missing values.
+It waits to impute \verb|demo.income| until after the final join has taken place, but other imputations take place earlier on in the plan, some before filtering and join operations.
+Imputations are placed to maximize ImputeDB's estimate of the quality of the overall results.
+Meanwhile, the performance-optimized plan (Fig.~\ref{fig:fast-plan}) uses the drop operation $\delta$ instead of filling in missing values.
+However, it is a significant improvement over dropping all tuples with missing data, as it only drops tuples with missing values in attributes which are referenced by the rest of the plan.
 
 
 \begin{figure}
@@ -56,15 +63,16 @@ GROUP BY demo.income
 \end{figure}
 
 \begin{figure}
+  \begin{subfigure}[b]{\linewidth}
   \Tree
   [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
     [.$g_{\text{income, AVG(white\_blood\_cell\_ct)}}$
-      [.$\mu_{\text{demo.income}}$
+      [.\colorbox{pink}{$\mu_{\text{demo.income}}$}
         [.$\bowtie_{\text{exams.id} = \text{demo.id}}$
-          [.$\mu_{\text{labs.white\_blood\_cell\_ct}}$
+          [.\colorbox{pink}{$\mu_{\text{labs.white\_blood\_cell\_ct}}$}
             [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
               [.$\sigma_{\text{exams.weight} \geq 120}$ 
-                [.$\mu_{\text{exams.weight}}$ exams ] 
+                [.\colorbox{pink}{$\mu_{\text{exams.weight}}$} exams ] 
               ] 
               labs 
             ]
@@ -73,31 +81,28 @@ GROUP BY demo.income
       ] 
     ] 
   ] 
-]
-\caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for quality.}
-\label{fig:quality-plan}
-\end{figure}
-
-\begin{figure}
+  ]
+  \caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for quality ($\alpha=1$).}
+  \label{fig:quality-plan}
+\end{subfigure}
+\begin{subfigure}[b]{\linewidth}
   \Tree
   [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
     [.$g_{\text{income, AVG(white\_blood\_cell\_ct)}}$
-      [.$\delta_{\text{demo.income, labs.white\_blood\_cell\_ct}}$
+      [.\colorbox{pink}{$\delta_{\text{demo.income, labs.white\_blood\_cell\_ct}}$}
         [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
           [.$\bowtie_{\text{demo.id} = \text{exams.id}}$
             [.$\sigma_{\text{demo.gender} = 2}$ demo ]
-            [.$\sigma_{\text{exams.weight} \geq 120}$ [.$\delta_{\text{exams.weight}}$ exams ] ] ] labs ] ] ] ]
-\caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for performance.}
+            [.$\sigma_{\text{exams.weight} \geq 120}$ [.\colorbox{pink}{$\delta_{\text{exams.weight}}$} exams ] ] ] labs ] ] ] ]
+\caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for performance ($\alpha=0$).}
 \label{fig:fast-plan}
+\end{subfigure}
+\vspace{0.5\baselineskip}
+\caption{Plans for the query in Fig.~\ref{fig:example-query}. Imputation operators are highlighted.}
 \end{figure}
 
-
-Tens of queries later, the epidemiologist has the holistic view of the
-data that she required before carefully crafting her own tailored
-imputation model. Knowing that there may be a need to explore
-this data set further, she can easily incorporate their imputation model
-into ImputeDB for future use.
-
+Returning to our epidemiologist, tens of queries later she has a holistic view of the data and she has the information that she needs to construct a tailored imputation model for her queries of interest.
+Knowing that there may be a need to explore this data set further, she can easily incorporate her imputation model into ImputeDB for future use.
 
 %%% Local Variables:
 %%% mode: latex
