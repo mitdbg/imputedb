@@ -31,7 +31,7 @@ An example query is shown in Fig.~\ref{fig:example-query}.
 
 She indicates her preference for performance or for accuracy by providing a configuration parameter $\alpha$ to ImputeDB in addition to her query.
 $\alpha$ is a dimensionless parameter in $[0,1]$, and it indicates the relative importance of the quality of query results and of query performance.
-So, a low $\alpha$ results in a fast query plan that may compromise accuracy, while a high $\alpha$ results in a high quality query plan that may take longer to run.
+So, a high $\alpha$ results in a fast query plan that may compromise accuracy, while a low $\alpha$ results in a high quality query plan that may take longer to run.
 In our intended workflow, the analyst picks a value of $\alpha$ and incrementally increases it to increase query result quality until the query takes too long to run.
 Fig.~\ref{fig:quality-plan} and Fig.~\ref{fig:fast-plan} show plans for the example query in Fig.~\ref{fig:example-query} when optimizing for quality and performance, respectively.
 
@@ -82,7 +82,7 @@ GROUP BY demo.income
     ] 
   ] 
   ]
-  \caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for quality ($\alpha=1$).}
+  \caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for quality ($\alpha=0$).}
   \label{fig:quality-plan}
 \end{subfigure}
 \begin{subfigure}[b]{\linewidth}
@@ -94,7 +94,7 @@ GROUP BY demo.income
           [.$\bowtie_{\text{demo.id} = \text{exams.id}}$
             [.$\sigma_{\text{demo.gender} = 2}$ demo ]
             [.$\sigma_{\text{exams.weight} \geq 120}$ [.\colorbox{pink}{$\delta_{\text{exams.weight}}$} exams ] ] ] labs ] ] ] ]
-\caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for performance ($\alpha=0$).}
+\caption{A plan for the query in Fig.~\ref{fig:example-query}, optimized for performance ($\alpha=1$).}
 \label{fig:fast-plan}
 \end{subfigure}
 \vspace{0.5\baselineskip}
