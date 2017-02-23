@@ -141,25 +141,25 @@ def explore(experiments_dir, base=False):
     else:
         name = 'imputedb'
     planning_times = summarize(data, by, 'plan_time')
-    run_times = summarize(data, by, 'run_time')
+    running_times = summarize(data, by, 'run_time')
 
     print(planning_times)
     print(running_times)
 
-    return planning_times, run_times, data
+    return planning_times, running_times, data
 
 def main(experiments_dir, output_dir):
+    make_plots(experiments_dir, output_dir)
+    make_plots(experiments_dir, output_dir, base=True)
+    write_perf_summary(experiments_dir, output_dir)
+
+def make_plots(experiments_dir, output_dir, base=False):
     if not os.path.isdir(experiments_dir):
         raise FileNotFoundError
 
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
-    make_plots(experiments_dir, output_dir)
-    make_plots(experiments_dir, output_dir, base=True)
-    write_perf_summary(experiments_dir, output_dir)
-
-def make_plots(experiments_dir, output_dir, base=False):
     # time data
     data = get_timing_results(experiments_dir, base=base)
 
@@ -178,11 +178,11 @@ def make_plots(experiments_dir, output_dir, base=False):
     else:
         name = 'imputedb'
     planning_times = summarize(data, by, 'plan_time')
-    run_times = summarize(data, by, 'run_time')
+    running_times = summarize(data, by, 'run_time')
         
     # plots
     xticks = range(0, nqueries)
-    xlabels = ["Query %i" % (q + 1) for q in xticks]
+    xlabels = ["%i" % (q + 1) for q in xticks]
 
     # plot 1: planning times
     print('planning_times ({})'.format(name))
@@ -192,24 +192,30 @@ def make_plots(experiments_dir, output_dir, base=False):
     myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
     plt.xlim(xticks[0] - 1, xticks[-1] + 1)
     plt.xticks(xticks, xlabels)
-    plt.xlabel('Query Name')
+    plt.xlabel('Query')
     plt.ylabel('Planning Time (ms)')
     plt.legend(loc='best')
     plt.savefig(os.path.join(output_dir, 'planning_times_%s.png' % name))
       
     print('running_times ({})'.format(name))
     print(running_times)
-    df = run_times
+    df = running_times
     plt.figure()
     myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
     plt.xlim(xticks[0] - 1, xticks[-1] + 1)
     plt.xticks(xticks, xlabels)
-    plt.xlabel('Query Name')
+    plt.xlabel('Query')
     plt.ylabel('Running Time (ms)')
     plt.legend(loc='best')
     plt.savefig(os.path.join(output_dir, 'running_times_%s.png' % name))
 
 def write_perf_summary(experiments_dir, output_dir):
+    if not os.path.isdir(experiments_dir):
+        raise FileNotFoundError
+
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
     experiment_results = get_query_results(experiments_dir, table_headers)
     base_results = get_query_results(experiments_dir, table_headers, base=True)
     perf = []

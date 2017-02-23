@@ -23,7 +23,7 @@ build:
 
 run_and_analysis: run analysis
 run:
-	docker run -dit --rm \
+	docker run -dit \
 		   -v "$(shell pwd):/src/test/experiments" \
 		   --name="imputedb-run" \
 		   imputedb \
