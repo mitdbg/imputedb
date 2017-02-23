@@ -1,0 +1,13 @@
+planning_times (imputedb)
+   query  alpha        std   mean
+0    0.0    0.0  10.671400  5.525
+1    0.0    1.0   1.571447  2.270
+
+running_times (imputedb)
+query  alpha          std      mean
+0    0.0    0.0  1211.111576  7282.105
+1    0.0    1.0    83.603431  1364.905
+
+times (base)
+query,alpha,iter,plan_time,run_time,plan_hash
+0,0.000000,0,185,4511948,-1368619563

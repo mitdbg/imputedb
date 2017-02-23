@@ -18,19 +18,25 @@ clean:
 	sudo rm -rf ./query_plans
 	sudo rm -rf ./__pycache__
 
+clean_containers:
+	@docker rm  -f $(shell docker ps -a -q -f name=imputedb-run-$(EXPERIMENT_SIZE)) || true
+
 build:
 	{ cd ../..; docker build -t imputedb .; }
 
 run_and_analysis: run analysis
+
+run_force: clean_containers run
+
 run:
-	@docker rm -f imputedb-run || echo "No existing imputedb-run containers."
 	docker run -dit \
-		   --name=imputedb-run \
+		   --name=imputedb-run-$(EXPERIMENT_SIZE) \
 		   -v "$(shell pwd):/src/test/experiments" \
 		   --user root \
 		   imputedb \
 		   python run_experiments.py $(EXPERIMENT_SIZE)
-	docker logs --follow imputedb-run | sudo tee output/$(EXPERIMENT_SIZE)/log
+	docker logs --follow imputedb-run-$(EXPERIMENT_SIZE) | sudo tee output/$(EXPERIMENT_SIZE)/log
+
 
 analysis:
 	docker run -it --rm \
@@ -47,4 +53,4 @@ explore:
 		   --user root \
 	           jupyter/datascience-notebook python
 
-.PHONY: help build run explore
+.PHONY: help clean clean_containers build run run_and_analysis run_force analysis explore
