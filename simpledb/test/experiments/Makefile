@@ -1,5 +1,7 @@
 .DEFAULT_GOAL := help
 
+EXPERIMENT_SIZE = medium
+
 help:
 	@echo "usage:"
 	@echo "  make help: display this help"
@@ -13,6 +15,7 @@ clean:
 		|| echo "No containers found."
 	sudo rm -rf ./output
 	sudo rm -rf ./query_plans
+	sudo rm -rf ./__pycache__
 
 build:
 	{ cd ../..; docker build -t imputedb .; }
@@ -21,6 +24,20 @@ run:
 	docker run -it --rm \
 		   -v "$(shell pwd)/output:/src/test/experiments/output" \
 		   -v "$(shell pwd)/query_plans:/src/test/experiments/query_plans" \
-		   imputedb 
+		   imputedb \
+		   python run_experiments.py medium
+	docker run -it --rm \
+		   -v "$(shell pwd)/output:/data" \
+		   -v "$(shell pwd):/src" \
+		   --user root \
+	           jupyter/datascience-notebook \
+		   python /src/analyze_experiments.py /data/$(EXPERIMENT_SIZE)
+
+explore:
+	docker run -it --rm \
+		   -v "$(shell pwd)/output:/data" \
+		   -v "$(shell pwd):/src" \
+		   --user root \
+	           jupyter/datascience-notebook
 
 .PHONY: help build run
