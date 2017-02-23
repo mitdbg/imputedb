@@ -1,25 +1,67 @@
 \section{Introduction}
 
+% Context
 Handling incorrect or dirty data is a complex and challenging problem for analysts.
-According to some estimates, data scientists spend between 50 and 80 percent of their
-time performing tasks such as collecting and cleaning datasets\cite{data-science-cleaning}.
+% Problem
 One way in which a dataset can be dirty is for parts of it to be missing altogether.
 Missing data is one of the simpler variants of dirty data, but if handled naively, can still cause analyses to be incorrect.
-To handle this problem, users may manually clean their dataset by performing
-some statistical analysis to replace missing data elements with likely values.
-This process is called \emph{imputation}.
-Traditional imputation methods replace all missing values in a dataset to create a new clean dataset.
-Although this manual imputation solves the problem of missing data, in the age of big data it may be very expensive to run an imputation algorithm on an entire dataset.
-Additionally, it may not be necessary to completely clean the data to make it usable.
-Some users may be willing to run queries on dirty data, simply ignoring any missing values, as long as they do not have to pay the cost of imputation.
-Others may want to run queries on a subset of the data, and so do not need to impute
-every field in every record. Yet others may want to customize the 
-imputation algorithm for the tradeoffs and demands of a particular domain.
+According to some estimates, data scientists spend between 50 and 80 percent of their time performing tasks such as collecting and cleaning datasets~\cite{data-science-cleaning}.
 
-In this paper, we present \ProjectName{}, a database system which is designed to interact with a dirty dataset as though it were clean.
+% Solution
+To handle this problem, users may manually clean their dataset by performing some statistical analysis to replace missing data elements with likely values.
+This process is called \emph{imputation}.
+We have developed a system called \ProjectName{} with a novel query optimization algorithm which allows imputation to occur on-the-fly, during query execution.
 The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
-To achieve this goal, we perform imputation on the fly, during query execution.
-Performing imputation at query time allows our system to impute only the data necessary to run the query, and it allows users to flexibly trade imputation quality for computation time.
+
+% Prior work
+There is relevant prior work in three broad areas: statistics, databases, and time-series forecasting.
+Prior work in statistics has focused on imputation quality~\cite{burgette2010multiple} and runtime cost~\cite{akande2015empirical}.
+Prior work in databases has a established simple semantics for handling tuples with missing values~\cite{codd1973understanding,grant1977null}.
+Prior work in time-series forecasting has incorporated forecasting extensions into domain-specific databases and characterized their behavior~\cite{parisi2011embedding,parisi2013temporal,duan2007processing}.
+In contrast, \ProjectName{} does not focus on the imputation algorithm itself but rather on the planning involved in its use in non-trivial query plans.
+
+% Implications
+Our approach enables an exploratory analysis workflow in which the analyst can issue standard SQL queries over a data set and get good results, even if that data has missing values.
+
+% Background
+Traditional imputation methods work over the entire data set and replace all missing values.
+Although this solves the problem of missing data, running a sophisticated imputation algorithm over a large data set can be very expensive.
+A simpler approach might drop all rows with missing values, but not only can this introduce bias into the results, but this may result in discarding all of the data.
+Finally, for many queries, it is not necessary to clean the entire data set, and a significant speed up can be obtained by cleaning only the necessary parts.
+
+% Scope
+\ProjectName{} is designed to enable data exploration, by allowing analysts to run their queries and get good results without dealing with imputation.
+However, we optimize query plans with respect to a heuristic measure of imputation quality, and provide no hard guarantees about the accuracy of the results.
+
+\subsection{Contributions}
+This paper makes the following contributions:
+\begin{itemize}
+\item \textbf{Relational algebra with imputation:}
+  We extend the standard relational algebra with two new operators to represent imputation operations: impute ($\mu$) and drop ($\delta$).
+  Impute fills in missing data values using a regression model (CE-CART)~\cite{burgette2010multiple}.
+  Drop simply drops tuples which contain null values.
+\item \textbf{Model of imputation quality and cost:}
+  We extend the traditional cost model for query plans to incorporate a measure of the quality of the imputations performed.
+  We use the cost model to abstract over the imputation algorithm used.
+  To add an additional imputation technique, it is sufficient to characterize it with two functions: one to describe its running time and one to describe the quality of its results.
+\item \textbf{Query planning with imputation:}
+  We present a novel query planning algorithm which jointly optimizes for running time and the quality of the results.
+  It does so by maintaining the set of Pareto optimal plans according to the cost model.
+  By deferring selection of the final plan, we make it possible for the user to trade off running time and result quality.
+\end{itemize}
+
+% Summary of related work
+
+% Although this manual imputation solves the problem of missing data, in the age of big data it may be very expensive to run an imputation algorithm on an entire dataset.
+% Additionally, it may not be necessary to completely clean the data to make it usable.
+% Some users may be willing to run queries on dirty data, simply ignoring any missing values, as long as they do not have to pay the cost of imputation.
+% Others may want to run queries on a subset of the data, and so do not need to impute
+% every field in every record. Yet others may want to customize the 
+% imputation algorithm for the tradeoffs and demands of a particular domain.
+
+% In this paper, we present \ProjectName{}, a database system which is designed to interact with a dirty dataset as though it were clean.
+% To achieve this goal, we perform imputation on the fly, during query execution.
+% Performing imputation at query time allows our system to impute only the data necessary to run the query, and it allows users to flexibly trade imputation quality for computation time.
 
 %%% Local Variables:
 %%% mode: latex
