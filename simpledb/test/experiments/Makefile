@@ -23,12 +23,14 @@ build:
 
 run_and_analysis: run analysis
 run:
+	docker rm imputedb-run
 	docker run -dit \
+		   --name=imputedb-run \
 		   -v "$(shell pwd):/src/test/experiments" \
-		   --name="imputedb-run" \
+		   --user root \
 		   imputedb \
 		   python run_experiments.py $(EXPERIMENT_SIZE)
-	docker logs --follow imputedb-run | tee output/$(EXPERIMENT_SIZE)/log
+	docker logs --follow imputedb-run | sudo tee output/$(EXPERIMENT_SIZE)/log
 
 analysis:
 	docker run -it --rm \
