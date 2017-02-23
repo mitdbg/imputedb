@@ -18,7 +18,7 @@ tables are well known and can limit approaches. For example, Akande finds that
 one approach (MI-GLM) is prohibitively expensive when attempting to impute on data that
 includes variables with potentially large domains (ten categories in their case).
 In contrast, \ProjectName{} allows users to specify a tradeoff between
-information loss and runtime performance, allowing users to perform queries
+information lost and runtime performance, allowing users to perform queries
 directly on the entire dataset. Furthermore,
 the query planner's imputation is guided by the requirements of each specific
 query's operators, rather than requiring broad assumptions about query
@@ -74,7 +74,7 @@ relational operators, respectively.
 In contrast to this work, \ProjectName{} is targeted at generic value imputation, not necessarily tailored to 
 time-series. The optimizer is not based on equivalence transformations, nor are there guarantees of equal
 results under different conditions. Instead, the optimizer allows users to pick their tradeoff between
-runtime cost and information loss. The search space considered by our optimizer is broader, not just
+runtime cost and information lost. The search space considered by our optimizer is broader, not just
 forecast-first/forecast-last plans, but rather imputation operators can be placed anywhere in the query plan
 (with some restrictions). The novelty of our contribution lies in the successful incorporation of
 imputation operations in non-trivial query plans with cost-based optimization.

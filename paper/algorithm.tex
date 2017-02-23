@@ -53,7 +53,8 @@ Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping 
  
 This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of performance and cost for the current query.
 
-In order to pick a final plan from the frontier, our model introduces a parameter $\alpha$ which encodes an upper bound on the amount of information loss that a user is willing to tolerate relative to the minimum information loss possible given the imputation operations.\todo{Get rid of discussion of information loss. It's a technical term and we don't really tackle it.}
+In order to pick a final plan from the frontier, our model introduces a parameter $\alpha$ which encodes an upper bound on the $\textsc{Loss}$ value that the user is willing
+to tolerate relative to the minimum possible amongst frontier plans.
 
 \begin{definition}
 Let $P$ be a set of plans. For $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Loss}(p) - \min_{p' \in P}(\textsc{Loss}(p')) \leq \alpha$. We denote this as $p^\alpha$.
@@ -98,7 +99,7 @@ which is inversely proportional to the number of total cells available to train 
 Total cells are defined as the product of the number of attributes and the number of tuples.
 Intuitively, imputation
 accuracy \textit{increases} when more complete attributes and complete tuples are available;
-correspondingly, the information loss \textit{decreases} with more values to work
+correspondingly, the information lost \textit{decreases} with more values to work
 with. Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
