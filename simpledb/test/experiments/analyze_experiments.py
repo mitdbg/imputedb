@@ -24,16 +24,16 @@ except ImportError:
 # configure this
 nqueries = 10
 table_headers = [
-    ['income', 'weight'],                     # query 0
-    ['income', 'cholesterol'],                # query 1
-    ['blood_lead'],                           # query 2
-    ['gender', 'blood_pressure_systolic'],    # query 3
-    ['years_edu', 'head_circumference'],      # query 4
-    ['attendedbootcamp', 'income'],           # query 5
-    ['age'],                                  # query 6
-    ['schooldegree', 'moneyforlearning'],     # query 7
-    ['attendedbootcamp', 'gdp_per_capita'],   # query 8
-    ['bootcamppostsalary', 'gdp_per_capita'], # query 9
+    ['income', 'weight'],                                         # query 0
+    ['income', 'cholesterol'],                                    # query 1
+    ['blood_lead'],                                               # query 2
+    ['gender', 'blood_pressure_systolic'],                        # query 3
+    ['age_yrs', 'gender', 'triglyceride', 'waist_circumference'], # query 4
+    ['attendedbootcamp', 'income'],                               # query 5
+    ['age'],                                                      # query 6
+    ['schooldegree', 'moneyforlearning'],                         # query 7
+    ['attendedbootcamp', 'gdp_per_capita'],                       # query 8
+    ['bootcamppostsalary', 'gdp_per_capita'],                     # query 9
 ]
 
 # basic utils
@@ -51,7 +51,7 @@ def myplot(df,alphas=None,**kwargs):
     _, ax = plt.subplots(1)
 
     if alphas is not None:
-        aset = alphas
+        aset = set(alphas).intersection(set(df['alpha']))
     else:
         aset = set(df['alpha'])
 
@@ -162,7 +162,7 @@ def explore(experiments_dir, base=False):
 def main(experiments_dir, output_dir):
     make_plots(experiments_dir, output_dir)
     make_plots(experiments_dir, output_dir, base=True)
-    write_perf_summary(experiments_dir, output_dir)
+    # write_perf_summary(experiments_dir, output_dir)
 
 def make_plots(experiments_dir, output_dir, base=False):
     if not os.path.isdir(experiments_dir):
@@ -186,10 +186,19 @@ def make_plots(experiments_dir, output_dir, base=False):
     by = ['query', 'alpha']
     if base:
         name = 'base_tables'
+        alphas = ['Impute at base tables']
     else:
         name = 'imputedb'
+        alphas = [0.0, 1.0]
+
     planning_times = summarize(data, by, 'plan_time')
     running_times = summarize(data, by, 'run_time')
+
+    # save to CSV
+    planning_times.to_csv(os.path.join(output_dir,
+        'planning_times_{}.csv'.format(name)))
+    running_times.to_csv(os.path.join(output_dir,
+        'running_times_{}.csv'.format(name)))
         
     # plots
     xticks = range(0, nqueries)
@@ -200,8 +209,9 @@ def make_plots(experiments_dir, output_dir, base=False):
     print(planning_times)
     df = planning_times
     plt.figure()
-    myplot(df, alphas=[0.0,1.0],x='query',y='mean',yerr='std',linestyle='none',marker='o')
+    myplot(df, alphas=alphas,x='query',y='mean',yerr='std',linestyle='none',marker='o')
     plt.xlim(xticks[0] - 1, xticks[-1] + 1)
+    plt.ylim(ymin=0)
     plt.xticks(xticks, xlabels)
     plt.xlabel('Query')
     plt.ylabel('Planning Time (ms)')
@@ -212,23 +222,37 @@ def make_plots(experiments_dir, output_dir, base=False):
     plt.figure()
     myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
     plt.xlim(xticks[0] - 1, xticks[-1] + 1)
+    plt.ylim(ymin=0)
     plt.xticks(xticks, xlabels)
     plt.xlabel('Query')
     plt.ylabel('Planning Time (ms)')
     plt.legend(loc='best', numpoints=1)
     plt.savefig(os.path.join(output_dir, 'planning_times_all_%s.png' % name))
       
+    # plot 3: running times,
     print('running_times ({})'.format(name))
     print(running_times)
     df = running_times
     plt.figure()
-    myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
+    myplot(df, alphas=alphas, x='query',y='mean',yerr='std',linestyle='none',marker='o')
     plt.xlim(xticks[0] - 1, xticks[-1] + 1)
+    plt.ylim(ymin=0)
     plt.xticks(xticks, xlabels)
     plt.xlabel('Query')
     plt.ylabel('Running Time (ms)')
     plt.legend(loc='best', numpoints=1)
     plt.savefig(os.path.join(output_dir, 'running_times_%s.png' % name))
+
+    # plot 4: running times, all alpha
+    plt.figure()
+    myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
+    plt.xlim(xticks[0] - 1, xticks[-1] + 1)
+    plt.ylim(ymin=0)
+    plt.xticks(xticks, xlabels)
+    plt.xlabel('Query')
+    plt.ylabel('Running Time (ms)')
+    plt.legend(loc='best', numpoints=1)
+    plt.savefig(os.path.join(output_dir, 'running_times_all_%s.png' % name))
 
 def write_perf_summary(experiments_dir, output_dir):
     if not os.path.isdir(experiments_dir):
