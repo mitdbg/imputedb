@@ -29,7 +29,7 @@ def run_medium_experiment():
 
     run_experiment(this_output_dir, iters, min_alpha, max_alpha, step)
 
-def run_experiment_large():
+def run_large_experiment():
     this_output_dir = os.path.join(output_dir, "large")
 
     iters     = 500
@@ -65,6 +65,6 @@ if __name__ == "__main__":
     elif experiment_size == "medium":
         run_medium_experiment()
     elif experiment_size == "large":
-        run_medium_experiment()
+        run_large_experiment()
     else:
         raise Error
