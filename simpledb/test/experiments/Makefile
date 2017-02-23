@@ -23,10 +23,12 @@ build:
 
 run_and_analysis: run analysis
 run:
-	docker run -it --rm \
+	docker run -dit --rm \
 		   -v "$(shell pwd):/src/test/experiments" \
+		   --name="imputedb-run" \
 		   imputedb \
 		   python run_experiments.py $(EXPERIMENT_SIZE)
+	docker logs --follow imputedb-run | tee output/$(EXPERIMENT_SIZE)/log
 
 analysis:
 	docker run -it --rm \
@@ -41,6 +43,6 @@ explore:
 		   -v "$(shell pwd)/output:/data" \
 		   -v "$(shell pwd):/src" \
 		   --user root \
-	           jupyter/datascience-notebook
+	           jupyter/datascience-notebook python
 
 .PHONY: help build run explore

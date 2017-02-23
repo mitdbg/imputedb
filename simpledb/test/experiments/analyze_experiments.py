@@ -116,6 +116,7 @@ def get_timing_results(experiments_dir, base=False):
     # Iterate through queries, alpha, reading 'timing.csv' for each.
     for f in glob.glob(experiments_dir + os.path.sep + "q*/alpha*/timing.csv"):
         # alpha = int(alpha_dir[len("alpha"):])/1000.0
+        print('Processing {}...'.format(f))
         df0 = pd.read_csv(f)
         df = df.append(df0)
 
@@ -125,29 +126,29 @@ def explore(experiments_dir):
     if not os.path.isdir(experiments_dir):
         raise FileNotFoundError
 
-    experiments = get_timing_results(experiments_dir)
+    # experiments = get_timing_results(experiments_dir)
     base_tables = get_timing_results(experiments_dir, base=True)
-    experiments['is_experiment'] = True
+    # experiments['is_experiment'] = True
     base_tables['is_experiment'] = False
     base_tables['alpha'] = 'Impute at base tables'
 
-    experiments = drop_warmup(experiments, ['query', 'alpha'], drop=20)
+    # experiments = drop_warmup(experiments, ['query', 'alpha'], drop=20)
     base_tables = drop_warmup(base_tables, ['query', 'alpha'], drop=20)
 
     # time measures
     by = ['query', 'alpha']
     planning_times = {}
-    planning_times['imputedb'] = summarize(experiments, by, 'plan_time')
+    # planning_times['imputedb'] = summarize(experiments, by, 'plan_time')
     planning_times['base_tables'] = summarize(base_tables, by, 'plan_time')
 
     running_times = {}
-    running_times['imputedb'] = summarize(experiments, by, 'run_time')
+    # running_times['imputedb'] = summarize(experiments, by, 'run_time')
     running_times['base_tables'] = summarize(base_tables, by, 'run_time')
 
     print(planning_times)
     print(running_times)
 
-    return (planning_times, running_times, experiments, base_table)
+    # return (planning_times, running_times, experiments, base_table)
 
 def main(experiments_dir, output_dir):
     if not os.path.isdir(experiments_dir):
@@ -205,6 +206,7 @@ def main(experiments_dir, output_dir):
         plt.legend(loc='best')
         plt.savefig(os.path.join(output_dir, 'running_times_%s.png' % name))
 
+def write_perf_summary(experiments_dir, table_headers):
     experiment_results = get_query_results(experiments_dir, table_headers)
     base_results = get_query_results(experiments_dir, table_headers, base=True)
     perf = []
