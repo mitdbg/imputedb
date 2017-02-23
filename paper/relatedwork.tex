@@ -39,6 +39,22 @@ detect dirty values, whether missing or otherwise, and rectify the errors if
 possible. A survey of methods and systems is provided in
 \cite{hellerstein2008quantitative}.
 
+In \cite{wolf2007query}, queries over databases with missing values are
+processed in a statistical approach, taking advantage of correlations between
+variables. Both tuples that match the original query as well as a ranking of
+tuples with incomplete data that may match are returned. Our work differs in
+that we allow any well-formed statistical technique to be used for imputation
+and focus on returning results to the analyst as if the database had been
+complete.
+
+Designers of data stream processing systems frequently confront missing values
+and consider them carefully in query processing. Often, if sensor error is the
+cause of missing values, values can be imputed with high confidence. In
+\cite{fernandez2009inter}, feedback punctuation is used to dynamically
+reconfigure the query plan as data continue to arrive for state-dependent
+optimizations. In this framework, expensive imputations can be avoided as
+real-time conditions change.
+
 BayesDB \cite{mansinghka2015bayesdb} provides users with a simple interface to 
 leverage statistical inference techniques in a database. Non-experts
 can use a simple declarative language (an extension of SQL), to specify models
