@@ -60,7 +60,7 @@ public abstract class AImputedPlanCache implements ImputedPlanCache {
 		}
 
 		public boolean dominates(Value o) {
-			return plan.loss().get() < o.plan.loss().get() && plan.time() < o.plan.time();
+			return plan.loss().get() <= o.plan.loss().get() && plan.time() <= o.plan.time();
 		}
 
 		@Override
