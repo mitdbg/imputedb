@@ -20,6 +20,7 @@ import java.util.function.Function;
 
 
 public class ExperimentRunner {
+    private static final double ALPHA_EPSILON = 1e-10;
     private final boolean imputeAtBase;
     private final double minAlpha;
     private final double maxAlpha;
@@ -169,7 +170,7 @@ public class ExperimentRunner {
         init();
         this.queries = getQueries();
         for (int q = 0; q < queries.length; q++) {
-            for (double alpha = this.minAlpha; alpha <= this.maxAlpha; alpha += this.step) {
+            for (double alpha = this.minAlpha; alpha <= (this.maxAlpha + ALPHA_EPSILON); alpha += this.step) {
                 openTimeWriter(q, alpha);
                 for (int i = 0; i < this.iters; i++) {
                     openOtherWriters(q, alpha, i);
