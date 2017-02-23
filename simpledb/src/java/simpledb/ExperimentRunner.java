@@ -31,10 +31,10 @@ public class ExperimentRunner {
     private FileWriter timesFileWriter;
     private FileWriter resultsFileWriter;
     private FileWriter plansFileWriter;
-	private String[] queries;
+    private String[] queries;
 
     private ExperimentRunner(boolean imputeAtBase, double minAlpha, double maxAlpha, double step, int iters,
-		String catalog, String queries, String outputBaseDir)
+        String catalog, String queries, String outputBaseDir)
             throws IOException {
         this.imputeAtBase = imputeAtBase;
         this.minAlpha = minAlpha;
@@ -43,7 +43,11 @@ public class ExperimentRunner {
         this.iters = iters;
         this.catalogPath = Paths.get(catalog);
         this.queriesPath = Paths.get(queries);
-        this.outputBaseDir = Paths.get(outputBaseDir);
+        if (imputeAtBase){
+            this.outputBaseDir = Paths.get(outputBaseDir, "base");
+        } else {
+            this.outputBaseDir = Paths.get(outputBaseDir);
+        }
     }
 
     public ExperimentRunner(int iters, String catalog, String queries, String outputDir)
@@ -52,7 +56,7 @@ public class ExperimentRunner {
     }
 
     public ExperimentRunner(double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries,
-		String outputDir)
+        String outputDir)
             throws IOException {
         this(false, minAlpha, maxAlpha, step, iters, catalog, queries, outputDir);
     }
@@ -72,11 +76,11 @@ public class ExperimentRunner {
     }
 
     private void openTimeWriter(int q, double alpha) throws IOException {
-	Path outputDir = outputBaseDir.resolve(String.format("q%02d/alpha%03.0f", q, alpha*1000));
-	if (Files.notExists(outputDir)){
-		Files.createDirectories(outputDir);
-	}
-	this.timesFileWriter = new FileWriter(outputDir.resolve("timing.csv").toFile());
+    Path outputDir = outputBaseDir.resolve(String.format("q%02d/alpha%03.0f", q, alpha*1000));
+    if (Files.notExists(outputDir)){
+        Files.createDirectories(outputDir);
+    }
+    this.timesFileWriter = new FileWriter(outputDir.resolve("timing.csv").toFile());
         this.timesFileWriter.write("query,alpha,iter,plan_time,run_time,plan_hash\n");
     }
 
@@ -85,12 +89,12 @@ public class ExperimentRunner {
     }
 
     private void openOtherWriters(int q, double alpha, int iter) throws IOException {
-	Path outputDir = outputBaseDir.resolve(String.format("q%02d/alpha%03.0f/it%05d", q, alpha*1000, iter));
-	if (Files.notExists(outputDir)){
-		Files.createDirectories(outputDir);
-	}
-	this.resultsFileWriter = new FileWriter(outputDir.resolve("result.txt").toFile());
-	this.plansFileWriter = new FileWriter(outputDir.resolve("plan.txt").toFile());
+    Path outputDir = outputBaseDir.resolve(String.format("q%02d/alpha%03.0f/it%05d", q, alpha*1000, iter));
+    if (Files.notExists(outputDir)){
+        Files.createDirectories(outputDir);
+    }
+    this.resultsFileWriter = new FileWriter(outputDir.resolve("result.txt").toFile());
+    this.plansFileWriter = new FileWriter(outputDir.resolve("plan.txt").toFile());
     }
 
     private void closeOtherWriters() throws IOException {
@@ -115,7 +119,7 @@ public class ExperimentRunner {
     private void run(int q, double alpha, int iter)
             throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
 
-	String query = queries[q] + ";";
+    String query = queries[q] + ";";
 
         // time planning
         Instant planStart = Instant.now();
@@ -142,7 +146,7 @@ public class ExperimentRunner {
 
         // Write results
         writeTime(q, alpha, iter, Duration.between(planStart, planEnd).toMillis(),
-			Duration.between(runStart, runEnd).toMillis(), plan.hashCode());
+            Duration.between(runStart, runEnd).toMillis(), plan.hashCode());
         writeResult(q, alpha, iter, results.toString());
         writePlan(q, alpha, iter, plan);
     }
@@ -164,11 +168,11 @@ public class ExperimentRunner {
             throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
         init();
         this.queries = getQueries();
-		for (int q = 0; q < queries.length; q++) {
-			for (double alpha = this.minAlpha; alpha <= this.maxAlpha; alpha += this.step) {
-				openTimeWriter(q, alpha);
+        for (int q = 0; q < queries.length; q++) {
+            for (double alpha = this.minAlpha; alpha <= this.maxAlpha; alpha += this.step) {
+                openTimeWriter(q, alpha);
                 for (int i = 0; i < this.iters; i++) {
-			openOtherWriters(q, alpha, i);
+                    openOtherWriters(q, alpha, i);
                     System.out.println("Running query " + q + ", alpha " + alpha + ", iter " + i);
                     run(q, alpha, i);
                     closeOtherWriters();
