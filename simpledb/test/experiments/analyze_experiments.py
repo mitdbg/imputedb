@@ -47,12 +47,23 @@ def summarize(df, by, a):
     ops = {'mean': np.mean, 'std': np.std}
     return df.groupby(by)[a].agg(ops).reset_index()
   
-def myplot(df,**kwargs):
+def myplot(df,alphas=None,**kwargs):
     _, ax = plt.subplots(1)
-    for a in set(df['alpha']):
+
+    if alphas is not None:
+        aset = alphas
+    else:
+        aset = set(df['alpha'])
+
+    if set(aset).issubset(set([0.0,1.0])):
+        label_str = r'$\alpha=%.0f$'
+    else:
+        label_str = r'$\alpha=%.2f$'
+
+    for a in aset:
         data = df[df['alpha'] == a]
         try:
-            data.plot(ax=ax, label=r'$\alpha=%.0f$' % a, **kwargs)
+            data.plot(ax=ax, label=(label_str % a), **kwargs)
         except TypeError:
             data.plot(ax=ax, label=a, **kwargs)
         # get around bug in legend drawing in pandas
@@ -189,13 +200,23 @@ def make_plots(experiments_dir, output_dir, base=False):
     print(planning_times)
     df = planning_times
     plt.figure()
+    myplot(df, alphas=[0.0,1.0],x='query',y='mean',yerr='std',linestyle='none',marker='o')
+    plt.xlim(xticks[0] - 1, xticks[-1] + 1)
+    plt.xticks(xticks, xlabels)
+    plt.xlabel('Query')
+    plt.ylabel('Planning Time (ms)')
+    plt.legend(loc='best', numpoints=1)
+    plt.savefig(os.path.join(output_dir, 'planning_times_%s.png' % name))
+
+    # plot 2: planning times, all alpha
+    plt.figure()
     myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
     plt.xlim(xticks[0] - 1, xticks[-1] + 1)
     plt.xticks(xticks, xlabels)
     plt.xlabel('Query')
     plt.ylabel('Planning Time (ms)')
-    plt.legend(loc='best')
-    plt.savefig(os.path.join(output_dir, 'planning_times_%s.png' % name))
+    plt.legend(loc='best', numpoints=1)
+    plt.savefig(os.path.join(output_dir, 'planning_times_all_%s.png' % name))
       
     print('running_times ({})'.format(name))
     print(running_times)
@@ -206,7 +227,7 @@ def make_plots(experiments_dir, output_dir, base=False):
     plt.xticks(xticks, xlabels)
     plt.xlabel('Query')
     plt.ylabel('Running Time (ms)')
-    plt.legend(loc='best')
+    plt.legend(loc='best', numpoints=1)
     plt.savefig(os.path.join(output_dir, 'running_times_%s.png' % name))
 
 def write_perf_summary(experiments_dir, output_dir):
