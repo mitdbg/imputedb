@@ -21,6 +21,21 @@ try:
 except ImportError:
     from io import StringIO
 
+# configure this
+nqueries = 10
+table_headers = [
+    ['income', 'weight'],                     # query 0
+    ['income', 'cholesterol'],                # query 1
+    ['blood_lead'],                           # query 2
+    ['gender', 'blood_pressure_systolic'],    # query 3
+    ['years_edu', 'head_circumference'],      # query 4
+    ['attendedbootcamp', 'income'],           # query 5
+    ['age'],                                  # query 6
+    ['schooldegree', 'moneyforlearning'],     # query 7
+    ['attendedbootcamp', 'gdp_per_capita'],   # query 8
+    ['bootcamppostsalary', 'gdp_per_capita'], # query 9
+]
+
 # basic utils
 def drop_warmup(df, by, drop=20):
     gb = df.groupby(by)
@@ -106,6 +121,34 @@ def get_timing_results(experiments_dir, base=False):
 
     return df
 
+def explore(experiments_dir):
+    if not os.path.isdir(experiments_dir):
+        raise FileNotFoundError
+
+    experiments = get_timing_results(experiments_dir)
+    base_tables = get_timing_results(experiments_dir, base=True)
+    experiments['is_experiment'] = True
+    base_tables['is_experiment'] = False
+    base_tables['alpha'] = 'Impute at base tables'
+
+    experiments = drop_warmup(experiments, ['query', 'alpha'], drop=20)
+    base_tables = drop_warmup(base_tables, ['query', 'alpha'], drop=20)
+
+    # time measures
+    by = ['query', 'alpha']
+    planning_times = {}
+    planning_times['imputedb'] = summarize(experiments, by, 'plan_time')
+    planning_times['base_tables'] = summarize(base_tables, by, 'plan_time')
+
+    running_times = {}
+    running_times['imputedb'] = summarize(experiments, by, 'run_time')
+    running_times['base_tables'] = summarize(base_tables, by, 'run_time')
+
+    print(planning_times)
+    print(running_times)
+
+    return (planning_times, running_times, experiments, base_table)
+
 def main(experiments_dir, output_dir):
     if not os.path.isdir(experiments_dir):
         raise FileNotFoundError
@@ -134,7 +177,7 @@ def main(experiments_dir, output_dir):
     running_times['base_tables'] = summarize(base_tables, by, 'run_time')
         
     # plots
-    xticks = range(0, 7)
+    xticks = range(0, nqueries)
     xlabels = ["Query %i" % (q + 1) for q in xticks]
 
     try:
@@ -162,19 +205,6 @@ def main(experiments_dir, output_dir):
         plt.legend(loc='best')
         plt.savefig(os.path.join(output_dir, 'running_times_%s.png' % name))
 
-    # compare actual query results
-    table_headers = [
-        ['income', 'weight'],                     # query 0
-        ['income', 'cholesterol'],                # query 1
-        ['blood_lead'],                           # query 2
-        ['gender', 'blood_pressure_systolic'],    # query 3
-        ['years_edu', 'head_circumference'],      # query 4
-        ['attendedbootcamp', 'income'],           # query 5
-        ['age'],                                  # query 6
-        ['schooldegree', 'moneyforlearning'],     # query 7
-        ['attendedbootcamp', 'gdp_per_capita'],   # query 8
-        ['bootcamppostsalary', 'gdp_per_capita'], # query 9
-    ]
     experiment_results = get_query_results(experiments_dir, table_headers)
     base_results = get_query_results(experiments_dir, table_headers, base=True)
     perf = []
@@ -198,9 +228,21 @@ def main(experiments_dir, output_dir):
             float_format='%.2f', index=False)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("usage: python analyze_experiments.py <experiment-output-dir>")
+    def print_usage_and_exit():
+        print("usage: python analyze_experiments.py [--explore] <experiment-output-dir>")
         sys.exit(1)
 
-    experiment_dir = sys.argv[1]
-    main(experiment_dir, os.path.join(experiment_dir, "analysis"))
+    if len(sys.argv) == 2:
+        experiment_dir = sys.argv[1]
+        main(experiment_dir, os.path.join(experiment_dir, "analysis"))
+    elif len(sys.argv) == 3:
+        # Doesn't do much
+        try:
+            j = sys.argv.index("--explore")
+            k = 1 + (j==1)
+            experiments_dir = sys.argv[k]
+            explore(experiments_dir)
+        except ValueError:
+            print_usage_and_exit()
+    else:
+        print_usage_and_exit()
