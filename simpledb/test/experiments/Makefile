@@ -23,7 +23,7 @@ build:
 
 run_and_analysis: run analysis
 run:
-	docker rm imputedb-run
+	@docker rm -f imputedb-run || echo "No existing imputedb-run containers."
 	docker run -dit \
 		   --name=imputedb-run \
 		   -v "$(shell pwd):/src/test/experiments" \

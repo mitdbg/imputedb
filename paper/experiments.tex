@@ -89,29 +89,34 @@ Given that the data had been cleaned, we uniformly introduced missing values acr
 of 671,153 rows and 37 integer columns.
 
 \subsection{Queries}
-We collect a set of queries (Table~\ref{fig:queries}) that we think are both representative, in that they could reasonably be written by a user in the course of data analysis, and interesting to plan.
+We collect a set of queries (Table~\ref{fig:queries}) that we think are both representative,
+in that they could reasonably be written by a user in the course of data analysis, and
+interesting to plan.
 
 The queries on the CDC NHANES data consist not only of projections and selections,
 but also interesting joins and aggregates. Our aim was to craft meaningful queries
 that would provide performance figures relevant to practitioners who may use
 similar datasets.
 
-Queries 1-5 are on the CDC data. In Query~\ref{q1}, we calculate the average height for users based on their income data. In Query~\ref{q2},
-we compare cholesterol levels for individuals at either tail of the income
-spectrum and above a certain weight. In Query~\ref{q3},
-we extract the maximum blood lead levels for children under the age of 6 years. In Query ~\ref{q4}, we calculate the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. In Query ~\ref{q5}, we extract the age (in months), creatine level, and head circumference, for subjects with high creatine levels.
+Queries 1-5 are on the CDC data. In Query~\ref{q1}, we calculate the average height for
+users based on their income data. In Query~\ref{q2}, we compare cholesterol levels for
+individuals with low, medium, and high incomes spectrum and above a certain weight. In
+Query~\ref{q3}, we extract the maximum blood lead levels for children under the age of 6
+years. In Query~\ref{q4}, we calculate the average systolic blood pressure, by gender, for
+subjects with a body mass index indicating obesity. In Query~\ref{q5}, we extract the age,
+gender, triglyceride levels, and waist circumference from individuals with high triglyceride
+levels.
 
-% Perhaps more school makes your head bigger :)
-
-Queries 6-10 are on the FCC data. In Query~\ref{q6}, we calculate the average income for survey participants,
-based on their bootcamp attendance. In Query~\ref{q7} estimates the average
-age of women from the United States who participated. In Query~\ref{q8}, we 
+Queries 6-10 are on the FCC data. In Query~\ref{q6}, we calculate the average income for
+survey participants, based on their bootcamp attendance. In Query~\ref{q7} estimates the
+average age of women from the United States who participated. In Query~\ref{q8}, we
 calculate the average amount of money survey participants with student debt destined to
-learning based on their school degree. In Query~\ref{q9}, we join the FCC data with a reference table provided
-by the World Bank which summarizes GDP per Capita across various
-countries\cite{worldbank-data}. The query calculates the average GDP-per-capita for participants based on whether or not they
-attended a bootcamp. Finally, in Query ~\ref{q10}, we identify individuals from countries with GDP per-capita of \$5000 or
-less who earn \$100,000 or more post-bootcamp.
+learning based on their school degree. In Query~\ref{q9}, we join the FCC data with a
+reference table provided by the World Bank which summarizes GDP per-capita across various
+countries\cite{worldbank-data}. The query calculates the average GDP per-capita for
+participants based on whether or not they attended a bootcamp. Finally, in Query~\ref{q10},
+we identify individuals from countries with GDP per-capita of \$5000 or less who earn
+\$100,000 or more post-bootcamp.
 
 Note that for all queries we have enumerated strings and encoded them with
 an appropriate integer value.
@@ -143,16 +148,17 @@ an appropriate integer value.
 %\end{table*}
 
 %\todobox{actually run experiments and rewrite this section}{
-All experiments were run on a single AWS EC2 c4.xlarge instance, with 4 2.9 GHz Intel Xeon E5-2666 v3 virtual CPUs and 7.5 GiB of main memory on Debian Linux.
+All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
+four 2.9 GHz Intel Xeon E5-2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
 
-Figure~\ref{fig:runtimes} provides a summary of the performance results. The first plot shows average running times for \ProjectName{}
-plans in two configurations: quality-optimized and runtime-optimized. The second plot shows, for comparison, the 
-average running times required for each query when performing imputation at the base tables.
-In all cases, running a query through \ProjectName{} is cheaper than 
-imputing a single base table, with the added advantage of imputation tailored to the query. This latter point adds
-significant flexibility to the user, who no longer needs to decide apriori what imputation strategy they have to stick to
-for all their queries.
-
+Figure~\ref{fig:runtimes} provides a summary of the performance results. The first plot
+shows average running times for \ProjectName{} plans in two configurations:
+quality-optimized and runtime-optimized. The second plot shows, for comparison, the average
+running times required for each query when performing imputation at the base tables.  In all
+cases, running a query through \ProjectName{} is cheaper than imputing a single base table,
+with the added advantage of imputation tailored to the query. This latter point adds
+significant flexibility to the user, who no longer needs to decide apriori what imputation
+strategy they have to stick to for all their queries.
 
 \begin{figure}
 \begin{subfigure}{\linewidth}
@@ -166,13 +172,17 @@ for all their queries.
 \caption{Query runtimes with imputation on base tables}
 \label{subfig:base-runtime-queries}
 \end{subfigure}
-\caption{Comparing \ProjectName{} runtimes for each query (\ref{subfig:project-runtime-queries}) with the runtime for a query when base-table imputations are used (\ref{subfig:base-runtime-queries})}
+\caption{Comparing \ProjectName{} runtimes for each query
+    (\ref{subfig:project-runtime-queries}) with the runtime for a query when base-table
+    imputations are used (\ref{subfig:base-runtime-queries})}
 \label{fig:runtimes}
 \end{figure}
 
 %TODO MJS
-Figure~\ref{fig:plantimes} provides a summary of the planning times for each of the queries.  We exclude the planning time for queries that impute at base table, as that
-requires no planning. On average, planning constituted 38 percent of total runtime for plans generated by \ProjectName{}.
+Figure~\ref{fig:plantimes} provides a summary of the planning times for each of the queries.
+We exclude the planning time for queries that impute at base table, as that requires no
+planning. On average, planning constituted 38 percent of total runtime for plans generated
+by \ProjectName{}.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/planning_times_imputedb.png}
@@ -180,14 +190,16 @@ requires no planning. On average, planning constituted 38 percent of total runti
 \label{fig:plantimes}
 \end{figure}
 
-Table~\ref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for \ProjectName{}'s query results when compared to 
-running imputation on the base tables and executing the query on the
+Table~\ref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for
+\ProjectName{}'s query results when compared to running imputation on the base tables and
+executing the query on the
 cleaned data. Each query was run 10 %TODO MJS
-iterations in both settings and then results from the two approaches were paired up and compared tuple-wise. We average tuple-wise
-absolute percentage deviations within each iteration of a query, and we report this value averaged over all iterations.
-We can see that optimizing for quality indeed reduces the SMAPE of query results. In general, the SMAPE relative to the
-base-imputation approach are low in all cases, indicating that on-the-fly imputation produces similar results to
-imputation at the base tables.
+iterations in both settings and then results from the two approaches were paired up and
+compared tuple-wise. We average tuple-wise absolute percentage deviations within each
+iteration of a query, and we report this value averaged over all iterations.  We can see
+that optimizing for quality indeed reduces the SMAPE of query results. In general, the SMAPE
+relative to the base-imputation approach are low in all cases, indicating that on-the-fly
+imputation produces similar results to imputation at the base tables.
 
 \begin{table}
 \centering
@@ -197,17 +209,21 @@ imputation at the base tables.
 \end{table}
 
 % TODO MJS
-In many cases, applying the imputation step at the base table simply is not an option. To illustrate the increasing difficulty of such an approach
-as datasets scale, we used a simple aggregate query over the ACS dataset in our final experiment(Figure~\ref{query-acs}). Applying the imputation operation to the base table
-is extremely expensive, in our case the process did not terminate within 20 minutes. In contrast, \ProjectName{} executes a quality-optimized version
-in 9 seconds and a runtime-optimized version in 1 second. This highlights the potential benefit of using our system for early data exploration.
+In many cases, applying the imputation step at the base table simply is not an option. To
+illustrate the increasing difficulty of such an approach as datasets scale, we used a simple
+aggregate query over the ACS dataset in our final experiment(Figure~\ref{query-acs}).
+Applying the imputation operation to the base table is extremely expensive, in our case the
+process did not terminate within 20 minutes. In contrast, \ProjectName{} executes a
+quality-optimized version in 9 seconds and a runtime-optimized version in 1 second. This
+highlights the potential benefit of using our system for early data exploration.
 
 \begin{figure}
 \begin{lstlisting}
 SELECT AVG(c0) FROM acs_dirty;
 \end{lstlisting}
-\caption{A simple aggregate query on ACS data. Imputing the base table is undesirable (did not terminate within 20min). \ProjectName's
-quality-optimized and performance-optimized query execute in 9 seconds and 1 second, respectively.
+\caption{A simple aggregate query on ACS data. Imputing the base table is prohibitive.
+    \ProjectName's quality-optimized and performance-optimized
+    query execute in 9 seconds and 1 second, respectively.
 }%TODO MJS
 \label{query-acs}
 \end{figure}
