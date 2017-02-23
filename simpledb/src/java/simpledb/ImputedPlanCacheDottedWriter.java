@@ -29,16 +29,17 @@ public class ImputedPlanCacheDottedWriter implements ImputedPlanCacheWriter {
 		for (AImputedPlanCache.Value val : cache.bestPlans(tables)) {
 			ImputedPlan plan = val.plan;
 			StringBuilder prefix = new StringBuilder();
+			prefix.append("queryplan_loss=");
 			prefix.append(plan.loss().get());
-			prefix.append(" ");
+			prefix.append("_time=");
 			prefix.append(plan.time());
-			prefix.append(" ");
+			prefix.append("_card=");
 			try {
 				prefix.append(plan.cardinality());
 			} catch (UnsupportedOperationException e) {
 				prefix.append("??");
 			}
-			prefix.append(" ");
+			prefix.append("_");
 			
 			try {
 				File outFile = File.createTempFile(prefix.toString(), ".dot", outDir);

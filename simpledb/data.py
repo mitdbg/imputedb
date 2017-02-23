@@ -31,7 +31,7 @@ demo_columns = {
   'RIDAGEMN' : 'age_months',           # numeric
   'DMDCITZN' : 'is_citizen',           # categorical
   'DMDYRSUS' : 'time_in_us',           # numeric
-  'DMDEDUC3' : 'years_edu_children',   # categorical
+  'DMDEDUC3' : 'years_edu',            # categorical
   'INDHHIN2' : 'income',               # categorical
   'DMDHHSIZ' : 'num_people_household', # categorical
   'DMDMARTL' : 'marital_status'        # categorical

@@ -6,7 +6,6 @@ import Zql.ZStatement;
 import Zql.ZqlParser;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,11 +27,14 @@ public class ExperimentRunner {
     private final int iters;
     private final Path catalogPath;
     private final Path queriesPath;
-    private final FileWriter timesFileWriter;
-    private final FileWriter resultsFileWriter;
-    private final FileWriter plansFileWriter;
+    private final Path outputBaseDir;
+    private FileWriter timesFileWriter;
+    private FileWriter resultsFileWriter;
+    private FileWriter plansFileWriter;
+    private String[] queries;
 
-    private ExperimentRunner(boolean imputeAtBase, double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries, String outputDir)
+    private ExperimentRunner(boolean imputeAtBase, double minAlpha, double maxAlpha, double step, int iters,
+        String catalog, String queries, String outputBaseDir)
             throws IOException {
         this.imputeAtBase = imputeAtBase;
         this.minAlpha = minAlpha;
@@ -41,9 +43,11 @@ public class ExperimentRunner {
         this.iters = iters;
         this.catalogPath = Paths.get(catalog);
         this.queriesPath = Paths.get(queries);
-        this.timesFileWriter = new FileWriter(new File(outputDir, "times.csv"));
-        this.resultsFileWriter = new FileWriter(new File(outputDir, "results.txt"));
-        this.plansFileWriter = new FileWriter(new File(outputDir, "plans.txt"));
+        if (imputeAtBase){
+            this.outputBaseDir = Paths.get(outputBaseDir, "base");
+        } else {
+            this.outputBaseDir = Paths.get(outputBaseDir);
+        }
     }
 
     public ExperimentRunner(int iters, String catalog, String queries, String outputDir)
@@ -51,7 +55,8 @@ public class ExperimentRunner {
         this(true, 0.0, 0.0, 1.0, iters, catalog, queries, outputDir);
     }
 
-    public ExperimentRunner(double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries, String outputDir)
+    public ExperimentRunner(double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries,
+        String outputDir)
             throws IOException {
         this(false, minAlpha, maxAlpha, step, iters, catalog, queries, outputDir);
     }
@@ -60,16 +65,6 @@ public class ExperimentRunner {
         Database.getCatalog().clear();
         Database.getCatalog().loadSchema(this.catalogPath.toAbsolutePath().toString());
         TableStats.computeStatistics();
-
-        this.timesFileWriter.write("query,alpha,iter,plan_time,run_time,plan_hash\n");
-        this.resultsFileWriter.write("Query Results\n");
-        this.plansFileWriter.write("Query Plans\n");
-    }
-
-    public void close() throws IOException {
-        this.timesFileWriter.close();
-        this.resultsFileWriter.close();
-        this.plansFileWriter.close();
     }
 
     private static DbIterator planQuery(String query, Function<Void, LogicalPlan> planFactory)
@@ -80,35 +75,59 @@ public class ExperimentRunner {
         return pp.handleQueryStatementSilent((ZQuery)s, new TransactionId()).getPhysicalPlan();
     }
 
-    private void writeTime(int id, double alpha, int iter, long planTime, long runTime, int planHash) throws IOException {
-        this.timesFileWriter.write(String.format("%d,%f,%d,%d,%d,%s\n", id, alpha, iter, planTime, runTime, planHash));
+    private void openTimeWriter(int q, double alpha) throws IOException {
+    Path outputDir = outputBaseDir.resolve(String.format("q%02d/alpha%03.0f", q, alpha*1000));
+    if (Files.notExists(outputDir)){
+        Files.createDirectories(outputDir);
+    }
+    this.timesFileWriter = new FileWriter(outputDir.resolve("timing.csv").toFile());
+        this.timesFileWriter.write("query,alpha,iter,plan_time,run_time,plan_hash\n");
     }
 
-    private void writeResult(int id, double alpha, String results) throws IOException{
-        this.resultsFileWriter.write("Query " + id + "\n");
-        this.resultsFileWriter.write("Alpha: " + alpha + "\n");
-        this.resultsFileWriter.write("Results: \n");
+    private void closeTimeWriter() throws IOException {
+        this.timesFileWriter.close();
+    }
+
+    private void openOtherWriters(int q, double alpha, int iter) throws IOException {
+    Path outputDir = outputBaseDir.resolve(String.format("q%02d/alpha%03.0f/it%05d", q, alpha*1000, iter));
+    if (Files.notExists(outputDir)){
+        Files.createDirectories(outputDir);
+    }
+    this.resultsFileWriter = new FileWriter(outputDir.resolve("result.txt").toFile());
+    this.plansFileWriter = new FileWriter(outputDir.resolve("plan.txt").toFile());
+    }
+
+    private void closeOtherWriters() throws IOException {
+        this.resultsFileWriter.close();
+        this.plansFileWriter.close();
+    }
+
+    private void writeTime(int q, double alpha, int iter, long planTime, long runTime, int planHash) throws IOException {
+        this.timesFileWriter.write(String.format("%d,%f,%d,%d,%d,%s\n", q, alpha, iter, planTime, runTime, planHash));
+    }
+
+    private void writeResult(int q, double alpha, int iter, String results) throws IOException{
         this.resultsFileWriter.write(results);
-        this.resultsFileWriter.write("\n\n\n");
+        this.resultsFileWriter.write("\n");
     }
 
-    private void writePlan(int id, double alpha, String plan) throws IOException{
-        this.plansFileWriter.write("Query " + id + "\n");
-        this.plansFileWriter.write("Alpha: " + alpha + "\n");
-        this.plansFileWriter.write("Plan: \n");
+    private void writePlan(int q, double alpha, int iter, String plan) throws IOException{
         this.plansFileWriter.write(plan);
-        this.plansFileWriter.write("\n\n\n");
+        this.plansFileWriter.write("\n");
     }
 
-    private void run(String query, int id, double alpha, int iter)
+    private void run(int q, double alpha, int iter)
             throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
+
+    String query = queries[q] + ";";
+
         // time planning
         Instant planStart = Instant.now();
         DbIterator imputed  = planQuery(query, x -> new ImputedLogicalPlan(alpha, this.imputeAtBase));
         Instant planEnd = Instant.now();
 
-        StringBuilder results = new StringBuilder();
         // time running
+        StringBuilder results = new StringBuilder();
         Instant runStart = Instant.now();
         imputed.open();
         while (imputed.hasNext()) {
@@ -120,15 +139,16 @@ public class ExperimentRunner {
             }
         }
         Instant runEnd = Instant.now();
-        // getting plan run
+
+        // get plan run
         QueryPlanVisualizer viz = new QueryPlanVisualizer();
         String plan = viz.getQueryPlanTree(imputed);
 
-        // write out times
-        writeTime(id, alpha, iter, Duration.between(planStart, planEnd).toMillis(), Duration.between(runStart, runEnd).toMillis(), plan.hashCode());
-
-        writeResult(id, alpha, results.toString());
-        writePlan(id, alpha, plan);
+        // Write results
+        writeTime(q, alpha, iter, Duration.between(planStart, planEnd).toMillis(),
+            Duration.between(runStart, runEnd).toMillis(), plan.hashCode());
+        writeResult(q, alpha, iter, results.toString());
+        writePlan(q, alpha, iter, plan);
     }
 
     private String[] getQueries() throws IOException {
@@ -147,15 +167,18 @@ public class ExperimentRunner {
     public void runExperiments()
             throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
         init();
-        String[] queries = getQueries();
-        for (double alpha = this.minAlpha; alpha <= this.maxAlpha; alpha += this.step) {
-            for (int q = 0; q < queries.length; q++) {
+        this.queries = getQueries();
+        for (int q = 0; q < queries.length; q++) {
+            for (double alpha = this.minAlpha; alpha <= this.maxAlpha; alpha += this.step) {
+                openTimeWriter(q, alpha);
                 for (int i = 0; i < this.iters; i++) {
-                    System.out.println("Running query " + q + " at alpha " + alpha + " iteration " + i);
-                    run(queries[q] + ";", q, alpha, i);
+                    openOtherWriters(q, alpha, i);
+                    System.out.println("Running query " + q + ", alpha " + alpha + ", iter " + i);
+                    run(q, alpha, i);
+                    closeOtherWriters();
                 }
+                closeTimeWriter();
             }
         }
-        close();
     }
 }
