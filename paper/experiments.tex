@@ -208,23 +208,22 @@ imputation produces similar results to imputation at the base tables.
 \label{table:smape}
 \end{table}
 
-% TODO MJS
-In many cases, applying the imputation step at the base table simply is not an option. To
-illustrate the increasing difficulty of such an approach as datasets scale, we used a simple
+In many real-world cases, applying the imputation step at the base table is prohibitive.
+To illustrate the increasing difficulty of such an approach as datasets scale, we used a simple
 aggregate query over the ACS dataset in our final experiment(Figure~\ref{query-acs}).
-Applying the imputation operation to the base table is extremely expensive, in our case the
-process did not terminate within 20 minutes. In contrast, \ProjectName{} executes a
-quality-optimized version in 9 seconds and a runtime-optimized version in 1 second. This
-highlights the potential benefit of using our system for early data exploration.
+Applying the imputation operation to the base table is extremely expensive, in our case
+completing in 75 minutes. In contrast, \ProjectName{} executes a quality-optimized version
+in 7 seconds and a runtime-optimized version in 1 second. This highlights the potential
+benefit of using our system for early data exploration.
 
 \begin{figure}
 \begin{lstlisting}
 SELECT AVG(c0) FROM acs_dirty;
 \end{lstlisting}
 \caption{A simple aggregate query on ACS data. Imputing the base table is prohibitive.
-    \ProjectName's quality-optimized and performance-optimized
-    query execute in 9 seconds and 1 second, respectively.
-}%TODO MJS
+    \ProjectName's quality-optimized and performance-optimized queries execute in 7 seconds
+    and 1 second, respectively.
+}
 \label{query-acs}
 \end{figure}
 
