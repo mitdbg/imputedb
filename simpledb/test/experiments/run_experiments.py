@@ -32,7 +32,7 @@ def run_medium_experiment():
 def run_large_experiment():
     this_output_dir = os.path.join(output_dir, "large")
 
-    iters     = 500
+    iters     = 220
     min_alpha = 0.00
     max_alpha = 1.00
     step      = 0.05
