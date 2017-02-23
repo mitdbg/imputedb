@@ -1,19 +1,18 @@
 \section{Algorithm}
 
-Our optimizer searches a restricted space (Sec.~\ref{sec:search-space}) of query plans containing imputation operators (Sec.~\ref{sec:operators}) for an optimal plan (Sec.~\ref{sec:cost-model}) given an estimate of the runtime of the query, information lost through imputation operations, and a parameter trading off the two.
+Our optimizer searches (Sec.~\ref{sec:planning}) a restricted space (Sec.~\ref{sec:search-space}) of query plans containing imputation operators (Sec.~\ref{sec:operators}) for an optimal plan given an estimate of the runtime of the query, information lost through imputation operations, and a parameter trading off the two.
 
 This plan is subject to two constraints (Sec.~\ref{sec:placement}).
 First, it must not emit any tuples which contain null values, regardless of the state of the base tables.
 Second, the traditional relational operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) must never observe a null value in any attribute that they operate on directly.
-Our planning algorithm is agnostic to the type of imputation used (Sec.~\ref{sec:imputation}), as it is treated as a black-box operation.
+Our planning algorithm is agnostic to the type of imputation used (Sec.~\ref{sec:imputation}), as the properties of the imputation are summarized by the cost model (Sec.~\ref{sec:cost-model}).
 
 \subsection{Imputation operators}
 \label{sec:operators}
 We introduce two new relational operators to perform imputation: \textit{Impute} ($\mu$) and
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
-replace all null values with non-null values for attributes in $C$ in the relation $R$.
-The imputation algorithm is discussed in detail in Sec.~\ref{sec:imputation}.
+replace all null values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in Sec.~\ref{sec:imputation}).
 \textit{Drop} simply removes from $R$ all tuples which have a null value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no null values for
 attributes in $C$.  
@@ -43,33 +42,25 @@ Figure~\ref{fig:query-schematic} shows a plan schematic for a query involving th
 
 \subsection{Cost model}
 \label{sec:cost-model}
-The cost for a plan $q$ is expressed as a tuple of $\langle \textsc{Loss}(q), \textsc{Time}(q) \rangle$.
-$\textsc{Time}(q)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of any query predicates. $\textsc{Loss}(q)$ is an estimate of the amount of information lost through the sequence of imputation procedures used. We note that our loss calculation constrains $\textsc{Loss}(q)$ to $[0, 1]$, while $\textsc{Time}(q)$ can range within $(0, \infty)$.
+The cost of a plan $q$ is expressed as a tuple $\langle \textsc{Loss}(q), \textsc{Time}(q) \rangle$.
+$\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. $\textsc{Loss}(q) \in [0,1]$ is an estimate of the amount of information lost by the imputation procedures used.
 
 \begin{definition}
-We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$, if $l < l' \land t < t'$, and denote this as $\doms{p}{p'}$. 
+We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$ if $l < l'$ and $t < t'$. We denote this as $\doms{p}{p'}$. 
 \end{definition}
 
-Given a query, \ProjectName{} produces a final set of possible plans $P$ by only maintaining plans that are not dominated by others in the search space. So if
-our search space is $S$
-
-\begin{gather*}
- P= \{ p | \not\exists p' \in S. \doms{p'}{p} \}
- \end{gather*}
+Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[P= \{ p ~|~ \not\exists p' \in S.\ p \neq p' \land \doms{p'}{p} \}.\]
  
-This set outlines the best possible options for trading performance and cost for the current query, building a Pareto frontier\cite{pareto1964cours}.
+This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of performance and cost for the current query.
 
-In order to pick a final plan from the frontier, our model introduces a parameter $\alpha$ which encodes an upper bound on the amount of information loss that a user is willing to tolerate
-relative to the minimum information loss possible given the imputation operations.
-
+In order to pick a final plan from the frontier, our model introduces a parameter $\alpha$ which encodes an upper bound on the amount of information loss that a user is willing to tolerate relative to the minimum information loss possible given the imputation operations.\todo{Get rid of discussion of information loss. It's a technical term and we don't really tackle it.}
 
 \begin{definition}
-Given a final set of plans $P$, and $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Loss}(p) - \min_{p' \in P}(\textsc{Loss}(p')) \leq \alpha$. We denote this as $p^\alpha$.
+Let $P$ be a set of plans. For $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Loss}(p) - \min_{p' \in P}(\textsc{Loss}(p')) \leq \alpha$. We denote this as $p^\alpha$.
 We say $p$ is $\alpha$-bound optimal if $\forall p'^\alpha \in P: \textsc{Time}(p) \leq \textsc{Time}(p')$. 
 \end{definition}
 
-Given $\alpha$ and $P$, \ProjectName{} returns the $\alpha$-bound optimal plan in $P$. Note that the $\alpha$-bound optimal plan is unique in $P$, given that
-$P$ does not keep any plans dominated by others in the set.
+Given $\alpha$ and $P$, \ProjectName{} returns the $\alpha$-bound optimal plan in $P$. Note that the $\alpha$-bound optimal plan is unique in $P$, since $P$ contains only non-dominated plans.
 
 So in essence, $\alpha$ is a tunable parameter that determines whether the optimizer focuses on quality or on performance, as plans that
 lose a lot of information through dropping are also the fastest. 
@@ -91,7 +82,7 @@ that plan. We use this estimate to compute $\text{Loss}(Q)$ as follows.
 \begin{align*}
   \textsc{Losses}(q) &= \begin{cases}
      1 :: \textsc{Losses}(q') & q = \delta_C(q') \\
-    \frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Cardinality}(q') }}  :: \textsc{Losses}(q')  & q = \mu_C(q') \\
+    \frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q') }}  :: \textsc{Losses}(q')  & q = \mu_C(q') \\
     \textsc{Losses}(q_1') ::: \textsc{Losses}(q_2') & q = q_1' \bowtie_\psi q_2' \\
     \textsc{Losses}(q') & q = \sigma_\phi(q'), \\ & q = \pi_C(q') \\
     Nil & q = t\\
@@ -161,6 +152,7 @@ Imputation operators can be placed at any point in the query plan, but to meet t
 Note that \textsc{Dirty} over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null, but the dirty set would be unchanged. We choose to over-approximate to ensure that all null values are explicitly imputed or dropped.
 
 \subsection{Query planning}
+\label{sec:planning}
 The input to our query planner is a tuple $(T, F, J, P, G, A)$:
 \begin{itemize}
 \item A set of tables $T$.
