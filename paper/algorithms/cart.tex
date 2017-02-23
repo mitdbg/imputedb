@@ -5,7 +5,7 @@
     
     \Function{ImputeWithCE-CART}{$T, D, C$}
     	\State $T' \gets \Call{ImputeRandom}{T, D}$
-	\For{$1 ... EPOCHS$}
+	\For{$1 ... EPOCHS$} \Comment{\todo{Is EPOCHS important? Should we talk about it?}}
 		\For{$d \in D$}
             \State $imp \gets \Call{TrainRT}{\pi_{C \cup D \backslash \{d\}}(T'), \pi_d{T'}}$
             \State $T' \gets (\pi_{C \cup D \backslash \{d\}}(T'), \Call{PredictRT}{imp, T})$
@@ -16,3 +16,8 @@
   \end{algorithmic}
   \caption{An algorithm for chained imputation using regression trees}
   \label{algo:imputation-strategy}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

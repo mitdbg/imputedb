@@ -80,15 +80,17 @@ null values in a column  ($\textsc{Missing}(c, Q)$) by using the histograms asso
 that plan. We use this estimate to compute $\text{Loss}(Q)$ as follows.
 
 \begin{align*}
-  \textsc{Losses}(q) &= \begin{cases}
-     1 :: \textsc{Losses}(q') & q = \delta_C(q') \\
-    \frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q') }}  :: \textsc{Losses}(q')  & q = \mu_C(q') \\
-    \textsc{Losses}(q_1') ::: \textsc{Losses}(q_2') & q = q_1' \bowtie_\psi q_2' \\
-    \textsc{Losses}(q') & q = \sigma_\phi(q'), \\ & q = \pi_C(q') \\
-    Nil & q = t\\
+  \textsc{L}(q) &= \begin{cases}
+     \{1\} \cup \textsc{L}(q') & q = \delta_C(q') \\
+    \left\{\frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q')}}\right\} \cup \textsc{L}(q')  & q = \mu_C(q') \\
+    \textsc{L}(q_1') \cup \textsc{L}(q_2') & q = q_1' \bowtie_\psi q_2' \\
+    \textsc{L}(q') & q = \sigma_\phi(q'), \\ & q = \pi_C(q') \\
+    \emptyset & q = t\\
   \end{cases}\\
-  \textsc{Loss}(q) &= \frac{\Sigma_{l \in \textsc{Losses}(q)} l}{| \textsc{Losses}(q)|}
+  \textsc{Loss}(q) &= \frac{\Sigma \textsc{L}(q)}{|\textsc{L}(q)|}
 \end{align*}
+
+\todo{Similar algorithm for computing Time?}
 
 Using the drop operator incurs a loss of information of 1 (i.e. we lose all information that
 the dropped tuples might have encoded). Imputing null fields incurs a loss penalty $p \in (0, 1]$,
@@ -193,13 +195,13 @@ To reduce the search space, we only consider the minimal imputation, the maximal
 Algorithm~\ref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in Algorithm~\ref{algo:top-level-planner}.
 
 The planner operates as follows.
-First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan.
+First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (Lines~\ref{lst:line:attr-start}-\ref{lst:line:attr-end}).
 This set will be used to determine which attributes are imputed.
 Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
-a search over imputation operations produces various possible plans, which are added to the cache. If no selections are available, a 
-simple scan is added to the plan cache. Join order is jointly optimized with imputation placements and a set of
-plans encompassing all necessary tables is produced. This set is now extended for any necessary grouping and aggregation
-operations. After a similar step has been taken for projections, the planner now contains the plan frontier (i.e. the
+a search over imputation operations produces various possible plans, which are added to the cache (Line~\ref{lst:line:sel}). If no selections are available, a 
+simple scan is added to the plan cache (Line~\ref{lst:line:scan}). Join order is jointly optimized with imputation placements and a set of
+plans encompassing all necessary tables is produced (Line~\ref{lst:line:join})\todo{Citation or explanation for join optimization algorithm}. This set is now extended for any necessary grouping and aggregation
+operations (Line~\ref{lst:line:group}). After a similar step has been taken for projections, the planner now contains the plan frontier (i.e. the
 best possible set from which to pick our final plan). The final step in the planner is to find all plans that are
 $\alpha$-bound and return the one that has the lowest runtime: the $\alpha$-bound optimal plan.
 
@@ -278,7 +280,7 @@ By restricting imputations to two classes: those that impute only attributes use
 we limit the factor of plans at each operator to three: \textit{Drop}, \textit{Impute} over attributes used in operator, and \textit{Impute} over all attributes needed.
 Recall that the planner maintains different plans for different dirty sets, keeping only those that are not dominated by other plans with the same dirty set. So in many
 cases we can drop some of these intermediate plans generated at each operator. However, if the dirty sets tracked are distinct through the entire planning phase,
-then we could explore $\mathcal{O}(3^{\# of operators}) * plans$. 
+then we could explore $\mathcal{O}(3^{\# of operators}) * plans$\todo{this is unclear. what is plans?}. 
 
 However, we note that in all cases we have considered, this exponential blowup does not affect the practical performance of our optimizer and results in relatively short
 planning times.

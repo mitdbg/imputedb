@@ -1,28 +1,28 @@
 % \begin{algorithm}
-\begin{algorithmic}[5]
+\begin{algorithmic}[1]
   \Require{A set of tables $T$, a relation $F: T \times \Phi$ between tables and filter predicates, a relation $J : T \times \Psi \times T$ between tables and join predicates, a set of projection attributes $P$,  an optional set of grouping attributes $G$ and aggregator function $A$, and a parameter $\alpha \in [0, 1]$ that expresses trade-off performance and information loss}
   \Ensure{An optimized query plan.}
   
   \Function{Plan}{$T, F, J, P, G, A$}
-  \State $C_g \gets \bigcup_{\phi \in F} \Call{Attr}{\phi}$ \Comment{Collect relevant attributes.} \label{lst:line:attr-start}
+  \State $C_g \gets \bigcup_{\phi \in F} \Call{Attr}{\phi}$ \Comment{Collect relevant attributes.}~\label{lst:line:attr-start}
   \State $C_g \gets \bigcup_{\psi \in J} \Call{Attr}{\psi} \cup P \cup G \cup \Call{Attr}{A} \cup C_g$ \label{lst:line:attr-end}
   \State Let $Q$ be an empty plan cache.
   \For{$t \in T$} \Comment{Add selections to the plan cache.}
   \If {$\exists \phi: (t, \phi) \in F$}
-  \State $Q[\{t\}] \lhd \Call{OptFilter}{Q, t, \phi, C_g}$
+  \State $Q[\{t\}] \lhd \Call{OptFilter}{Q, t, \phi, C_g}$~\label{lst:line:sel}
   \Else
-  \State $Q[\{t\}] \lhd \{t\}$
+  \State $Q[\{t\}] \lhd \{t\}$~\label{lst:line:scan}
   \EndIf
   \EndFor
   
-  \State $\Call{OptJoin}{Q, T, J, C_g}$	\Comment{Optimize joins.}
+  \State $\Call{OptJoin}{Q, T, J, C_g}$	\Comment{Optimize joins.}~\label{lst:line:join}
   \State $B \gets Q[T]$ \Comment{Get the best plans for all tables.}
-  \If{$G \neq \emptyset$} \Comment{Add optional group \& aggregate.}
+  \If{$G \neq \emptyset$} \Comment{Add optional group \& aggregate.}~\label{lst:line:group}
   \State $B \gets \bigcup_{q \in B} \Call{OptGroupBy}{q, G, A, C_g}$
   \EndIf
   
   \State $B \gets \bigcup_{q \in B} \Call{OptProject}{q, P}$ \Comment{Add projections.}
-  \State \Return $p \in B$ s.t. $p$ is $\alpha$-bound optimal  \Comment{Return fastest plan satisfying $\alpha$ bound.}
+  \State \Return $p \in B$ s.t. $p$ is $\alpha$-bound optimal.
   \EndFunction
   
 \end{algorithmic}
