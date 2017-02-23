@@ -86,12 +86,10 @@ that plan. We use this estimate to compute $\text{Loss}(Q)$ as follows.
     \left\{\frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q')}}\right\} \cup \textsc{L}(q')  & q = \mu_C(q') \\
     \textsc{L}(q_1') \cup \textsc{L}(q_2') & q = q_1' \bowtie_\psi q_2' \\
     \textsc{L}(q') & q = \sigma_\phi(q'), \\ & q = \pi_C(q') \\
-    \emptyset & q = t\\
+    \emptyset\ multiset & q = t\\
   \end{cases}\\
   \textsc{Loss}(q) &= \frac{\Sigma \textsc{L}(q)}{|\textsc{L}(q)|}
 \end{align*}
-
-\todo{Similar algorithm for computing Time?}
 
 Using the drop operator incurs a loss of information of 1 (i.e. we lose all information that
 the dropped tuples might have encoded). Imputing null fields incurs a loss penalty $p \in (0, 1]$,
@@ -105,7 +103,22 @@ alternate imputation strategies could be used, the analyst may provide a corresp
 loss with a reasonable parameterization.
 
 To compute $\text{Time}(Q)$, we retain a simple set of heuristics used by a standard 
-database. Scan costs are estimated based on the number of tuples, 
+database. 
+
+\begin{align*}
+  \textsc{T}(q) &= \begin{cases}
+     \{ f_1(pg_{fetch}, io_{cost}) \} \cup \textsc{T}(q') & q = \delta_C(q') \\
+      \{ f_2(\textsc{Attr}(q'), C, \textsc{Card}(q'), iters) \} \cup \textsc{T}(q')  & q = \mu_C(q') \\  
+     \{ f_3(\textsc{T}(q_1'), \textsc{T}(q_2')) \} & q = q_1' \bowtie_\psi q_2' \\
+    \{ \hat{t} \} \cup \textsc{T}(q') & q = \sigma_\phi(q'), \\ & q = \pi_C(q') \\
+    \{ f_4(\textsc{Card}(t), pg_{size}, io_{cost}) \} & q = t\\
+  \end{cases}
+  \intertext{ \textit{for some set of functions  $f_{1,2,3,4}$, constant $\hat{t}$, IO Cost/Page $io_{cost}$, page fetches $pg_{fetch}$, page size $pg_{size}$, iterations $iters$} } 
+  \textsc{Time}(q) &= \Sigma \textsc{T}(q)
+\end{align*}
+
+
+Scan costs are estimated based on the number of tuples, 
 page size, and an unit-less IO cost per page. Join costs are estimated as a function
 of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
 Filtering, projecting, and aggregating are all done in memory and have low computational overhead
