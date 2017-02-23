@@ -47,7 +47,7 @@ def summarize(df, by, a):
     ops = {'mean': np.mean, 'std': np.std}
     return df.groupby(by)[a].agg(ops).reset_index()
   
-def plot(df,**kwargs):
+def myplot(df,**kwargs):
     _, ax = plt.subplots(1)
     for a in set(df['alpha']):
         data = df[df['alpha'] == a]
@@ -122,33 +122,31 @@ def get_timing_results(experiments_dir, base=False):
 
     return df
 
-def explore(experiments_dir):
-    if not os.path.isdir(experiments_dir):
-        raise FileNotFoundError
+def explore(experiments_dir, base=False):
+    # time data
+    data = get_timing_results(experiments_dir, base=base)
 
-    # experiments = get_timing_results(experiments_dir)
-    base_tables = get_timing_results(experiments_dir, base=True)
-    # experiments['is_experiment'] = True
-    base_tables['is_experiment'] = False
-    base_tables['alpha'] = 'Impute at base tables'
+    if not base:
+        data['is_experiment'] = True
+    else:
+        data['is_experiment'] = False
+        data['alpha'] = 'Impute at base tables'
 
-    # experiments = drop_warmup(experiments, ['query', 'alpha'], drop=20)
-    base_tables = drop_warmup(base_tables, ['query', 'alpha'], drop=20)
+    data = drop_warmup(data, ['query', 'alpha'], drop=20)
 
     # time measures
     by = ['query', 'alpha']
-    planning_times = {}
-    # planning_times['imputedb'] = summarize(experiments, by, 'plan_time')
-    planning_times['base_tables'] = summarize(base_tables, by, 'plan_time')
-
-    running_times = {}
-    # running_times['imputedb'] = summarize(experiments, by, 'run_time')
-    running_times['base_tables'] = summarize(base_tables, by, 'run_time')
+    if base:
+        name = 'base_tables'
+    else:
+        name = 'imputedb'
+    planning_times = summarize(data, by, 'plan_time')
+    run_times = summarize(data, by, 'run_time')
 
     print(planning_times)
     print(running_times)
 
-    # return (planning_times, running_times, experiments, base_table)
+    return planning_times, run_times, data
 
 def main(experiments_dir, output_dir):
     if not os.path.isdir(experiments_dir):
@@ -157,56 +155,61 @@ def main(experiments_dir, output_dir):
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
-    # time data
-    experiments = get_timing_results(experiments_dir)
-    base_tables = get_timing_results(experiments_dir, base=True)
-    experiments['is_experiment'] = True
-    base_tables['is_experiment'] = False
-    base_tables['alpha'] = 'Impute at base tables'
+    make_plots(experiments_dir, output_dir)
+    make_plots(experiments_dir, output_dir, base=True)
+    write_perf_summary(experiments_dir, output_dir)
 
-    experiments = drop_warmup(experiments, ['query', 'alpha'], drop=20)
-    base_tables = drop_warmup(base_tables, ['query', 'alpha'], drop=20)
+def make_plots(experiments_dir, output_dir, base=False):
+    # time data
+    data = get_timing_results(experiments_dir, base=base)
+
+    if not base:
+        data['is_experiment'] = True
+    else:
+        data['is_experiment'] = False
+        data['alpha'] = 'Impute at base tables'
+
+    data = drop_warmup(data, ['query', 'alpha'], drop=20)
 
     # time measures
     by = ['query', 'alpha']
-    planning_times = {}
-    planning_times['imputedb'] = summarize(experiments, by, 'plan_time')
-    planning_times['base_tables'] = summarize(base_tables, by, 'plan_time')
-
-    running_times = {}
-    running_times['imputedb'] = summarize(experiments, by, 'run_time')
-    running_times['base_tables'] = summarize(base_tables, by, 'run_time')
+    if base:
+        name = 'base_tables'
+    else:
+        name = 'imputedb'
+    planning_times = summarize(data, by, 'plan_time')
+    run_times = summarize(data, by, 'run_time')
         
     # plots
     xticks = range(0, nqueries)
     xlabels = ["Query %i" % (q + 1) for q in xticks]
 
-    try:
-        planning_times_items = planning_times.iteritems()
-        running_times_items = running_times.iteritems()
-    except AttributeError:
-        planning_times_items = planning_times.items()
-        running_times_items = running_times.items()
-        
-    for name, df in planning_times_items:
-        plot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
-        plt.xlim(xticks[0] - 1, xticks[-1] + 1)
-        plt.xticks(xticks, xlabels)
-        plt.xlabel('Query Name')
-        plt.ylabel('Planning Time (ms)')
-        plt.legend(loc='best')
-        plt.savefig(os.path.join(output_dir, 'planning_times_%s.png' % name))
+    # plot 1: planning times
+    print('planning_times ({})'.format(name))
+    print(planning_times)
+    df = planning_times
+    plt.figure()
+    myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
+    plt.xlim(xticks[0] - 1, xticks[-1] + 1)
+    plt.xticks(xticks, xlabels)
+    plt.xlabel('Query Name')
+    plt.ylabel('Planning Time (ms)')
+    plt.legend(loc='best')
+    plt.savefig(os.path.join(output_dir, 'planning_times_%s.png' % name))
       
-    for name, df in running_times_items:
-        plot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
-        plt.xlim(xticks[0] - 1, xticks[-1] + 1)
-        plt.xticks(xticks, xlabels)
-        plt.xlabel('Query Name')
-        plt.ylabel('Running Time (ms)')
-        plt.legend(loc='best')
-        plt.savefig(os.path.join(output_dir, 'running_times_%s.png' % name))
+    print('running_times ({})'.format(name))
+    print(running_times)
+    df = run_times
+    plt.figure()
+    myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
+    plt.xlim(xticks[0] - 1, xticks[-1] + 1)
+    plt.xticks(xticks, xlabels)
+    plt.xlabel('Query Name')
+    plt.ylabel('Running Time (ms)')
+    plt.legend(loc='best')
+    plt.savefig(os.path.join(output_dir, 'running_times_%s.png' % name))
 
-def write_perf_summary(experiments_dir, table_headers):
+def write_perf_summary(experiments_dir, output_dir):
     experiment_results = get_query_results(experiments_dir, table_headers)
     base_results = get_query_results(experiments_dir, table_headers, base=True)
     perf = []
@@ -231,20 +234,11 @@ def write_perf_summary(experiments_dir, table_headers):
 
 if __name__ == "__main__":
     def print_usage_and_exit():
-        print("usage: python analyze_experiments.py [--explore] <experiment-output-dir>")
+        print("usage: python analyze_experiments.py <experiment-output-dir>")
         sys.exit(1)
 
     if len(sys.argv) == 2:
         experiment_dir = sys.argv[1]
         main(experiment_dir, os.path.join(experiment_dir, "analysis"))
-    elif len(sys.argv) == 3:
-        # Doesn't do much
-        try:
-            j = sys.argv.index("--explore")  
-            k = 1 + (j==1)
-            experiments_dir = sys.argv[k]
-            explore(experiments_dir)
-        except ValueError:
-            print_usage_and_exit()
     else:
         print_usage_and_exit()
