@@ -164,14 +164,16 @@ def main(experiments_dir, output_dir):
 
     # compare actual query results
     table_headers = [
-        ['income', 'weight'],                   # query 0
-        ['income', 'cholesterol'],              # query 1
-        ['blood_lead'],                         # query 2
-        ['gender', 'blood_pressure_systolic'],  # query 3
-        ['attendedbootcamp', 'income'],         # query 4
-        ['age'],                                # query 5
-        ['schooldegree', 'moneyforlearning'],   # query 6
-        ['attendedbootcamp', 'gdp_per_capita'], # query 7
+        ['income', 'weight'],                     # query 0
+        ['income', 'cholesterol'],                # query 1
+        ['blood_lead'],                           # query 2
+        ['gender', 'blood_pressure_systolic'],    # query 3
+        ['years_edu', 'head_circumference'],      # query 4
+        ['attendedbootcamp', 'income'],           # query 5
+        ['age'],                                  # query 6
+        ['schooldegree', 'moneyforlearning'],     # query 7
+        ['attendedbootcamp', 'gdp_per_capita'],   # query 8
+        ['bootcamppostsalary', 'gdp_per_capita'], # query 9
     ]
     experiment_results = get_query_results(experiments_dir, table_headers)
     base_results = get_query_results(experiments_dir, table_headers, base=True)
