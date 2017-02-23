@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-EXPERIMENT_SIZE = medium
+EXPERIMENT_SIZE = large
 
 help:
 	@echo "usage:"
@@ -8,6 +8,7 @@ help:
 	@echo "  make clean: remove output directories and images"
 	@echo "  make build: build image 'imputedb'"
 	@echo "  make run: run experiments"
+	@echo "  make explore: explore the output data in a python container"
 
 clean:
 	@docker rm $(shell docker ps -a -q -f ancestor=imputedb) 2>/dev/null \
@@ -20,12 +21,14 @@ clean:
 build:
 	{ cd ../..; docker build -t imputedb .; }
 
+run_and_analysis: run analysis
 run:
 	docker run -it --rm \
-		   -v "$(shell pwd)/output:/src/test/experiments/output" \
-		   -v "$(shell pwd)/query_plans:/src/test/experiments/query_plans" \
+		   -v "$(shell pwd):/src/test/experiments" \
 		   imputedb \
-		   python run_experiments.py medium
+		   python run_experiments.py $(EXPERIMENT_SIZE)
+
+analysis:
 	docker run -it --rm \
 		   -v "$(shell pwd)/output:/data" \
 		   -v "$(shell pwd):/src" \
@@ -40,4 +43,4 @@ explore:
 		   --user root \
 	           jupyter/datascience-notebook
 
-.PHONY: help build run
+.PHONY: help build run explore
