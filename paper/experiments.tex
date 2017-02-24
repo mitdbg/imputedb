@@ -178,7 +178,9 @@ with performance improvement on a factor of ten.
 Figure~\ref{fig:plantimes} provides a summary of the planning times for each of the queries.
 We exclude the planning time for queries that impute at base table, as that requires no
 planning. In the median query across a variety of queries and choices of $\alpha$, planning
-constituted 8.5 percent of total runtime by \ProjectName{}.
+constituted 8.5 percent of total runtime by \ProjectName{}. The one-standard-deviation
+intervals around the mean planning time often overlap, suggesting the planning component is
+constant in $\alpha$.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/planning_times_imputedb.png}
