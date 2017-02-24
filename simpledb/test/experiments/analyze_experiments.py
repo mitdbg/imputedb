@@ -82,11 +82,20 @@ def get_query_results(experiments_dir, headers, base=False):
         experiments_dir = os.path.join(experiments_dir, "base")
 
     # Iterate through queries, alpha, iters
-    for f in glob.glob(experiments_dir + os.path.sep + "q*/alpha*/it*/result.txt"):
+    print("get_query_results")
+    if restrict_alpha=True:
+        globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha000/it*/result.txt") + \
+             glob.glob(experiments_dir + os.path.sep + "q*/alpha1000/it*/result.txt")
+    else:
+        globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha*/it*/result.txt")
+
+    for f in globs:
+        print("Reading {}...".format(f))
         qi = f.rfind("/q")+len("/q")
         q = int(f[qi:qi+2])
         ai = f.rfind("/alpha") + len("/alpha")
-        alpha = int(f[ai:ai+3])/1000.0
+        aj = f.find("/", ai)
+        alpha = int(f[ai:aj])/1000.0
         df = pd.read_csv(f, header=None, names=headers[q])
         if len(df.columns) > 1:
             df = df.set_index(df.columns[0])
@@ -116,7 +125,7 @@ def get_smape(refs, results):
     metrics = np.array(metrics)
     return np.nanmean(metrics), np.nanstd(metrics)
 
-def get_timing_results(experiments_dir, base=False):
+def get_timing_results(experiments_dir, restrict_alpha=False, base=False):
     df = pd.DataFrame(columns=["query","alpha","iter","plan_time","run_time","plan_hash"])
 
     # Impute on base stored in base/ subdirectory, buth with same subdirectory
@@ -124,9 +133,14 @@ def get_timing_results(experiments_dir, base=False):
     if base:
         experiments_dir = os.path.join(experiments_dir, "base")
 
+    if restrict_alpha:
+        globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha000/timing.csv") + \
+             glob.glob(experiments_dir + os.path.sep + "q*/alpha1000/timing.csv")
+     else:
+         globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha*/timing.csv")
+
     # Iterate through queries, alpha, reading 'timing.csv' for each.
-    for f in glob.glob(experiments_dir + os.path.sep + "q*/alpha*/timing.csv"):
-        # alpha = int(alpha_dir[len("alpha"):])/1000.0
+    for f in globs:
         print('Processing {}...'.format(f))
         df0 = pd.read_csv(f)
         df = df.append(df0)
@@ -162,7 +176,7 @@ def explore(experiments_dir, base=False):
 def main(experiments_dir, output_dir):
     make_plots(experiments_dir, output_dir)
     make_plots(experiments_dir, output_dir, base=True)
-    # write_perf_summary(experiments_dir, output_dir)
+    write_perf_summary(experiments_dir, output_dir)
 
 def make_plots(experiments_dir, output_dir, base=False):
     if not os.path.isdir(experiments_dir):
@@ -271,6 +285,7 @@ def write_perf_summary(experiments_dir, output_dir):
         experiment_results_items = experiment_results.items()
         base_results_items       = base_results.items()
     for (query, alpha), res in experiment_results_items:
+        print("Processing query {}, alpha {}...".format(query, alpha))
         refs = [df for (q, a), dfs in base_results_items for df in dfs if q == query]
         smape, std = get_smape(refs, res)
         perf.append((query, alpha, smape, std))
