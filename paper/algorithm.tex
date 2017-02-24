@@ -290,52 +290,64 @@ ImputeDB, this would not pose a problem.
 We prove the optimality of the final plan selected by showing that our cost-model and algorithm
 construct a complete Pareto frontier.
 
-%\begin{definition}
-%Given two plans $p$ and $p'$,  such that $|\textsc{Dirty}(p) \setminus \textsc{Dirty}(p')| = n$, and $\textsc{Time}(p) \leq \textsc{Time}(p')$,
-%we say $p$ yields $p'$ with dirty set size reduction $n$, if we can add any number of imputation and relational operators to $p$ to obtain
-%$p'$. We denote this $p \xrightarrow{n} p'$. 
-%\end{definition}
+\begin{definition}
+An abstract imputation operator $I: \mathcal{P}(String) \rightarrow \mathcal{P}(\{ \delta, \mu \})$ is a function that given a dirty set maps to
+a set of imputation operations. For convenience we denote applying the set of transformations to a plan $p$ as $I(p)$ and understand that this
+is shorthand for $\{ op(p)   | op \in I(\textsc{Dirty}(p)) \}$.
+\end{definition}
 
-\todo{define F and way its ok, why it depends solely on the dirty set... the algorithm keeps all other state relevant, so this is all thats needed for transformations}
+Algorithm{~\ref{algo:top-level-planner} plans the query in stages. It first handles any pushed-down selections, it then optimizes joins, then groupby/aggregations,
+and finally projections. It maintains all necessary state information through a combination of dirty sets on intermediate plans and
+initializing empty plan caches at stages that require it. Given this, we can succinctly describe possible transformations to a plan at a given
+point in the algorithm solely through $I$.
 
-\begin{theorem}
-Our cost-model and plan-cache semantics results in a final set of plans that constitute a Pareto frontier.
+
+\begin{theorem}\label{theorem:no-bad-sit}
+By computing dirty-set specific Pareto frontiers, it is never the case that we discard a plan $p_1$ s.t. $\doms{p_2}{p_1}$, but $\exists p_1' \in I(p_1), p_2' \in I(p_2). \doms{p_1'}{p_2'} \land \textsc{Dirty}(p_1') = \textsc{Dirty}(p_2')$
 \end{theorem}
 
+Theorem~\ref{theorem:no-bad-sit} states that there is no \textit{bad situation} such as that depicted in Figure~\ref{fig:bad-sit-diagram}
+
+\begin{figure}
+\begin{tikzpicture}
+% before I
+\node(p1) {$p_1$};
+\node[right=of p1](dom1){$\prec$};
+\node[right=of dom1](p2) {$p_2$};
+
+% after I
+\node[below=of p1](p1'){$p_1'$};
+\node[right=of p1'](dom2) {$\succ$};
+\node[right=of dom2](p2'){$p_2'$};
+
+% arrows
+\draw[->] (p1) -- node[right] {$\scriptstyle I$} (p1');
+\draw[->] (p2) -- node[right] {$\scriptstyle I$} (p2');
+\end{tikzpicture}
+\caption{A bad Pareto frontier selection would choose $p_2$ and never reach $p_1'$}
+\label{fig:bad-sit-diagram}
+\end{figure}
+
 \begin{proof}
-For contradiction, let $p_1$ and $p_2$ be plans such that $\doms{p_1}{p_2}$. Given a function $F: D \rightarrow O$ (d is dirty sets, o is operators),
-assume plans only $p_3 \in F(\textsc{Dirty}(p_2))(p_2)$, and $p_4 \in F(\textsc{Dirty}(p_1))(p_1)$, and that $\dom{p_3}{p_4}$.
+For contradiction, let $p_1$ and $p_2$ be plans such that $\doms{p_2}{p_1}$, $p_1$ is removed from the plan cache
+in favor of $p_2$, but there  $\exists p_1' \in I(p_1), p_2' \in I(p_2). \doms{p_1'}{p_2'} \land \textsc{Dirty}(p_1') = \textsc{Dirty}(p_2')$
+and $p_1'$ is not reachable from $p_2$ by $I$.
 
+There are two possible cases :
 
-A contradiction arises from in one of two cases
+\begin{case}
+$\textsc{Dirty}(p_1) = \textsc{Dirty}(p_2)$, in which case $I(p_1) = I(p_2)$, as $I$ uniquely determines the possible transformations. This makes $p_2$ and $p_1$ substitutable, so $p_1'$ is reachable from $p_2$. This is a contradiction.
+\end{case}
 
-case 1: p1 doesn't dominate p2 (that con only happen if the dirty sets are different) (they are comparable), so not tossed
-case 2: they have the same dirty set, and since dirty set determines F exclusively, then p3 and p4 are reachable for both, so they are substituable
+\begin{case}
+$\textsc{Dirty}(p_1) \not= \textsc{Dirty}(p_2)$, in which case $p_1$ is not removed from the plan cache as the $\doms{p_2}{p_1}$ is not within the same dirty set. This is a contradiction
+\end{case}
+
+So it must be the case that no such situation arises.
 \end{proof}
 
 
-
-%\begin{proof}
-%We prove this by induction on the reduction in the size of the dirty set for a plan.
-%
-%For the base case, given a plan $p$, we obtain $P_1 = \{ p' | p \xrightarrow{1} p'  \}$. We construct a set of plans for each
-%dirty set by keeping all non-dominated plans with the same dirty set. By definition, each of these sets are a Pareto frontier 
-%to reduce $\textsc{Dirty}(p)$ by 1.
-%
-%By the induction hypothesis, we can do the same on $P_n = \{ p' | p \xrightarrow{n} p' \}$ to produce a set of Pareto frontiers to
-%reduce $\textsc{Dirty}(p)$ by $n$.
-%
-%Given a Pareto optimal plan in our search space $p''$ s.t. $p \xrightarrow{n+1} p''$, it must be the case that there exists a plan $p''_{prev}  \xrightarrow{1} p''$. 
-%
-%If $p''_{prev}$ is Pareto optimal for its dirty set and a reduction of size $n$, then we can directly yield $p''$ from the appropriate
-%frontier.
-%
-%If $p''_{prev}$ is not Pareto optimal, there exists a Pareto optimal plan $\widehat{p''_{prev}}$ with the same dirty set
-%as $p''_{prev}$, which dominates it, so we can apply the same imputation operations to $\widehat{p''_{prev}}$ to yield $p''$.
-%\end{proof}
-%
-%\todo{We're working on a proof of optimality for the final set of plans created}
-
+Given that no desirable plans are discarded by computing Pareto frontiers for each dirty set, the final Pareto frontier (for dirty set $\emptyset$) is optimal.
 
 \subsection{Complexity}
 Our optimization algorithm builds off the approach taken by System R \cite{blasgen1981system}, therefore our planning algorithm still operates in exponential time. 
