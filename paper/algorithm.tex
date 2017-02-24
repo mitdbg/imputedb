@@ -46,7 +46,7 @@ The cost of a plan $q$ is expressed as a tuple $\langle \textsc{Loss}(q), \texts
 $\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. $\textsc{Loss}(q) \in [0,1]$ is an estimate of the amount of information lost by the imputation procedures used.
 
 \begin{definition}
-We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$ if $l < l'$ and $t < t'$. We denote this as $\doms{p}{p'}$. 
+We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$ if $(l \leq l' \land t < t') \lor (l < l' \land t \leq t')$. We denote this as $\doms{p}{p'}$. 
 \end{definition}
 
 Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[P= \{ p ~|~ \not\exists p' \in S.\ p \neq p' \land \doms{p'}{p} \}.\]
@@ -147,6 +147,7 @@ does not even dominate computation, as post-processing steps like pruning, which
 in achieving good performance, can have cost exponential in the height of the tree. In
 practice, we find that a simple parameterization can be acceptable (i.e. yield intelligent query
 plans).
+
 
 \subsection{Imputation placement}
 \label{sec:placement}
@@ -284,6 +285,57 @@ ImputeDB, this would not pose a problem.
 %\begin{algorithm}
 %    \input{algorithms/cart.tex}
 %\end{algorithm}
+
+\subsection{Optimality}
+We prove the optimality of the final plan selected by showing that our cost-model and algorithm
+construct a complete Pareto frontier.
+
+%\begin{definition}
+%Given two plans $p$ and $p'$,  such that $|\textsc{Dirty}(p) \setminus \textsc{Dirty}(p')| = n$, and $\textsc{Time}(p) \leq \textsc{Time}(p')$,
+%we say $p$ yields $p'$ with dirty set size reduction $n$, if we can add any number of imputation and relational operators to $p$ to obtain
+%$p'$. We denote this $p \xrightarrow{n} p'$. 
+%\end{definition}
+
+\todo{define F and way its ok, why it depends solely on the dirty set... the algorithm keeps all other state relevant, so this is all thats needed for transformations}
+
+\begin{theorem}
+Our cost-model and plan-cache semantics results in a final set of plans that constitute a Pareto frontier.
+\end{theorem}
+
+\begin{proof}
+For contradiction, let $p_1$ and $p_2$ be plans such that $\doms{p_1}{p_2}$. Given a function $F: D \rightarrow O$ (d is dirty sets, o is operators),
+assume plans only $p_3 \in F(\textsc{Dirty}(p_2))(p_2)$, and $p_4 \in F(\textsc{Dirty}(p_1))(p_1)$, and that $\dom{p_3}{p_4}$.
+
+
+A contradiction arises from in one of two cases
+
+case 1: p1 doesn't dominate p2 (that con only happen if the dirty sets are different) (they are comparable), so not tossed
+case 2: they have the same dirty set, and since dirty set determines F exclusively, then p3 and p4 are reachable for both, so they are substituable
+\end{proof}
+
+
+
+%\begin{proof}
+%We prove this by induction on the reduction in the size of the dirty set for a plan.
+%
+%For the base case, given a plan $p$, we obtain $P_1 = \{ p' | p \xrightarrow{1} p'  \}$. We construct a set of plans for each
+%dirty set by keeping all non-dominated plans with the same dirty set. By definition, each of these sets are a Pareto frontier 
+%to reduce $\textsc{Dirty}(p)$ by 1.
+%
+%By the induction hypothesis, we can do the same on $P_n = \{ p' | p \xrightarrow{n} p' \}$ to produce a set of Pareto frontiers to
+%reduce $\textsc{Dirty}(p)$ by $n$.
+%
+%Given a Pareto optimal plan in our search space $p''$ s.t. $p \xrightarrow{n+1} p''$, it must be the case that there exists a plan $p''_{prev}  \xrightarrow{1} p''$. 
+%
+%If $p''_{prev}$ is Pareto optimal for its dirty set and a reduction of size $n$, then we can directly yield $p''$ from the appropriate
+%frontier.
+%
+%If $p''_{prev}$ is not Pareto optimal, there exists a Pareto optimal plan $\widehat{p''_{prev}}$ with the same dirty set
+%as $p''_{prev}$, which dominates it, so we can apply the same imputation operations to $\widehat{p''_{prev}}$ to yield $p''$.
+%\end{proof}
+%
+%\todo{We're working on a proof of optimality for the final set of plans created}
+
 
 \subsection{Complexity}
 Our optimization algorithm builds off the approach taken by System R \cite{blasgen1981system}, therefore our planning algorithm still operates in exponential time. 
