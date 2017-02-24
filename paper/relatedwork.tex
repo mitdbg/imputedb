@@ -3,15 +3,14 @@
 \subsection{Missing Values and Statistics}
 
 Imputation of missing values is a widely studied field within the statistics and machine
-learning communities. As highlighted in \cite{gelman2006data}, missing data
+learning communities. As highlighted in~\cite{gelman2006data}, missing data
 can appear for a variety of reasons, including both random and conditioned on
 existing values (observed and missing). Methods in the statistical community
 focus on correctly modeling relationships between the attributes to factor in
-varied forms of missingness. For example, Burgette and Reiter
-(\cite{burgette2010multiple}) discuss the usage of sequential regression trees
+varied forms of missingness. For example, Burgette and Reiter~\cite{burgette2010multiple} discuss the usage of sequential regression trees
 for imputing missing data.
 
-In \cite{akande2015empirical}, Akande et al analyze the performance of various
+In~\cite{akande2015empirical}, Akande et al analyze the performance of various
 multiple imputation techniques on the American Community Survey dataset. 
 The computational difficulties of imputing on large base
 tables are well known and can limit approaches. For example, Akande finds that
@@ -26,10 +25,10 @@ workloads.
 
 \subsection{Missing Values and Databases}
 There is a long history in the database community surrounding the
-treatment of nulls. As early as 1973, \cite{codd1973understanding}
+treatment of nulls. As early as 1973,~\cite{codd1973understanding}
 provides a treatment of the semantics of null. Multiple
 papers have described various (at times conflicting) treatments
-of nulls \cite{grant1977null}. \ProjectName's main design invariant - no relational operator
+of nulls~\cite{grant1977null}. \ProjectName's main design invariant - no relational operator
 sees missing values for attributes it must operate on and users should never see
 missing data - eliminates
 the need to handle null value semantics, while guaranteeing soundness (modulo
