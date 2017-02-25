@@ -10,8 +10,12 @@ According to some estimates, data scientists spend between 50 and 80 percent of 
 % Solution
 To handle this problem, users may manually clean their dataset by performing some statistical analysis to replace missing data elements with likely values.
 This process is called \emph{imputation}.
-We have developed a system called \ProjectName{} with a novel query optimization algorithm which allows imputation to occur on the fly, during query execution.
-The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
+We have developed a system called \ProjectName{} with a novel query optimization algorithm which allows imputation to occur on the fly, during query execution. \emph{The key insight behind \ProjectName{} is that imputation
+only needs to be performed on the data relevant to a particular query and
+that this subset is generally much smaller than the entire database.} 
+
+\todobox{see how this bit fits}{
+The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.}
 
 % Prior work
 There is relevant prior work in three broad areas: statistics, databases, and time-series forecasting.
