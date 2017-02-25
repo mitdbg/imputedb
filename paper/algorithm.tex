@@ -291,16 +291,15 @@ We prove the optimality of the final plan selected by showing that our cost-mode
 construct a complete Pareto frontier.
 
 \begin{definition}
-An abstract imputation operator $I: \mathcal{P}(String) \rightarrow \mathcal{P}(\{ \delta, \mu \})$ is a function that given a dirty set maps to
-a set of imputation operations. For convenience we denote applying the set of transformations to a plan $p$ as $I(p)$ and understand that this
+$I: \mathcal{P}(D) \rightarrow \mathcal{P}(\{ \delta, \mu \})$, where
+$D$ is the set of dirty attributes for a relation, is an abstract imputation operator mapping a set of dirty
+attributes to a set of imputation operations.
+
+For convenience we denote applying the set of imputation operations to a plan $p$ as $I(p)$ and understand that this
 is shorthand for $\{ op(p)   | op \in I(\textsc{Dirty}(p)) \}$.
 \end{definition}
 
-Algorithm{~\ref{algo:top-level-planner} plans the query in stages. It first handles any pushed-down selections, it then optimizes joins, then groupby/aggregations,
-and finally projections. It maintains all necessary state information through a combination of dirty sets on intermediate plans and
-initializing empty plan caches at stages that require it. Given this, we can succinctly describe possible transformations to a plan at a given
-point in the algorithm solely through $I$.
-
+We can succinctly describe possible imputation transformations to a plan at a given point in the planning algorithm solely through $I$.
 
 \begin{theorem}\label{theorem:no-bad-sit}
 By computing dirty-set specific Pareto frontiers, it is never the case that we discard a plan $p_1$ s.t. $\doms{p_2}{p_1}$, but $\exists p_1' \in I(p_1), p_2' \in I(p_2). \doms{p_1'}{p_2'} \land \textsc{Dirty}(p_1') = \textsc{Dirty}(p_2')$
