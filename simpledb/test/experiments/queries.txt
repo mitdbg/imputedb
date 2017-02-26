@@ -19,11 +19,6 @@ WHERE demo.id = labs.id AND labs.id = exams.id AND
       body_mass_index >= 30
 GROUP BY gender;
 
-SELECT age_yrs, gender, triglyceride, waist_circumference
-FROM demo, labs, exams
-WHERE demo.id = exams.id AND labs.id = exams.id AND
-      labs.triglyceride > 200;
-
 SELECT attendedbootcamp, AVG(income)
 FROM fcc
 GROUP BY attendedbootcamp;
@@ -42,8 +37,3 @@ FROM fcc, gdp
 WHERE fcc.countrycitizen = gdp.country
 GROUP BY attendedbootcamp;
 
-SELECT bootcamppostsalary, gdp_per_capita
-FROM fcc, gdp
-WHERE fcc.countrycitizen = gdp.country AND
-      fcc.bootcamppostsalary <= 2 AND
-      gdp.gdp_per_capita <= 5000;

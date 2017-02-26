@@ -41,14 +41,14 @@ WHERE demo.id = labs.id AND labs.id = exams.id AND
 GROUP BY gender;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno} \label{q4}\\
-5 & 
-\begin{minipage}{6in}
-\begin{lstlisting}[breaklines]
-SELECT age_yrs, gender, triglyceride, waist_circumference
-FROM demo, labs, exams
-WHERE demo.id = exams.id AND labs.id = exams.id AND
-      labs.triglyceride > 200;
-\end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label{q5}\\
+%5 & 
+%\begin{minipage}{6in}
+%\begin{lstlisting}[breaklines]
+%SELECT age_yrs, gender, triglyceride, waist_circumference
+%FROM demo, labs, exams
+%WHERE demo.id = exams.id AND labs.id = exams.id AND
+%      labs.triglyceride > 200;
+%\end{lstlisting}
+%\end{minipage}\refstepcounter{queryno} \label{q5}\\
 \bottomrule
 \end{tabular}

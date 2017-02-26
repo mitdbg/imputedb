@@ -98,25 +98,21 @@ but also interesting joins and aggregates. Our aim was to craft meaningful queri
 that would provide performance figures relevant to practitioners who may use
 similar datasets.
 
-Queries 1-5 are on the CDC data. In Query~\ref{q1}, we calculate the average height for
+Queries 1-4 are on the CDC data. In Query~\ref{q1}, we calculate the average height for
 users based on their income data. In Query~\ref{q2}, we compare cholesterol levels for
 individuals with low, medium, and high incomes spectrum and above a certain weight. In
 Query~\ref{q3}, we extract the maximum blood lead levels for children under the age of 6
 years. In Query~\ref{q4}, we calculate the average systolic blood pressure, by gender, for
-subjects with a body mass index indicating obesity. In Query~\ref{q5}, we extract the age,
-gender, triglyceride levels, and waist circumference from individuals with high triglyceride
-levels.
+subjects with a body mass index indicating obesity. 
 
-Queries 6-10 are on the FCC data. In Query~\ref{q6}, we calculate the average income for
+Queries 5-8 are on the FCC data. In Query~\ref{q6}, we calculate the average income for
 survey participants, based on their bootcamp attendance. In Query~\ref{q7} estimates the
 average age of women from the United States who participated. In Query~\ref{q8}, we
 calculate the average amount of money survey participants with student debt destined to
 learning based on their school degree. In Query~\ref{q9}, we join the FCC data with a
 reference table provided by the World Bank which summarizes GDP per-capita across various
 countries\cite{worldbank-data}. The query calculates the average GDP per-capita for
-participants based on whether or not they attended a bootcamp. Finally, in Query~\ref{q10},
-we identify individuals from countries with GDP per-capita of \$5000 or less who earn
-\$100,000 or more post-bootcamp.
+participants based on whether or not they attended a bootcamp. 
 
 Note that for all queries we have enumerated strings and encoded them with
 an appropriate integer value.
@@ -155,7 +151,9 @@ shows average running times for \ProjectName{} plans in two configurations:
 quality-optimized and runtime-optimized. The second plot shows, for comparison, the average
 running times required for each query when performing imputation at the base tables.  In all
 cases, running a query through \ProjectName{} is cheaper than imputing a single base table,
-with performance improvement on a factor of ten.
+with performance improvement on a factor of ten. This performance differential means it is feasible
+to explore multiple imputations operations (including more expensive operators) when using
+\ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
 \begin{subfigure}{\linewidth}
