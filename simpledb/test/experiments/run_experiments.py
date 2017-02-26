@@ -40,6 +40,18 @@ def run_large_experiment():
 
     run_experiment(this_output_dir, iters, min_alpha, max_alpha, step)
 
+def run_alt_experiment():
+    this_output_dir = os.path.join(output_dir, "alt")
+
+    iters     = 220
+    min_alpha = 0.00
+    max_alpha = 1.00
+    step      = 0.05
+
+    queries = "queries1.txt"
+
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step)
+
 def run_acs_experiment():
     this_output_dir = os.path.join(output_dir, "acs")
 
@@ -96,6 +108,8 @@ if __name__ == "__main__":
         run_medium_experiment()
     elif experiment_size == "large":
         run_large_experiment()
+    elif experiment_size == "alt":
+        run_alt_experiment()
     elif experiment_size == "acs":
         run_acs_experiment()
     else:
