@@ -1,4 +1,4 @@
-\section{Experiments}
+\section{Experiments}\label{sec:experiments}
 To evaluate the performance of our approach,  we implemented
 a prototype system in Java, following a traditional iterator model.
 For our experiments we plan and execute queries
@@ -28,8 +28,8 @@ of our experiments, we use three tables:
 
 The original tables have a large number of attributes, in some cases providing more granular
 tests results or alternative metrics. In order to simplify the presentation and
-exploration of queries, we focused on a subset of the attributes for each table.
-Table~\ref{table:nhanes-description} shows the attributes selected, along with the
+exploration of queries, we focused on a subset of the attributes for each table.~\Cref{table:nhanes-description}
+shows the attributes selected, along with the
 percentage of nulls. It is worth noting that for readability, we have replaced the
 NHANES variable names with self-explanatory attribute names.
 
@@ -73,7 +73,7 @@ pre-processed, but where plenty of missing values remain. It is
 worth noting that given the table design (where many attributes
 are related), many of these missing values are to be
 expected. The dataset we started with had 15,620 rows and 113
-columns. We chose 17 attributes, which are outlined in Table~\ref{table:fcc-description}, along with the percentage of missing values.
+columns. We chose 17 attributes, which are outlined in~\Cref{table:fcc-description}, along with the percentage of missing values.
 
 \begin{table}
    \centering
@@ -89,7 +89,7 @@ Given that the data had been cleaned, we uniformly introduced missing values acr
 of 671,153 rows and 37 integer columns.
 
 \subsection{Queries}
-We collect a set of queries (Table~\ref{fig:queries}) that we think are both representative,
+We collect a set of queries (\Cref{fig:queries}) that we think are both representative,
 in that they could reasonably be written by a user in the course of data analysis, and
 interesting to plan.
 
@@ -98,25 +98,21 @@ but also interesting joins and aggregates. Our aim was to craft meaningful queri
 that would provide performance figures relevant to practitioners who may use
 similar datasets.
 
-Queries 1-5 are on the CDC data. In Query~\ref{q1}, we calculate the average height for
-users based on their income data. In Query~\ref{q2}, we compare cholesterol levels for
-individuals with low, medium, and high incomes spectrum and above a certain weight. In
-Query~\ref{q3}, we extract the maximum blood lead levels for children under the age of 6
-years. In Query~\ref{q4}, we calculate the average systolic blood pressure, by gender, for
-subjects with a body mass index indicating obesity. In Query~\ref{q5}, we extract the age,
-gender, triglyceride levels, and waist circumference from individuals with high triglyceride
-levels.
+Queries 1-4 are on the CDC data. In~\Cref{q1}, we calculate the average height for
+users based on their income data. In~\Cref{q2}, we compare cholesterol levels for
+individuals with low, medium, and high incomes spectrum and above a certain weight. In~\Cref{q3}, 
+we extract the maximum blood lead levels for children under the age of 6
+years. In~\Cref{q4}, we calculate the average systolic blood pressure, by gender, for
+subjects with a body mass index indicating obesity. 
 
-Queries 6-10 are on the FCC data. In Query~\ref{q6}, we calculate the average income for
-survey participants, based on their bootcamp attendance. In Query~\ref{q7} estimates the
-average age of women from the United States who participated. In Query~\ref{q8}, we
+Queries 5-8 are on the FCC data. In~\Cref{q5}, we calculate the average income for
+survey participants, based on their bootcamp attendance. In~\Cref{q6} estimates the
+average age of women from the United States who participated. In~\Cref{q7}, we
 calculate the average amount of money survey participants with student debt destined to
-learning based on their school degree. In Query~\ref{q9}, we join the FCC data with a
+learning based on their school degree. In~\Cref{q8}, we join the FCC data with a
 reference table provided by the World Bank which summarizes GDP per-capita across various
 countries\cite{worldbank-data}. The query calculates the average GDP per-capita for
-participants based on whether or not they attended a bootcamp. Finally, in Query~\ref{q10},
-we identify individuals from countries with GDP per-capita of \$5000 or less who earn
-\$100,000 or more post-bootcamp.
+participants based on whether or not they attended a bootcamp. 
 
 Note that for all queries we have enumerated strings and encoded them with
 an appropriate integer value.
@@ -150,12 +146,14 @@ an appropriate integer value.
 All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
 four 2.9 GHz Intel Xeon E5-2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
 
-Figure~\ref{fig:runtimes} provides a summary of the performance results. The first plot
+\Cref{fig:runtimes} provides a summary of the performance results. The first plot
 shows average running times for \ProjectName{} plans in two configurations:
 quality-optimized and runtime-optimized. The second plot shows, for comparison, the average
 running times required for each query when performing imputation at the base tables.  In all
 cases, running a query through \ProjectName{} is cheaper than imputing a single base table,
-with performance improvement on a factor of ten.
+with performance improvement on a factor of ten. This performance differential means it is feasible
+to explore multiple imputations operations (including more expensive operators) when using
+\ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
 \begin{subfigure}{\linewidth}
@@ -170,25 +168,30 @@ with performance improvement on a factor of ten.
 \label{subfig:base-runtime-queries}
 \end{subfigure}
 \caption{Comparing \ProjectName{} runtimes for each query
-    (\ref{subfig:project-runtime-queries}) with the runtime for a query when base-table
-    imputations are used (\ref{subfig:base-runtime-queries})}
+    (\Cref{subfig:project-runtime-queries}) with the runtime for a query when base-table
+    imputations are used (\Cref{subfig:base-runtime-queries})}
 \label{fig:runtimes}
 \end{figure}
 
-Figure~\ref{fig:plantimes} provides a summary of the planning times for each of the queries.
-We exclude the planning time for queries that impute at base table, as that requires no
-planning. In the median query across a variety of queries and choices of $\alpha$, planning
-constituted 8.5 percent of total runtime by \ProjectName{}. The one-standard-deviation
-intervals around the mean planning time often overlap, suggesting the planning component is
-constant in $\alpha$.
+%\Cref{fig:plantimes} provides a summary of the planning times for each of the queries.
+%We exclude the planning time for queries that impute at base table, as that requires no
+%planning. 
 
-\begin{figure}
-\includegraphics[width=\columnwidth]{figures/planning_times_imputedb.png}
-\caption{Planning times for each query}
-\label{fig:plantimes}
-\end{figure}
+In the median query across a variety of queries and choices of $\alpha$, planning
+constituted 8.5 percent of total runtime. In all cases, the optimizer
+returned a query plan within 40ms, with times roughly constant between levels of $\alpha$.
 
-Table~\ref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for
+% The one-standard-deviation
+%intervals around the mean planning time often overlap, suggesting the planning component is
+%constant in $\alpha$.
+
+%\begin{figure}
+%\includegraphics[width=\columnwidth]{figures/planning_times_imputedb.png}
+%\caption{Planning times for each query}
+%\label{fig:plantimes}
+%\end{figure}
+
+\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for
 \ProjectName{}'s query results when compared to running imputation on the base tables and
 executing the query on the cleaned data. Each query was run 200 iterations in both settings
 and then results from the two approaches were paired up and compared tuple-wise. We average
@@ -199,6 +202,7 @@ approach are low in all cases, indicating that on-the-fly imputation produces si
 results to imputation at the base tables.
 
 \begin{table}
+\todo{Consider switching to graph, or changing table layout..not very intuitive right now.}
 \centering
 \input{tables/perf_summary.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
@@ -209,7 +213,7 @@ results to imputation at the base tables.
 
 In many real-world cases, applying the imputation step at the base table is prohibitive.
 To illustrate the increasing difficulty of such an approach as datasets scale, we used a simple
-aggregate query over the ACS dataset in our final experiment(Figure~\ref{query-acs}).
+aggregate query over the ACS dataset in our final experiment(\Cref{query-acs}).
 Applying the imputation operation to the base table is extremely expensive, in our case
 completing in 75 minutes. In contrast, \ProjectName{} executes a quality-optimized version
 in 7 seconds and a runtime-optimized version in 1 second. This highlights the potential

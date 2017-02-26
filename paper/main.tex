@@ -20,6 +20,9 @@
 \usepackage{subcaption}
 \usepackage{xcolor}
 \usepackage{hyperref} % load after other packages
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage{cleveref}
 
 \addbibresource{references.bib}
 
@@ -64,13 +67,20 @@
 
 \newcommand{\ProjectName}{ImputeDB}
 \newcommand{\doms}[2]{#1 \succ #2}
+
+% definitions/theorems etc
 \newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{case}{Case}
+
+% new section names for cref
+\Crefname{query}{Query}{Query}
 
 \title{\ProjectName{}: Data Imputation as a Query Optimization}
 
 \author{
   Jos\'e Cambronero \\
-  \texttt{jcamsan@mit.edu}
+  \texttt{jcamsan@csail.mit.edu}
   \and
   John K. Feser \\
   \texttt{feser@csail.mit.edu}
