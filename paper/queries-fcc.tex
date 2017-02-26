@@ -9,7 +9,7 @@ SELECT attendedbootcamp, AVG(income)
 FROM fcc
 GROUP BY attendedbootcamp;
 \end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label{q5} \\
+\end{minipage}\refstepcounter{queryno} \label[query]{q5} \\
 6 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
@@ -17,7 +17,7 @@ SELECT AVG(age)
 FROM fcc
 WHERE gender = 178 AND countrycitizen = 158;
 \end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label{q6} \\
+\end{minipage}\refstepcounter{queryno} \label[query]{q6} \\
 7 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
@@ -26,7 +26,7 @@ FROM fcc
 WHERE studentdebtowe > 0 AND schooldegree >= 0
 GROUP BY schooldegree;
 \end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label{q7}\\
+\end{minipage}\refstepcounter{queryno} \label[query]{q7}\\
 8 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
@@ -35,7 +35,7 @@ FROM fcc, gdp
 WHERE fcc.countrycitizen = gdp.country
 GROUP BY attendedbootcamp;
 \end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label{q8}\\
+\end{minipage}\refstepcounter{queryno} \label[query]{q8}\\
 %10 & 
 %\begin{minipage}{6in}
 %\begin{lstlisting}[breaklines]

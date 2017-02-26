@@ -1,18 +1,18 @@
 \section{Algorithm}
 
-Our optimizer searches (Sec.~\ref{sec:planning}) a restricted space (Sec.~\ref{sec:search-space}) of query plans containing imputation operators (Sec.~\ref{sec:operators}) for an optimal plan given an estimate of the runtime of the query, information lost through imputation operations, and a parameter trading off the two.
+Our optimizer searches (\Cref{sec:planning}) a restricted space (\Cref{sec:search-space}) of query plans containing imputation operators (\Cref{sec:operators}) for an optimal plan given an estimate of the runtime of the query, information lost through imputation operations, and a parameter trading off the two.
 
-This plan is subject to two constraints (Sec.~\ref{sec:placement}).
+This plan is subject to two constraints (\Cref{sec:placement}).
 First, it must not emit any tuples which contain null values, regardless of the state of the base tables.
 Second, the traditional relational operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) must never observe a null value in any attribute that they operate on directly.
-Our planning algorithm is agnostic to the type of imputation used (Sec.~\ref{sec:imputation}), as the properties of the imputation are summarized by the cost model (Sec.~\ref{sec:cost-model}).
+Our planning algorithm is agnostic to the type of imputation used (\Cref{sec:imputation}), as the properties of the imputation are summarized by the cost model (\Cref{sec:cost-model}).
 
 \subsection{Imputation operators}
 \label{sec:operators}
 We introduce two new relational operators to perform imputation: \textit{Impute} ($\mu$) and
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
-replace all null values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in Sec.~\ref{sec:imputation}).
+replace all null values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
 \textit{Drop} simply removes from $R$ all tuples which have a null value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no null values for
 attributes in $C$.  
@@ -32,7 +32,7 @@ To keep the query plan search space tractable, only plans that fit the following
 \end{itemize}
   
 The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before and after traditional operators.
-Figure~\ref{fig:query-schematic} shows a plan schematic for a query involving three tables, absent any imputation operators.
+\Cref{fig:query-schematic} shows a plan schematic for a query involving three tables, absent any imputation operators.
 
 \begin{figure}
 \Tree [.$\pi$ [.$g$ [.$\bowtie$ [.$\bowtie$ [.$\sigma$ $t_1$ ] [.$\sigma$ $t_2$ ] ] [.$\sigma$ $t_3$ ] ] ] ]
@@ -74,7 +74,7 @@ These cardinality estimates are impacted not just by filtering or joining, as in
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 For simplicity, each of the logical nodes in a query plan points to a set of histograms.
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for new operation in the plan.
-Algorithm~\ref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
+\Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
 For each sub-plan, we keep track of the estimated number of
 null values in a column  ($\textsc{Missing}(c, Q)$) by using the histograms associated with
@@ -129,7 +129,7 @@ per page.
 The time computation for \textit{Impute} depends on the properties of the underlying
 algorithm. \ProjectName{} treats the actual machine learning algorithm as a black box
 and simply queries it for a time estimate. In the base implementation of our system,
-we use an iterative algorithm (see Sec.~\ref{sec:imputation}), where the runtime cost
+we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
 is a function of the number of attributes with no missing data, number of attributes with
 missing data being imputed, number of tuples, and the number of iterations for the algorithm.
 
@@ -178,12 +178,12 @@ The input to our query planner is a tuple $(T, F, J, P, G, A)$:
 \item An optional set of grouping attributes $G$ and aggregator function $A$.
 \end{itemize}
 
-The query planner must select a join ordering in addition to placing imputation operators as described in Section~\ref{sec:placement}.
+The query planner must select a join ordering in addition to placing imputation operators as described in~\Cref{sec:placement}.
 
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
 At a high level, a plan cache is a mapping from a set of tables to a set of dominating plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single plan because each plan has a distinct set of dirty attributes and a choice over the plan frontier
-can only be made once the set is final. Details are shown in Figure~\ref{fig:semantics-plan-cache}.
+can only be made once the set is final. Details are shown in~\Cref{fig:semantics-plan-cache}.
 
 \begin{figure}
   \begin{align*}
@@ -206,16 +206,16 @@ can only be made once the set is final. Details are shown in Figure~\ref{fig:sem
 
 To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
 
-Algorithm~\ref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in Algorithm~\ref{algo:top-level-planner}.
+\Cref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in~\Cref{algo:top-level-planner}.
 
 The planner operates as follows.
-First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (Lines~\ref{lst:line:attr-start}-\ref{lst:line:attr-end}).
+First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}-\Cref{lst:line:attr-end}).
 This set will be used to determine which attributes are imputed.
 Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
-a search over imputation operations produces various possible plans, which are added to the cache (Line~\ref{lst:line:sel}). If no selections are available, a 
-simple scan is added to the plan cache (Line~\ref{lst:line:scan}). Join order is jointly optimized with imputation placements and a set of
-plans encompassing all necessary tables is produced (Line~\ref{lst:line:join}). This set is now extended for any necessary grouping and aggregation
-operations (Line~\ref{lst:line:group}). After a similar step has been taken for projections, the planner now contains the plan frontier (i.e. the
+a search over imputation operations produces various possible plans, which are added to the cache (\Cref{lst:line:sel}). If no selections are available, a 
+simple scan is added to the plan cache (\Cref{lst:line:scan}). Join order is jointly optimized with imputation placements and a set of
+plans encompassing all necessary tables is produced (\Cref{lst:line:join}). This set is now extended for any necessary grouping and aggregation
+operations (\Cref{lst:line:group}). After a similar step has been taken for projections, the planner now contains the plan frontier (i.e. the
 best possible set from which to pick our final plan). The final step in the planner is to find all plans that are
 $\alpha$-bound and return the one that has the lowest runtime: the $\alpha$-bound optimal plan.
 
@@ -305,7 +305,7 @@ We can succinctly describe possible imputation transformations to a plan at a gi
 By computing dirty-set specific Pareto frontiers, it is never the case that we discard a plan $p_1$ s.t. $\doms{p_2}{p_1}$, but $\exists p_1' \in I(p_1), p_2' \in I(p_2). \doms{p_1'}{p_2'} \land \textsc{Dirty}(p_1') = \textsc{Dirty}(p_2')$
 \end{theorem}
 
-Theorem~\ref{theorem:no-bad-sit} states that there is no \textit{bad situation} such as that depicted in Figure~\ref{fig:bad-sit-diagram}
+\Cref{theorem:no-bad-sit} states that there is no \textit{bad situation} such as that depicted in~\Cref{fig:bad-sit-diagram}
 
 \begin{figure}
 \centering
@@ -324,7 +324,7 @@ Theorem~\ref{theorem:no-bad-sit} states that there is no \textit{bad situation} 
 \draw[->] (p1) -- node[right] {$\scriptstyle I$} (p1');
 \draw[->] (p2) -- node[right] {$\scriptstyle I$} (p2');
 \end{tikzpicture}
-\caption{A bad Pareto frontier selection would choose $p_2$ over $p_1$, as it is locally optimal, but with the available transformations ($I$) $p_2$  can only reach $p_2'$, which is dominated by the inaccessible $p_1'$. Theorem~\ref{theorem:no-bad-sit} says such a situation cannot arise when constructing Pareto frontiers on a dirty-set basis.}
+\caption{A bad Pareto frontier selection would choose $p_2$ over $p_1$, as it is locally optimal, but with the available transformations ($I$) $p_2$  can only reach $p_2'$, which is dominated by the inaccessible $p_1'$.~\Cref{theorem:no-bad-sit} says such a situation cannot arise when constructing Pareto frontiers on a dirty-set basis.}
 \label{fig:bad-sit-diagram}
 \end{figure}
 

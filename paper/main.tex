@@ -22,6 +22,7 @@
 \usepackage{hyperref} % load after other packages
 \usepackage{tikz}
 \usetikzlibrary{positioning}
+\usepackage{cleveref}
 
 \addbibresource{references.bib}
 
@@ -71,6 +72,9 @@
 \newtheorem{definition}{Definition}
 \newtheorem{theorem}{Theorem}
 \newtheorem{case}{Case}
+
+% new section names for cref
+\Crefname{query}{Query}{Query}
 
 \title{\ProjectName{}: Data Imputation as a Query Optimization}
 
