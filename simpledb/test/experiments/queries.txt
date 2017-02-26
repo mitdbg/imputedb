@@ -6,7 +6,7 @@ GROUP BY income;
 SELECT income, AVG(cholesterol)
 FROM demo, exams, labs
 WHERE demo.id = exams.id AND exams.id = labs.id AND
-income >= 13 AND income <= 15 AND weight >= 63
+income >= 13 AND income <= 15 AND weight >= 6300
 GROUP BY income;
 
 SELECT MAX(blood_lead)
@@ -16,7 +16,7 @@ WHERE demo.id = labs.id AND labs.id = exams.id AND age_yrs <= 6;
 SELECT gender, AVG(blood_pressure_systolic)
 FROM demo, labs, exams
 WHERE demo.id = labs.id AND labs.id = exams.id AND
-      body_mass_index >= 30
+      body_mass_index >= 3000
 GROUP BY gender;
 
 SELECT attendedbootcamp, AVG(income)
