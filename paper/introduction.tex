@@ -14,16 +14,13 @@ We have developed a system called \ProjectName{} with a novel query optimization
 only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.} 
 
-\todobox{see how this bit fits}{
-The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.}
-
 % Prior work
 There is relevant prior work in three broad areas: statistics, databases, and time-series forecasting.
 Prior work in statistics has focused on imputation quality~\cite{burgette2010multiple} and runtime cost~\cite{akande2015empirical}.
 Prior work in databases has a established simple semantics for handling tuples with missing values~\cite{codd1973understanding,grant1977null}.
 Prior work in time-series forecasting has incorporated forecasting extensions into domain-specific databases and characterized their behavior~\cite{parisi2011embedding,parisi2013temporal,duan2007processing}.
 \ProjectName{} contributes a novel approach to planning data imputation on a per query basis, allowing users to use standard SQL on real-world data sets with missing values
-and express preferences in quality of data imputation versus running time.
+and express preferences in quality of data imputation versus running time. The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
 
 % Background
 While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive.

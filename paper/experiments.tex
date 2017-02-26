@@ -173,18 +173,23 @@ to explore multiple imputations operations (including more expensive operators) 
 \label{fig:runtimes}
 \end{figure}
 
-\Cref{fig:plantimes} provides a summary of the planning times for each of the queries.
-We exclude the planning time for queries that impute at base table, as that requires no
-planning. In the median query across a variety of queries and choices of $\alpha$, planning
-constituted 8.5 percent of total runtime by \ProjectName{}. The one-standard-deviation
-intervals around the mean planning time often overlap, suggesting the planning component is
-constant in $\alpha$.
+%\Cref{fig:plantimes} provides a summary of the planning times for each of the queries.
+%We exclude the planning time for queries that impute at base table, as that requires no
+%planning. 
 
-\begin{figure}
-\includegraphics[width=\columnwidth]{figures/planning_times_imputedb.png}
-\caption{Planning times for each query}
-\label{fig:plantimes}
-\end{figure}
+In the median query across a variety of queries and choices of $\alpha$, planning
+constituted 8.5 percent of total runtime. In all cases, the optimizer
+returned a query plan within 40ms, with times roughly constant between levels of $\alpha$.
+
+% The one-standard-deviation
+%intervals around the mean planning time often overlap, suggesting the planning component is
+%constant in $\alpha$.
+
+%\begin{figure}
+%\includegraphics[width=\columnwidth]{figures/planning_times_imputedb.png}
+%\caption{Planning times for each query}
+%\label{fig:plantimes}
+%\end{figure}
 
 \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for
 \ProjectName{}'s query results when compared to running imputation on the base tables and
@@ -197,6 +202,7 @@ approach are low in all cases, indicating that on-the-fly imputation produces si
 results to imputation at the base tables.
 
 \begin{table}
+\todo{Consider switching to graph, or changing table layout..not very intuitive right now.}
 \centering
 \input{tables/perf_summary.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
