@@ -183,7 +183,7 @@ returned a query plan within 40ms, with times roughly constant between levels of
 %\end{figure}
 
 \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for \ProjectName{}'s query results when compared to running imputation on the base tables and executing the query on the cleaned data \todo{SMAPE citation}.
-After a warm-up period, each query ran for 200 iterations \todo{iterations? is this for the imputation or is it the number of query re-runs?} in both settings and then results from the two approaches were paired up and compared tuple-wise.
+Each query was separately run 200 times in both settings and then results from the two approaches were paired up and compared tuple-wise.
 We average tuple-wise absolute percentage deviations within each iteration of a query, and we report this value averaged over all iterations.
 We can see that optimizing for quality indeed reduces the SMAPE of query results.
 In general, the SMAPE relative to the base-imputation approach are low in all cases\todo{give actual value}, indicating that on-the-fly imputation produces similar results to imputation at the base tables.
