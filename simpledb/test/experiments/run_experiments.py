@@ -5,10 +5,11 @@ import os
 import subprocess
 import tempfile
 
-executable = ["java","-jar","../../dist/simpledb.jar"]
-output_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "output")
-catalog   = "../../catalog.txt"
-queries   = "queries.txt"
+executable_default    = ["java","-Xmx3200m","-jar","../../dist/simpledb.jar"]
+executable_longimpute = ["java","-Xmx3200m","-Dsimpledb.ImputeSlow","-jar","../../dist/simpledb.jar"]
+output_dir            = os.path.join(os.path.dirname(os.path.realpath(__file__)), "output")
+catalog_default       = "../../catalog.txt"
+queries_default       = "queries.txt"
 
 def run_small_experiment():
     this_output_dir = os.path.join(output_dir, "small")
@@ -36,11 +37,30 @@ def run_large_experiment():
     iters     = 220
     min_alpha = 0.00
     max_alpha = 1.00
-    step      = 0.05
+    step      = 1.00
 
-    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step)
+    queries = "queries01.txt"
+
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute)
+
+def run_alt_experiment():
+    this_output_dir = os.path.join(output_dir, "alt")
+
+    iters     = 220
+    min_alpha = 0.00
+    max_alpha = 1.00
+    step      = 1.00
+
+    queries = "queries02.txt"
+
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute)
 
 def run_acs_experiment():
+    catalog = catalog_default
+    executable = executable_default
+
     this_output_dir = os.path.join(output_dir, "acs")
 
     # Impute on base table
@@ -50,7 +70,7 @@ def run_acs_experiment():
     iters = 1
 
     print("Running acs base...")
-    executable_max_heap = [executable[0]] + ["-Xmx3200m"] + executable[1:]
+    executable_max_heap = [executable[0]] + ["-Xmx3200m", "-Dsimpledb.ImputeSlow"] + executable[1:]
     cmd = executable_max_heap + \
         ["experiment", catalog, acs_query, this_output_dir, str(iters), "--base"]
     print(cmd)
@@ -69,9 +89,19 @@ def run_acs_experiment():
 
     os.close(f)
 
-def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step):
+def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
+        queries=None, executable=None):
     if not os.path.isdir(this_output_dir):
         os.makedirs(this_output_dir)
+
+    if not queries:
+        queries = queries_default
+
+    if not executable:
+        executable = executable_default
+
+
+    catalog = catalog_default
 
     # Timing using ImputeDB
     subprocess.call(executable +
@@ -96,6 +126,8 @@ if __name__ == "__main__":
         run_medium_experiment()
     elif experiment_size == "large":
         run_large_experiment()
+    elif experiment_size == "alt":
+        run_alt_experiment()
     elif experiment_size == "acs":
         run_acs_experiment()
     else:

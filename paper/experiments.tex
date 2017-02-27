@@ -94,34 +94,41 @@ Our aim was to craft meaningful queries
 that would provide performance figures relevant to practitioners using
 similar datasets.
 
-Queries 1-4 are on the CDC data. In~\Cref{q1}, we calculate the average height for
-users based on their income data. In~\Cref{q2}, we compare cholesterol levels for
-individuals with low, medium, and high incomes spectrum and above a certain weight. In~\Cref{q3}, 
-we extract the maximum blood lead levels for children under the age of 6
-years. In~\Cref{q4}, we calculate the average systolic blood pressure, by gender, for
-subjects with a body mass index indicating obesity. 
+Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}). In~\Cref{q1}, we
+calculate the average height for users based on their income data. In~\Cref{q2}, we compare
+cholesterol levels for individuals with low, medium, and high incomes spectrum and above a
+certain weight. In~\Cref{q3}, we extract the maximum blood lead levels for children under
+the age of 6 years. In~\Cref{q4}, we calculate the average systolic blood pressure, by
+gender, for subjects with a body mass index indicating obesity. 
 
-Queries 5-8 are on the freeCodeCamp data.
+Our second set of queries is on the FCC data (\Cref{fig:queries-fcc}).
 \Cref{q5} calculates the average income for survey participants, based on their bootcamp attendance.
 \Cref{q6} estimates the average age of women from the United States who participated.
 \Cref{q7} calculates the average amount of money survey participants with student debt spent on learning based on their school degree.
 \Cref{q8} joins the freeCodeCamp data with a reference table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
 The query calculates the average GDP per-capita of countries with and without bootcamp participants. 
-
 \begin{table*}
-  \todo{do we really need headers on these tables?}
-  \centering
-  \begin{subtable}{\linewidth}
-    \input{queries-cdc}
-    \caption{Queries on CDC data}\label{fig:queries-cdc}
-  \end{subtable}
-  \par\medskip
-  \begin{subtable}{\linewidth}
-    \input{queries-fcc}
-    \caption{Queries on freeCodeCamp data}\label{fig:queries-fcc}
-  \end{subtable}
-  \par\medskip  
-  \caption{Queries used in our experiments.}\label{fig:queries}
+\centering
+ \begin{subtable}{\linewidth}
+  \input{queries-cdc}
+  \caption{Queries on CDC data}
+  \label{fig:queries-cdc}
+ \end{subtable}
+ ~
+ \begin{subtable}{\linewidth}
+ \input{queries-fcc}
+ \caption{Queries on FCC data}
+ \label{fig:queries-fcc}
+ \end{subtable}
+ ~
+ \begin{subtable}{\linewidth}
+ \input{query-acs}
+ \caption{Queries on ACS data}
+ \label{fig:query-acs}
+ \end{subtable}
+
+  \caption{Queries used in our experiments.}
+  \label{fig:queries}
 \end{table*}
 
 %\begin{table*}
@@ -146,20 +153,15 @@ to explore multiple imputations operations (including more expensive operators) 
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
-  \todo{change this to a single graph of X-times faster than base approach}
-  \begin{subfigure}{\linewidth}
-    \includegraphics[width=\columnwidth]{figures/running_times_imputedb.png}
-    \caption{Query runtimes with \ProjectName{}}\label{subfig:project-runtime-queries}
-  \end{subfigure}
-  ~
-  \begin{subfigure}{\linewidth}
-    \includegraphics[width=\columnwidth]{figures/running_times_base_tables.png}
-    \caption{Query runtimes with imputation on base tables}\label{subfig:base-runtime-queries}
-  \end{subfigure}
-  \par\medskip
-  \caption{Comparing \ProjectName{} runtimes for each query
-    (\Cref{subfig:project-runtime-queries}) with the runtime for a query when base-table
-    imputations are used (\Cref{subfig:base-runtime-queries})}\label{fig:runtimes}
+\includegraphics[width=\columnwidth]{figures/running_times_combined.png}
+\caption{Query runtimes with imputation on base tables, \ProjectName{} imputation
+    optimizing for quality ($\alpha=0$), and \ProjectName{} imputation optimizing for
+    efficiency ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
+    magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
+    imputation can provide another order-of-magnitude speedup at the expense of quality. For
+    relatively large queries (Query 9), runtime of imputation can be reduced from 6.5
+    hours to 7 seconds. }
+\label{fig:runtimes}
 \end{figure}
 
 %\Cref{fig:plantimes} provides a summary of the planning times for each of the queries.
@@ -181,7 +183,7 @@ returned a query plan within 40ms, with times roughly constant between levels of
 %\end{figure}
 
 \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for \ProjectName{}'s query results when compared to running imputation on the base tables and executing the query on the cleaned data \todo{SMAPE citation}.
-Each query ran for 200 iterations \todo{iterations? is this for the imputation or is it the number of query re-runs?} in both settings and then results from the two approaches were paired up and compared tuple-wise.
+After a warm-up period, each query ran for 200 iterations \todo{iterations? is this for the imputation or is it the number of query re-runs?} in both settings and then results from the two approaches were paired up and compared tuple-wise.
 We average tuple-wise absolute percentage deviations within each iteration of a query, and we report this value averaged over all iterations.
 We can see that optimizing for quality indeed reduces the SMAPE of query results.
 In general, the SMAPE relative to the base-imputation approach are low in all cases\todo{give actual value}, indicating that on-the-fly imputation produces similar results to imputation at the base tables.
@@ -196,16 +198,14 @@ In general, the SMAPE relative to the base-imputation approach are low in all ca
 \label{table:smape}
 \end{table}
 
-In many real-world cases, applying the imputation step at the base table is prohibitively expensive.
-To illustrate the increasing difficulty of such an approach as datasets scale, we ran the following query over the ACS dataset:
-\begin{lstlisting}
-SELECT AVG(c0) FROM acs_dirty;
-\end{lstlisting}
-Imputing the base table and then running the query takes 75 minutes.
-In contrast, \ProjectName{} executes a quality-optimized query plan in 7 seconds and a runtime-optimized plan in 1 second.
-This highlights the benefit of using our system for early data exploration.
-\end{figure}
-
+In many real-world cases, applying the imputation step at the base table is prohibitively
+expensive.
+To illustrate the increasing difficulty of such an approach as datasets scale, we run the
+query in (\Cref{fig:query-acs}) over the ACS dataset.
+Applying the imputation operation to the base table is extremely expensive, in our case
+completing in 355 minutes(\ref{fig:runtimes}). In contrast, \ProjectName{} executes a quality-optimized version
+in 7 seconds and a runtime-optimized version in 1 second. This highlights the potential
+benefit of using our system for early data exploration.
 
 %%% Local Variables:
 %%% mode: latex
