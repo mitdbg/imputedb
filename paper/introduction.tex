@@ -3,14 +3,14 @@
 % Context
 Handling incorrect or dirty data is a complex and challenging problem for analysts.
 % Problem
-One way in which a dataset can be dirty is for parts of it to be missing altogether.
-Missing data is one of the simpler variants of dirty data, but if handled naively, can still cause analyses to be incorrect.
+One way in which a dataset can be dirty is for parts of it to be missing altogether~\cite{kim2003}.
+Missing data is one of the simpler variants of dirty data, but if handled naively, can still cause analyses to be incorrect~\cite{rubin1976}.
 According to some estimates, data scientists spend between 50 and 80 percent of their time performing tasks such as collecting and cleaning datasets~\cite{data-science-cleaning}.
 
 % Solution
 To handle this problem, users may manually clean their dataset by performing some statistical analysis to replace missing data elements with likely values.
 This process is called \emph{imputation}.
-We have developed a system called \ProjectName{} with a novel query optimization algorithm which allows imputation to occur on the fly, during query execution. \emph{The key insight behind \ProjectName{} is that imputation
+We have developed a system called \ProjectName{} with a novel query optimization algorithm which allows imputation to occur on-the-fly, during query execution. \emph{The key insight behind \ProjectName{} is that imputation
 only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.} 
 
