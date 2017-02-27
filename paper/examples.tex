@@ -1,16 +1,9 @@
 \section{Motivating Example}
-In this section, we present a common scenario where a scientists
-has to perform analysis on real-world data.
-
-\subsection{Analysis with missing data}
 An epidemiologist at the CDC is tasked with an 
 exploratory analysis of data collected from individuals across
 a battery of exams. In particular, she is interested in exploring
 the relationship between income and the immune system,
 controlling for factors such as weight and gender.
-
-%While careful modeling will be necessary before putting
-%results into the final research paper,
 
 The epidemiologist is excited
 to get a quick and accurate view into the data. However,
@@ -18,15 +11,13 @@ the data has been collected through CDC surveys (see~\Cref{subsec:datasets}),
 and there is a significant amount of missing data across all
 relevant attributes. 
 
-Before she can perform her queries, the researcher must develop a strategy
-for handling the missing values. She currently has two options:
+Before she can perform her queries, the epidemiologist must develop a strategy
+for handling missing values. She currently has two options:
 1) she could drop records with missing values in relevant fields,
 2) she could use a standard data imputation package on all of her data. Both of these
 approaches have significant drawbacks. For the query pictured in ~\Cref{fig:example-query}, 
 (1) drops 1492 potentially relevant tuples,
-while her previous experiences with (2) have proven be expensive. In a previous project, she
-worked with the American Community Survey data (671,153 rows), and performing imputation on the whole
-dataset took around 75 minutes\todo{Here, we can reference the number from our own experiment (done), or the number from Akande et al: ``performing imputation on just a 1.5 percent random sample took 45 minutes''}. The analyst needs a more complete picture
+while her previous experiences with (2) have proven be expensive. The epidemiologist needs a more complete picture
 of the data, so (1) is insufficient, and she is under time pressure, so (2)
 is infeasible.
 
@@ -45,7 +36,7 @@ WHERE gender = 2 AND
       exams.id = labs.id
 GROUP BY demo.income
 \end{lstlisting}
-\caption{A typical public health query on CDC's NHANES data}
+\caption{A typical public health query on CDC's NHANES data.}
 \label{fig:example-query}
 \end{figure}
 
@@ -69,23 +60,23 @@ GROUP BY demo.income
   ] 
   ]
 \vspace{0.5\baselineskip}
-\caption{A quality-optimized plan for the query in~\Cref{fig:example-query}. $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate. $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
+\caption{A quality-optimized plan for the query in~\Cref{fig:example-query}. The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate. $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
 \label{fig:quality-plan}
 \end{figure}
 
 \subsection{Planning with \ProjectName{}}
 The multiple possible locations for performing imputation leads to a  search space contains plans of varying performance and quality of results. The user can influence the final plan selected by \ProjectName{}
-through a parameter $\alpha \in [0, 1]$, where low $\alpha$ 
+through a tradeoff parameter $\alpha \in [0, 1]$, where low $\alpha$ 
 prioritizes the quality of the query results and high $\alpha$ prioritizes performance.
 
 For the query in~\Cref{fig:example-query}, \ProjectName{} generates
 the plans in~\Cref{fig:quality-plan} and~\Cref{fig:fast-plan}, when 
 optimizing for quality and performance, respectively.
 
-The quality-optimized plan (\Cref{fig:quality-plan}) uses the impute operation $\mu$, which employs regression model to fill in missing values rather than dropping tuples.
+\Cref{fig:quality-plan} shows a quality-optimized plan that uses the impute operation $\mu$, which employs regression model to fill in missing values rather than dropping tuples.
 It waits to impute \verb|demo.income| until after the final join has taken place, but other imputations take place earlier on in the plan, some before filtering and join operations.
 Imputations are placed to maximize ImputeDB's estimate of the quality of the overall results.
-Meanwhile, the performance-optimized plan (\Cref{fig:fast-plan}) uses the drop operation $\delta$ instead of filling in missing values.
+Meanwhile, \Cref{fig:fast-plan}'s performance-optimized plan uses the drop operation $\delta$ instead of filling in missing values.
 However, it is a significant improvement over dropping all tuples with missing data, as it only drops tuples with missing values in attributes which are referenced by the rest of the plan. In both cases, only performing
 imputation on the necessary data yields a query that is much faster
 than performing imputation on the whole dataset and then executing
@@ -112,14 +103,14 @@ the query.
     ] 
   ] 
   ]
-\caption{A performance-optimized plan for the query in~\Cref{fig:example-query}. $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate. $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
+\caption{A performance-optimized plan for the query in~\Cref{fig:example-query}.The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate. $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
 \label{fig:fast-plan}
 \end{figure}
 
 \subsection{\ProjectName{} Workflow}
-Now that the analyst has \ProjectName{}, she can explore
+Now that the epidemiologist has \ProjectName{}, she can explore
 the dataset using SQL. For each query, she repeatedly chooses a value
-of $\alpha$ and runs the query until she is unsatisfied with the runtime.
+for $\alpha$ and runs the query until she is unsatisfied with the runtime.
 Rather than commit \emph{a priori} to a runtime bound for her query,
 which may be unsatisfiable, this iterative approach gives her 
 immediate feedback.
