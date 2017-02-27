@@ -97,19 +97,20 @@
 \maketitle
 
 \begin{abstract}
-Missing values abound in data analysis and often present a serious challenge for users, who
+Missing values abound in data analysis and often present a serious challenge for usability of data. Users
 are forced to pick between removing tuples with missing values or creating a clean duplicate of their data
-by  applying a potentially expensive imputation strategy. We show that it is possible
+by  applying a potentially-expensive imputation strategy. We show that it is possible
 to incorporate imputation into a cost-based query optimizer, performing imputation on the fly
 for each query. This allows users to immediately explore
-their data, while the system picks the optimal placement of imputation operations based
+their data, while the system picks the optimal placement of imputation operations. This placement is based
 on the specific query issued and a parameter that the user selects for evaluating the tradeoff between data
 quality and runtime performance. We incorporate the imputation operators into the relational algebra, allowing
 for traditional optimizations to take place. Our experiments evaluate this approach on two real-world survey-based datasets
-from the \textit{Center for Disease Control and Prevention} and \textit{freeCodeCamp}, showing that the 
-optimizer generates query plans that execute in a fraction of the time that it takes to impute values at the base
-tables, making exploratory data analysis using our system feasible. Furthermore, we show that the query results
-from on-the-fly imputation are comparable to those generated with the standard full-table imputation approach.
+from the \textit{Center for Disease Control and Prevention} and \textit{freeCodeCamp}. Our results show that the optimizer
+generates query plans that execute between \todo{add [low x - high x] range} as fast as imputing at the base
+tables and then executing queries, making exploratory data analysis using our system feasible. Furthermore, we show that the query results
+from on-the-fly imputation have Symmetric-Mean-Absolute-Percentage-Error between \todo{add SMAPE range}  
+when compared to standard full-table imputation approach.
 \end{abstract}
 
 \input{introduction}
