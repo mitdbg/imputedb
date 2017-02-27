@@ -59,6 +59,7 @@ def run_alt_experiment():
 
 def run_acs_experiment():
     catalog = catalog_default
+    executable = executable_default
 
     this_output_dir = os.path.join(output_dir, "acs")
 
@@ -69,7 +70,7 @@ def run_acs_experiment():
     iters = 1
 
     print("Running acs base...")
-    executable_max_heap = [executable[0]] + ["-Xmx3200m"] + executable[1:]
+    executable_max_heap = [executable[0]] + ["-Xmx3200m", "-Dsimpledb.ImputeSlow"] + executable[1:]
     cmd = executable_max_heap + \
         ["experiment", catalog, acs_query, this_output_dir, str(iters), "--base"]
     print(cmd)
