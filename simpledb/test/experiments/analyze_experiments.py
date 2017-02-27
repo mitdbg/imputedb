@@ -70,7 +70,7 @@ def myplot(df,alphas=None,**kwargs):
         plt.legend()
     return ax
   
-def get_query_results(experiments_dir, headers, base=False):
+def get_query_results(experiments_dir, headers, restrict_alpha=False, base=False):
     # results has
     # - key: (query, alpha)
     # - value: df with results, col names specific to that query
@@ -83,7 +83,7 @@ def get_query_results(experiments_dir, headers, base=False):
 
     # Iterate through queries, alpha, iters
     print("get_query_results")
-    if restrict_alpha=True:
+    if restrict_alpha:
         globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha000/it*/result.txt") + \
              glob.glob(experiments_dir + os.path.sep + "q*/alpha1000/it*/result.txt")
     else:
@@ -136,8 +136,8 @@ def get_timing_results(experiments_dir, restrict_alpha=False, base=False):
     if restrict_alpha:
         globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha000/timing.csv") + \
              glob.glob(experiments_dir + os.path.sep + "q*/alpha1000/timing.csv")
-     else:
-         globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha*/timing.csv")
+    else:
+        globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha*/timing.csv")
 
     # Iterate through queries, alpha, reading 'timing.csv' for each.
     for f in globs:

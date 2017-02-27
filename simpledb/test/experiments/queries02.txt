@@ -36,4 +36,3 @@ SELECT attendedbootcamp, AVG(gdp_per_capita)
 FROM fcc, gdp
 WHERE fcc.countrycitizen = gdp.country and age >= 18
 GROUP BY attendedbootcamp;
-
