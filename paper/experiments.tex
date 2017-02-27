@@ -3,22 +3,20 @@ To evaluate the performance of our approach,  we implemented
 a prototype system in Java, following a traditional iterator model.
 For our experiments we plan and execute queries
 for two separate survey-based data sets, showing that our system
-is ideal for early dataset exploration.
+is well suited for early dataset exploration.
 
 \subsection{Data sets} \label{subsec:datasets}
 \subsubsection{Center for Disease Control: Surveys}
-For our first set of experiments, we use survey data collected by the 
-Center for Disease Control and Prevention (CDC) in the United States. In particular, we
-experiment on a set of tables collected as part of the National
+We use survey data collected by the 
+Center for Disease Control and Prevention (CDC) in the United States. We
+experiment on a set of tables collected as part of the 2013-2014 National
 Health and Nutrition Examination Survey (NHANES), a series of studies
 conducted by the CDC on a national sample of several thousand individuals\cite{cdc-data}.
 The data consists on survey responses, physical examinations, and laboratory
-results, amongst others. Our dataset corresponds to the 2013-2014 NHANES
-and is available for direct download on the CDC's organization site on 
+results, amongst others. Our dataset is available for direct download on the CDC's organization site on 
 kaggle.com, a popular data science website.
 
-There are a total of 6 tables associated with the NHANES data set. For purposes
-of our experiments, we use three tables:
+There are a total of 6 tables associated with the NHANES data set. We use three tables:
 
 \begin{itemize}
 	\item Demographics: outlines demographic information of subjects
@@ -50,7 +48,7 @@ NHANES variable names with self-explanatory attribute names.
         \input{tables/cdc_exams}
         \caption{Physical Results}
     \end{subtable}
-    \caption{Missing values in CDC NHANES 2013-2014 data}
+    \caption{Missing value distribution within each table/attribute in CDC NHANES 2013-2014 data}
     \label{table:nhanes-description} 
 \end{table}
 
@@ -69,7 +67,7 @@ questions. The survey targeted users who were in one way or another
 related to coding organizations.
 
 For our purposes, we use a version of the data that has been 
-pre-processed, but where plenty of missing values remain. It is
+pre-processed, but where many missing values remain. It is
 worth noting that given the table design (where many attributes
 are related), many of these missing values are to be
 expected. The dataset we started with had 15,620 rows and 113
@@ -78,7 +76,7 @@ columns. We chose 17 attributes, which are outlined in~\Cref{table:fcc-descripti
 \begin{table}
    \centering
     \input{tables/fcc}
-    \caption{Missing values in FCC Survey Data}
+    \caption{Missing values in fCC Survey Data}
    \label{table:fcc-description} 
 \end{table}
 
@@ -89,9 +87,8 @@ Given that the data had been cleaned, we uniformly introduced missing values acr
 of 671,153 rows and 37 integer columns.
 
 \subsection{Queries}
-We collect a set of queries (\Cref{fig:queries}) that we think are both representative,
-in that they could reasonably be written by a user in the course of data analysis, and
-interesting to plan.
+We collect a set of queries (\Cref{fig:queries}) that we think are both representative and interesting
+to plan. They could reasonably be written by a user in the course of data analysis.
 
 The queries on the CDC NHANES data consist not only of projections and selections,
 but also interesting joins and aggregates. Our aim was to craft meaningful queries
@@ -105,11 +102,11 @@ we extract the maximum blood lead levels for children under the age of 6
 years. In~\Cref{q4}, we calculate the average systolic blood pressure, by gender, for
 subjects with a body mass index indicating obesity. 
 
-Queries 5-8 are on the FCC data. In~\Cref{q5}, we calculate the average income for
+Queries 5-8 are on the fCC data. In~\Cref{q5}, we calculate the average income for
 survey participants, based on their bootcamp attendance. In~\Cref{q6} estimates the
 average age of women from the United States who participated. In~\Cref{q7}, we
 calculate the average amount of money survey participants with student debt destined to
-learning based on their school degree. In~\Cref{q8}, we join the FCC data with a
+learning based on their school degree. In~\Cref{q8}, we join the fCC data with a
 reference table provided by the World Bank which summarizes GDP per-capita across various
 countries\cite{worldbank-data}. The query calculates the average GDP per-capita for
 participants based on whether or not they attended a bootcamp. 
@@ -127,7 +124,7 @@ an appropriate integer value.
  ~
  \begin{subtable}{\linewidth}
  \input{queries-fcc}
- \caption{Queries on FCC data}
+ \caption{Queries on fCC data}
  \label{fig:queries-fcc}
  \end{subtable}
   \caption{Queries used in our experiments.}
@@ -146,16 +143,17 @@ an appropriate integer value.
 All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
 four 2.9 GHz Intel Xeon E5-2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
 
-\Cref{fig:runtimes} provides a summary of the performance results. The first plot
+\Cref{fig:runtimes} shows a summary of the performance results. The first plot
 shows average running times for \ProjectName{} plans in two configurations:
 quality-optimized and runtime-optimized. The second plot shows, for comparison, the average
 running times required for each query when performing imputation at the base tables.  In all
 cases, running a query through \ProjectName{} is cheaper than imputing a single base table,
-with performance improvement on a factor of ten. This performance differential means it is feasible
+with performance improvement on a factor of ten\todo{give range of performance}. This performance differential means it is feasible
 to explore multiple imputations operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
+\todo{change this to a single graph of X-times faster than base approach}
 \begin{subfigure}{\linewidth}
 \includegraphics[width=\columnwidth]{figures/running_times_imputedb.png}
 \caption{Query runtimes with \ProjectName{}}
@@ -193,12 +191,12 @@ returned a query plan within 40ms, with times roughly constant between levels of
 
 \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for
 \ProjectName{}'s query results when compared to running imputation on the base tables and
-executing the query on the cleaned data. Each query was run 200 iterations in both settings
+executing the query on the cleaned data. Each query ran for 200 iterations in both settings
 and then results from the two approaches were paired up and compared tuple-wise. We average
 tuple-wise absolute percentage deviations within each iteration of a query, and we report
 this value averaged over all iterations.  We can see that optimizing for quality indeed
 reduces the SMAPE of query results. In general, the SMAPE relative to the base-imputation
-approach are low in all cases, indicating that on-the-fly imputation produces similar
+approach are low in all cases\todo{give actual value}, indicating that on-the-fly imputation produces similar
 results to imputation at the base tables.
 
 \begin{table}

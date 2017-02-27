@@ -1,26 +1,18 @@
 \section{Introduction}
 
 % Context
-Handling incorrect or dirty data is a complex and challenging problem for analysts.
+Handling incorrect or dirty data is a complex and challenging problem for analysts\todo{add significant citations here}.
 % Problem
 One way in which a dataset can be dirty is for parts of it to be missing altogether~\cite{kim2003}.
-Missing data is one of the simpler variants of dirty data, but if handled naively, can still cause analyses to be incorrect~\cite{rubin1976}.
+Missing data, if handled naively, can cause analyses to be incorrect~\cite{rubin1976}.
 According to some estimates, data scientists spend between 50 and 80 percent of their time performing tasks such as collecting and cleaning datasets~\cite{data-science-cleaning}.
 
 % Solution
 To handle this problem, users may manually clean their dataset by performing some statistical analysis to replace missing data elements with likely values.
 This process is called \emph{imputation}.
-We have developed a system called \ProjectName{} with a novel query optimization algorithm which allows imputation to occur on-the-fly, during query execution. \emph{The key insight behind \ProjectName{} is that imputation
+We have developed a system called \ProjectName{}, which is the first database to use a query optimization algorithm which allows imputation to occur on-the-fly, during query execution. \emph{The key insight behind \ProjectName{} is that imputation
 only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.} 
-
-% Prior work
-There is relevant prior work in three broad areas: statistics, databases, and time-series forecasting.
-Prior work in statistics has focused on imputation quality~\cite{burgette2010multiple} and runtime cost~\cite{akande2015empirical}.
-Prior work in databases has a established simple semantics for handling tuples with missing values~\cite{codd1973understanding,grant1977null}.
-Prior work in time-series forecasting has incorporated forecasting extensions into domain-specific databases and characterized their behavior~\cite{parisi2011embedding,parisi2013temporal,duan2007processing}.
-\ProjectName{} contributes a novel approach to planning data imputation on a per query basis, allowing users to use standard SQL on real-world data sets with missing values
-and express preferences in quality of data imputation versus running time. The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
 
 % Background
 While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive.
@@ -30,10 +22,23 @@ In contrast to existing systems, \ProjectName{} exploits this observation and av
 carefully plans the placement of different imputation operations throughout the query plan, resulting in a 
 significant speedup in query execution. The focus on of our work is not on the imputation algorithm but rather on the planning involved in its use in non-trivial query plans. 
 
+\todobox{find appropriate location for this}
+{In a previous project, she
+worked with the American Community Survey data (671,153 rows), and performing imputation on the whole
+dataset took around 75 minutes\todo{Here, we can reference the number from our own experiment (done), or the number from Akande et al: ``performing imputation on just a 1.5 percent random sample took 45 minutes''}.}
+
+% Prior work
+There is relevant prior work in three broad areas: statistics, databases, and time-series forecasting.
+Prior work in statistics\todo{add more specific subarea qualifier} has focused on imputation quality~\cite{burgette2010multiple} and runtime cost~\cite{akande2015empirical}.
+Prior work in databases has a established simple semantics for handling tuples with missing values~\cite{codd1973understanding,grant1977null}.
+Prior work in time-series forecasting has incorporated forecasting extensions into domain-specific databases and characterized their behavior~\cite{parisi2011embedding,parisi2013temporal,duan2007processing}.
+\ProjectName{} contributes the first optimizer to plan data imputation on a per query basis, allowing users to use standard SQL on real-world data sets with missing values
+and express preferences in quality of data imputation versus running time. The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
+
 % Implications
 Our approach enables an exploratory analysis workflow in which the analyst can issue standard SQL queries over a data set, even if that data has missing values, and get
-queries that execute in a fraction of the time it takes to impute base tables and then run queries (the traditional approach). Furthermore, the results obtained with this approach
-are similar in quality to those obtained with the base-table imputation approach, as indicated by low symmetric-Mean-Absolute-Percentage-Errors in our empirical results
+queries that execute in a fraction of the time\todo{add actual performance figures here} it takes to impute base tables and then run queries (the traditional approach). Furthermore, the results obtained with this approach
+are similar in quality to those obtained with the base-table imputation approach, as indicated by low\todo{add actual value here} Symmetric-Mean-Absolute-Percentage-Errors in our empirical results
 over real-world data sets (see~\Cref{sec:experiments} for details).
 
 % Scope
@@ -45,14 +50,14 @@ This paper makes the following contributions:
 \begin{itemize}
 \item \textbf{Relational algebra with imputation:}
   We extend the standard relational algebra with two new operators to represent imputation operations: impute ($\mu$) and drop ($\delta$).
-  Impute fills in missing data values using a regression model (CE-CART)~\cite{burgette2010multiple}.
-  Drop simply drops tuples which contain null values.
+  Impute operation fills in missing data values using a regression model (CE-CART)~\cite{burgette2010multiple}.
+  Drop operation simply drops tuples which contain null values.
 \item \textbf{Model of imputation quality and cost:}
   We extend the traditional cost model for query plans to incorporate a measure of the quality of the imputations performed.
   We use the cost model to abstract over the imputation algorithm used.
   To add an additional imputation technique, it is sufficient to characterize it with two functions: one to describe its running time and one to describe the quality of its results.
 \item \textbf{Query planning with imputation:}
-  We present a novel query planning algorithm which jointly optimizes for running time and the quality of the results.
+  We present the first query planning algorithm to jointly optimize for running time and the quality of the imputed results.
   It does so by maintaining multiple sets of Pareto optimal plans according to the cost model.
   By deferring selection of the final plan, we make it possible for the user to trade off running time and result quality.
 \item \textbf{Proof of optimality:}

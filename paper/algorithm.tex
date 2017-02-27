@@ -1,11 +1,12 @@
 \section{Algorithm}
 
+\todobox{this jumps around too much}{
 Our optimizer searches (\Cref{sec:planning}) a restricted space (\Cref{sec:search-space}) of query plans containing imputation operators (\Cref{sec:operators}) for an optimal plan given an estimate of the runtime of the query, information lost through imputation operations, and a parameter trading off the two.
 
 This plan is subject to two constraints (\Cref{sec:placement}).
 First, it must not emit any tuples which contain null values, regardless of the state of the base tables.
 Second, the traditional relational operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) must never observe a null value in any attribute that they operate on directly.
-Our planning algorithm is agnostic to the type of imputation used (\Cref{sec:imputation}), as the properties of the imputation are summarized by the cost model (\Cref{sec:cost-model}).
+Our planning algorithm is agnostic to the type of imputation used (\Cref{sec:imputation}), as the properties of the imputation are summarized by the cost model (\Cref{sec:cost-model}).}
 
 \subsection{Imputation operators}
 \label{sec:operators}
@@ -13,6 +14,8 @@ We introduce two new relational operators to perform imputation: \textit{Impute}
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
 replace all null values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
+In our experiments, we instantiate \textit{Impute} with the CE-CART\cite{burgette2010multiple} algorithm, but we highlight that
+our system is agnostic to this choice.
 \textit{Drop} simply removes from $R$ all tuples which have a null value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no null values for
 attributes in $C$.  
@@ -26,7 +29,7 @@ To keep the query plan search space tractable, only plans that fit the following
 
 \item Joins are performed after filtering, and only left-deep plans are considered.
 
-\item A grouping \& aggregation operator is optional, and if present will be performed after the final join.
+\item A grouping and aggregation operator is optional and if present will be performed after the final join.
 
 \item Projections are placed at the root of the query tree.
 \end{itemize}
@@ -53,7 +56,7 @@ Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping 
  
 This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of performance and cost for the current query.
 
-In order to pick a final plan from the frontier, our model introduces a parameter $\alpha$ which encodes an upper bound on the $\textsc{Loss}$ value that the user is willing
+In order to pick a final plan from the frontier, our model introduces a tradeoff parameter $\alpha$ which encodes an upper bound on the $\textsc{Loss}$ value that the user is willing
 to tolerate relative to the minimum possible amongst frontier plans.
 
 \begin{definition}
@@ -118,12 +121,12 @@ database.
 %\end{align*}
 
 Scan costs are estimated based on the number of tuples, 
-page size, and an unit-less IO cost per page. Join costs are estimated as a function
+page size, and an unit-less I/O cost per page. Join costs are estimated as a function
 of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
 Filtering, projecting, and aggregating are all done in memory and have low computational overhead
 so we assume negligible time costs for those operations. We extend these heuristics to 
 account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and its time
-complexity can be expressed as a function of the number of heap pages read and the IO cost
+complexity can be expressed as a function of the number of heap pages read and the I/O cost
 per page.
 
 The time computation for \textit{Impute} depends on the properties of the underlying
@@ -135,7 +138,7 @@ missing data being imputed, number of tuples, and the number of iterations for t
 
 In general, evaluating the time complexity for different \textit{Impute} operators is
 complicated, as the properties of
-different algorithms can vary significantly, the underlying IO cost
+different algorithms can vary significantly, the underlying I/O cost
 is not easily extracted (especially in the case that the entire stream of tuples does not
 fit in memory), and the CPU cost dominates (in contrast to the other operators, which may
 not even consider CPU cost explicitly). For example, \cite{martin1995time} find that the
@@ -350,6 +353,7 @@ So it must be the case that no such situation arises.
 Given that no desirable plans are discarded by computing Pareto frontiers for each dirty set, the final Pareto frontier (for dirty set $\emptyset$) is optimal.
 
 \subsection{Complexity}
+\todo{Stengthen complexity argument, as per Sam's feedback}
 Our optimization algorithm builds off the approach taken by System R \cite{blasgen1981system}, therefore our planning algorithm still operates in exponential time. 
 If we removed our restriction on imputation operators to consider not just minimal versus maximal imputations, and instead allowed any arbitrary subset
 of attributes to be imputed at a plan node (including those not operated on by that node), then every single operator in the query plan would have a
