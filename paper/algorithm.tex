@@ -1,9 +1,10 @@
 \section{Algorithm}
 In order to correctly plan around missing values, we first extend the relational algebra operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) 
 with two new operators (\Cref{sec:operators}). We then define the search space (\Cref{sec:search-space}) of plans to encompass non-trivial operations, such as joins and 
-aggregations. The decision to place imputation operators is driven by our cost model (\Cref{sec:cost-model}), which characterizes a plan based on estimates for the 
-quality of the imputations performed and the runtime performance. Soundness of query execution is provided by our main design invariant, which guarantees traditional relational
-algebra operators must never observe a missing value in any attribute that they operate on directly (\Cref{sec:placement}). Our imputation planning algorithm is
+aggregations. Soundness of query execution is provided by our main design invariant, which guarantees traditional relational
+algebra operators must never observe a missing value in any attribute that they operate on directly (\Cref{sec:placement}). 
+The decision to place imputation operators is driven by our cost model (\Cref{sec:cost-model}), which characterizes a plan based on estimates for the 
+quality of the imputations performed and the runtime performance. Our imputation planning algorithm is
 agnostic to the type of imputation used (\Cref{sec:imputation}). Finally, we show
 that while our algorithm is exponential in the number of joins(\Cref{sec:complexity}), in practice, planning times are not a concern.
 
@@ -43,6 +44,24 @@ The space of query plans is similar to that considered by System R~\cite{blasgen
 \label{fig:query-schematic}
 \end{figure}
 
+\subsection{Imputation placement}
+\label{sec:placement}
+Imputation operators must be placed so that no relational operator receives a tuple containing null in an attribute that the operator examines, regardless of the state of the data in the base tables.
+
+Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan $q$ is associated with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each table using the table histograms, which track the number of null values in each column. The dirty set for a query plan can be computed recursively as follows:
+
+\begin{align*}
+  \textsc{Dirty}(q) = \begin{cases}
+    \textsc{Dirty}(q') \setminus C & q = \delta_C(q')\ \text{or}\ q = \mu_C(q') \\
+    \textsc{Dirty}(q') \cap C & q = \pi_C(q') \\
+    \textsc{Dirty}(q_l) \cup \textsc{Dirty}(q_r) & q = q_l \bowtie_\psi q_r \\
+    \textsc{Dirty}(q') & q = \sigma_\phi(q') \\
+    \textsc{Dirty}(t) & q = \text{some table}\ t \\
+  \end{cases}
+\end{align*}
+
+Note that \textsc{Dirty} over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null, but the dirty set would be unchanged. We choose to over-approximate to ensure that all null values are explicitly imputed or dropped.
+
 \subsection{Cost model}
 \label{sec:cost-model}
 The cost of a plan $q$ is expressed as a tuple $\langle \textsc{Loss}(q), \textsc{Time}(q) \rangle$.
@@ -50,7 +69,7 @@ $\textsc{Loss}(q) \in [0,1]$ is an estimate of the amount of information lost by
 $\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
 
 \begin{definition}
-We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$ if $(l \leq l' \land t < t') \lor (l < l' \land t \leq t')$. We denote this as $\doms{p}{p'}$. 
+We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(p) = \textsc{Dirty}(p') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{p}{p'}$. 
 \end{definition}
 
 Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[P= \{ p ~|~ \not\exists p' \in S.\ p \neq p' \land \doms{p'}{p} \}.\]
@@ -152,25 +171,6 @@ in achieving good performance, can have cost exponential in the height of the tr
 practice, we find that a simple parameterization can be acceptable (i.e. yield intelligent query
 plans).
 
-
-\subsection{Imputation placement}
-\label{sec:placement}
-Imputation operators must be placed so that no relational operator receives a tuple containing null in an attribute that the operator examines, regardless of the state of the data in the base tables.
-
-Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan $q$ is associated with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each table using the table histograms, which track the number of null values in each column. The dirty set for a query plan can be computed recursively as follows:
-
-\begin{align*}
-  \textsc{Dirty}(q) = \begin{cases}
-    \textsc{Dirty}(q') \setminus C & q = \delta_C(q')\ \text{or}\ q = \mu_C(q') \\
-    \textsc{Dirty}(q') \cap C & q = \pi_C(q') \\
-    \textsc{Dirty}(q_l) \cup \textsc{Dirty}(q_r) & q = q_l \bowtie_\psi q_r \\
-    \textsc{Dirty}(q') & q = \sigma_\phi(q') \\
-    \textsc{Dirty}(t) & q = \text{some table}\ t \\
-  \end{cases}
-\end{align*}
-
-Note that \textsc{Dirty} over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null, but the dirty set would be unchanged. We choose to over-approximate to ensure that all null values are explicitly imputed or dropped.
-
 \subsection{Query planning}
 \label{sec:planning}
 The input to our query planner is a tuple $(T, F, J, P, G, A)$:
@@ -201,7 +201,7 @@ Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}
                                            P' &= \left\{q ~|~ \begin{aligned}
                                                                      q \in \llbracket Q[T] \rrbracket \cup \{p\}, \\
                                                                      \textsc{Dirty}(q) = \textsc{Dirty}(p),\\
-                                                                     \forall q' \in \llbracket Q[T] \rrbracket, \textsc{Dirty}(q')=\textsc{Dirty}(q).  \doms{q} {q'} 
+                                                                     \forall q' \in \llbracket Q[T] \rrbracket.  \doms{q} {q'} 
                                                                    \end{aligned}
                                            \right\}
   \end{align*}
@@ -209,11 +209,10 @@ Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}
   \label{fig:semantics-plan-cache}
 \end{figure}
 
-\todobox{jose rewrite this clearly}{
-While $\textsc{Loss}$ is not monotonically increasing in our model, we maintain a collection of sound and complete Pareto frontiers by 
-computing these specific to each dirty set. That is to say, that the combination of $\textsc{Loss}(p) \times \textsc{Dirty}(p)$ for some
-plan $p$ behaves monotonically, as the dirty-set is strictly decreasing through the application of $\delta, \mu$ operations. 
-The final Pareto frontier corresponds to the collection of plans associated with the empty dirty set.}
+The plan cache uses the partial order of plans defined by  $\langle \textsc{Dirty}, \textsc{Loss}, \textsc{Time} \rangle$ to
+collect sound and complete Pareto frontiers. For plans with the same dirty set, we can treat $\langle \textsc{Loss}, \textsc{Time} \rangle$
+as a total order, allowing us to appropriately select the frontier. Meanwhile, plans with different $\textsc{Dirty}$ sets cannot be compared. The final
+Pareto frontier corresponds to the collection of plans associate with the empty dirty set.
 
 To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp.\ drop) only imputes (resp.\ drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
 
