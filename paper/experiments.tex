@@ -167,7 +167,8 @@ to explore multiple imputations operations (including more expensive operators) 
     performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
     magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
     imputation can provide another order-of-magnitude speedup at the expense of quality. For
-    relatively expensive queries over large datasets (Query 9), runtime of imputation can be reduced from \acsbaseresulthours~to \acsimputedbzeroresult.}
+    relatively expensive queries over large datasets (Query 9), runtime of imputation can be reduced
+    from~\acsbaseresulthours~to~\acsimputedbzeroresult.}
     
 \label{fig:runtimes}
 \end{figure}
@@ -192,17 +193,20 @@ returned a query plan within 40ms, with times roughly constant between levels of
 
 \subsubsection{Accuracy vs. Base-table Imputation}
 
-\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for \ProjectName{}'s query results when compared to running imputation on the base tables and executing the query on this cleaned base data \todo{SMAPE citation}.
+\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for \ProjectName{}'s query results when compared to running
+imputation on the base tables and executing the query on this cleaned base data \todo{SMAPE citation}.
 Each query was separately run 200 times in both settings and then results from the two approaches were paired up and compared tuple-wise.
 We average tuple-wise absolute percentage deviations within each iteration of a query, and we report this value averaged over all iterations.
 We can see that optimizing for quality indeed reduces the SMAPE of query results.
-In general, the SMAPE relative to the base-imputation approach are low in all cases\todo{give actual value}, indicating that on-the-fly imputation produces similar results to imputation at the base tables.
+In general, the SMAPE relative to the base-imputation approach are low in all cases\todo{give actual value}, indicating that on-the-fly imputation produces
+similar results to imputation at the base tables.
 
 \begin{table}
 \centering
 \input{tables/perf_summary.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
-    parameterizations relative to results when imputing on base table. Queries optimized for quality ($\alpha=0$) generally achieve lower error than queries optimized for efficiency ($\alpha=1$).}
+    parameterizations relative to results when imputing on base table. Queries optimized for quality ($\alpha=0$) generally achieve
+    lower error than queries optimized for efficiency ($\alpha=1$).}
 \label{table:smape}
 \end{table}
 
@@ -211,11 +215,14 @@ In many real-world cases, applying the imputation step at the base table is proh
 expensive.
 To illustrate the increasing difficulty of such an approach as datasets scale, we run~\Cref{q9} over the ACS dataset.
 Applying the imputation operation to the base table is extremely expensive, in our case
-completing in \acsbaseresultminutes (\Cref{fig:runtimes}. In contrast, \ProjectName{} executes a quality-optimized version
-in\acsimputedbzeroresult~and a runtime-optimized version in \acsimputedboneresult. This highlights the potential
+completing in \acsbaseresultminutes~(\Cref{fig:runtimes}). In contrast, \ProjectName{} executes a quality-optimized version
+in~\acsimputedbzeroresult~and a runtime-optimized version in~\acsimputedboneresult. This highlights the potential
 benefit of using our system for early data exploration.
 
-\srm{note somewhere that imputation requires both training and running model, and state why this is reasonable / the only choice}
+For every imputation inserted into the query plan, a new statistical model is instantiated and trained before being used for imputation.
+Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
+this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are not known until runtime.
+Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead. 
 
 %%% Local Variables:
 %%% mode: latex
