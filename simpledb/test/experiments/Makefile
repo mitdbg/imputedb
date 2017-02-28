@@ -61,5 +61,4 @@ explore:
 		   --user root \
 	           jupyter/datascience-notebook python
 
-.PHONY: 
-help clean clean_force clean_files clean_containers clean_containers_force build run_and_analysis run analysis explore
+.PHONY: help clean clean_force clean_files clean_containers clean_containers_force build run_and_analysis run analysis explore
