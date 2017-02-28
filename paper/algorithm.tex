@@ -366,7 +366,7 @@ By doing so we limit the number of imputations at any point to four: \textit{Dro
 This modification increases the complexity of our planning algorithm to $O(16^J)$.\todo{I think this is right, but should check}
 
 To motivate the restriction of imputation types, we consider the implications of allowing arbitrary imputations.
-If we allow any arbitrary subset of attributes to be imputed, then we would need to consider $O(2^{|D|+1})$ different imputation operators before each relational operator.
+If we allow any arbitrary subset of attributes to be imputed, then we would need to consider $O(2^{|D|+1})$ different imputation operators before each relational operator where $D$ is the set of dirty attributes in all tables.
 This would increase the overall complexity of the algorithm drastically.
 
 Finally, we note that for the queries we have examined, this exponential blowup does not affect the practical performance of our optimizer.
