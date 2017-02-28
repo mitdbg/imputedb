@@ -113,35 +113,27 @@ Our second set of queries is on the fCC data (\Cref{fig:queries-fcc}).
 \Cref{q7} calculates the average amount of student debt based on school degree for survey participants who have student debt.
 \Cref{q8} joins the freeCodeCamp data with a reference table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
 The query calculates the average GDP per-capita of countries with and without bootcamp participants. 
-\begin{table*}
-\centering
- \begin{subtable}{\linewidth}
-  \input{queries-cdc}
-  \caption{Queries on CDC data}
-  \label{fig:queries-cdc}
- \end{subtable}
- ~
- \begin{subtable}{\linewidth}
- \input{queries-fcc}
- \caption{Queries on fCC data}
- \label{fig:queries-fcc}
- \end{subtable}
- ~
- \begin{subtable}{\linewidth}
- \input{query-acs}
- \caption{Queries on ACS data}
- \label{fig:query-acs}
- \end{subtable}
 
-  \caption{Queries used in our experiments.}
-  \label{fig:queries}
+\begin{table*}
+  \centering
+  \begin{subtable}{\linewidth}
+    \input{queries-cdc}
+    \caption{Queries on CDC data}\label{fig:queries-cdc}
+  \end{subtable}
+  \par\medskip
+  \begin{subtable}{\linewidth}
+    \input{queries-fcc}
+    \caption{Queries on fCC data}\label{fig:queries-fcc}
+  \end{subtable}
+  \par\medskip
+  \caption{Queries used in our experiments.}\label{fig:queries}
 \end{table*}
 
 %\begin{table*}
 %  \centerfloat
 %  \input{runtimes}
 %    \caption{Base error, percent change in error and and running time for queries
-%    with different imputation levels. Base error is the root-mean-square error (RMSE) between the query run on clean
+%    with different imputation levels. Base error is the root-mean-square error (RMSE) between the query on clean
 %    data and the query run on dirty data without imputation. Change in error is relative to the base error.}
 %  \label{fig:experiments}
 %\end{table*}
@@ -213,10 +205,13 @@ similar results to imputation at the base tables.
 \subsubsection{Runtime of Base-table Imputation}
 In many real-world cases, applying the imputation step at the base table is prohibitively
 expensive.
-To illustrate the increasing difficulty of such an approach as datasets scale, we run~\Cref{q9} over the ACS dataset.
+To illustrate the increasing difficulty of such an approach as datasets scale, we ran the following query over the ACS dataset:
+\begin{lstlisting}[breaklines]
+SELECT AVG(c0) FROM acs_dirty;
+\end{lstlisting}
 Applying the imputation operation to the base table is extremely expensive, in our case
-completing in \acsbaseresultminutes~(\Cref{fig:runtimes}). In contrast, \ProjectName{} executes a quality-optimized version
-in~\acsimputedbzeroresult~and a runtime-optimized version in~\acsimputedboneresult. This highlights the potential
+completing in \acsbaseresultminutes{} (\Cref{fig:runtimes}). In contrast, \ProjectName{} executes a quality-optimized version
+in \acsimputedbzeroresult{} and a runtime-optimized version in \acsimputedboneresult{}. This highlights the potential
 benefit of using our system for early data exploration.
 
 For every imputation inserted into the query plan, a new statistical model is instantiated and trained before being used for imputation.
