@@ -15,9 +15,9 @@ Before she can perform her queries, the epidemiologist must develop a strategy
 for handling missing values. She currently has two options:
 1) she could drop records with missing values in relevant fields,
 2) she could use a standard data imputation package on all of her data. Both of these
-approaches have significant drawbacks. For the query pictured in ~\Cref{fig:example-query}, 
+approaches have significant drawbacks. For the query pictured in~\Cref{fig:example-query}, 
 (1) drops 1492 potentially relevant tuples,
-while her previous experiences with (2) have proven be expensive. The epidemiologist needs a more complete picture
+while her previous experiences with (2) have proven to be expensive. The epidemiologist needs a more complete picture
 of the data, so (1) is insufficient, and she is under time pressure, so (2)
 is infeasible.
 
@@ -60,12 +60,13 @@ GROUP BY demo.income
   ] 
   ]
 \vspace{0.5\baselineskip}
-\caption{A quality-optimized plan for the query in~\Cref{fig:example-query}. The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate. $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
+\caption{A quality-optimized plan for the query in~\Cref{fig:example-query}. The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate, $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
 \label{fig:quality-plan}
 \end{figure}
 
 \subsection{Planning with \ProjectName{}}
-The multiple possible locations for performing imputation leads to a  search space contains plans of varying performance and quality of results. The user can influence the final plan selected by \ProjectName{}
+The search space contains plans of varying performance and quality of results, as a product of the multiple possible locations for imputation.
+The user can influence the final plan selected by \ProjectName{}
 through a tradeoff parameter $\alpha \in [0, 1]$, where low $\alpha$ 
 prioritizes the quality of the query results and high $\alpha$ prioritizes performance.
 
@@ -73,7 +74,7 @@ For the query in~\Cref{fig:example-query}, \ProjectName{} generates
 the plans in~\Cref{fig:quality-plan} and~\Cref{fig:fast-plan}, when 
 optimizing for quality and performance, respectively.
 
-\Cref{fig:quality-plan} shows a quality-optimized plan that uses the impute operation $\mu$, which employs regression model to fill in missing values rather than dropping tuples.
+\Cref{fig:quality-plan} shows a quality-optimized plan that uses the impute operation $\mu$, which employs an iterative regression model to fill in missing values rather than dropping tuples.
 It waits to impute \verb|demo.income| until after the final join has taken place, but other imputations take place earlier on in the plan, some before filtering and join operations.
 Imputations are placed to maximize ImputeDB's estimate of the quality of the overall results.
 Meanwhile, \Cref{fig:fast-plan}'s performance-optimized plan uses the drop operation $\delta$ instead of filling in missing values.
@@ -85,25 +86,15 @@ the query.
 
 
 \begin{figure}
-  \Tree
+\Tree
   [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
     [.$g_{\text{income, AVG(white\_blood\_cell\_ct)}}$
-      [.\colorbox{pink}{$\mu_{\text{demo.income}}$}
-        [.$\bowtie_{\text{exams.id} = \text{demo.id}}$
-          [.\colorbox{pink}{$\mu_{\text{labs.white\_blood\_cell\_ct}}$}
-            [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
-              [.$\sigma_{\text{exams.weight} \geq 120}$ 
-                [.\colorbox{pink}{$\mu_{\text{exams.weight}}$} exams ] 
-              ] 
-              labs 
-            ]
-          ]
-        [.$\sigma_{\text{demo.gender} = 2}$ demo ]
-      ] 
-    ] 
-  ] 
-  ]
-\caption{A performance-optimized plan for the query in~\Cref{fig:example-query}.The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate. $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
+      [.\colorbox{pink}{$\delta_{\text{demo.income, labs.white\_blood\_cell\_ct}}$}
+        [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
+          [.$\bowtie_{\text{demo.id} = \text{exams.id}}$
+            [.$\sigma_{\text{demo.gender} = 2}$ demo ]
+            [.$\sigma_{\text{exams.weight} \geq 120}$ [.\colorbox{pink}{$\delta_{\text{exams.weight}}$} exams ] ] ] labs ] ] ] ]
+\caption{A performance-optimized plan for the query in~\Cref{fig:example-query}.The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate, $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
 \label{fig:fast-plan}
 \end{figure}
 
