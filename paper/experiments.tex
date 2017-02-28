@@ -1,5 +1,9 @@
 \newcommand{\demorows}{10175}
 \newcommand{\labexrows}{9813}
+\newcommand{\acsbaseresultminutes}{355 minutes}
+\newcommand{\acsbaseresulthours}{just under 6 hours}
+\newcommand{\acsimputedbzeroresult}{4 seconds}
+\newcommand{\acsimputedboneresult}{1 second}
 
 \section{Experiments}\label{sec:experiments}
 To evaluate the performance of our approach,  we implemented
@@ -161,8 +165,7 @@ to explore multiple imputations operations (including more expensive operators) 
     performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
     magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
     imputation can provide another order-of-magnitude speedup at the expense of quality. For
-    relatively expensive queries over large datasets (Query 9), runtime of imputation can be reduced from 6.5
-    hours to 7 seconds. }
+    relatively expensive queries over large datasets (Query 9), runtime of imputation can be reduced from \acsbaseresulthours~to \acsimputedbzeroresult. }
 \label{fig:runtimes}
 \end{figure}
 
@@ -202,8 +205,8 @@ In many real-world cases, applying the imputation step at the base table is proh
 expensive.
 To illustrate the increasing difficulty of such an approach as datasets scale, we run~\Cref{q9} over the ACS dataset.
 Applying the imputation operation to the base table is extremely expensive, in our case
-completing in 355 minutes(\Cref{fig:runtimes})\todo{Micah: this doesn't match the 6.5 hours in the figure}. In contrast, \ProjectName{} executes a quality-optimized version
-in 7 seconds and a runtime-optimized version in 1 second. This highlights the potential
+completing in \acsbaseresultminutes (\Cref{fig:runtimes}. In contrast, \ProjectName{} executes a quality-optimized version
+in\acsimputedbzeroresult~and a runtime-optimized version in \acsimputedboneresult. This highlights the potential
 benefit of using our system for early data exploration.
 
 %%% Local Variables:
