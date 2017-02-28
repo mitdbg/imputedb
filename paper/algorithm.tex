@@ -209,6 +209,12 @@ Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}
   \label{fig:semantics-plan-cache}
 \end{figure}
 
+
+While $\textsc{Loss}$ is not monotonically increasing in our model, we maintain a collection of sound and complete Pareto frontiers by 
+computing these specific to each dirty set. That is to say, that the combination of $\textsc{Loss}(p) \times \textsc{Dirty}(p)$ for some
+plan $p$ behaves monotonically, as the dirty-set is strictly decreasing through the application of $\delta, \mu$ operations. 
+The final Pareto frontier corresponds to the collection of plans associated with the empty dirty set.
+
 To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
 
 \Cref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in~\Cref{algo:top-level-planner}.
@@ -243,6 +249,8 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 \begin{algorithm}
 \input{algorithms/histogram-transform.tex}
 \end{algorithm}
+
+
 
 \subsection{Imputation Strategies}
 \label{sec:imputation}
