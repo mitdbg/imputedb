@@ -5,7 +5,7 @@
 To evaluate the performance of our approach,  we implemented
 a prototype system in Java, following a traditional iterator model.
 For our experiments we plan and execute queries
-for two separate survey-based data sets, showing that our system
+for three separate survey-based data sets, showing that our system
 is well suited for early dataset exploration.
 
 \subsection{Data sets} \label{subsec:datasets}
@@ -61,21 +61,23 @@ For readability, we have replaced the NHANES variable names with self-explanator
 
 \subsubsection{freeCodeCamp 2016 New Coder Survey}
 For our second set of experiments, we chose to use data collected
-by freeCodeCamp (FCC) as a part of a survey of new software developers
+by freeCodeCamp (fCC) as a part of a survey of new software developers
 (both professional and amateur)~\cite{fcc-data}. freeCodeCamp is an open-source
 community that helps users learn how to program. Their \textit{2016 New Coder Survey} consists of responses by over 15,000 people to 48 different
 demographic and programming-related questions.
 The survey targeted users who were related to coding organizations.
 
 We use a version of the data that has been pre-processed, but where missing values remain.
-\todobox{Give example of expected missing value}{However, many of the missing values are expected because the data has been de-normalized.}
-The original dataset has 15,620 rows and 113 attributes.
+For example, 46.6\% of entries for entry \textit{commutetime} are missing. However, it is worth noting that some of the missing values
+are also expected, given the way the data has been de-normalized. For example, \textit{bootcamploanyesno}, a binary attribute encoding
+whether a respondent had a loan for a bootcamp, is expected to be null for participants who did not attend a bootcamp.
+
 We chose a subset of 17 attributes, shown in~\Cref{table:fcc-description}, along with the percentage of missing values.
 
 \begin{table}
   \centering
   \input{tables/fcc}
-  \caption{Missing values in freeCodeCamp Survey Data}\label{table:fcc-description} 
+  \caption{Missing value distribution for each attribute in freeCodeCamp Survey Data}\label{table:fcc-description} 
 \end{table}
 
 \subsubsection{American Community Survey}
@@ -95,16 +97,16 @@ that would provide performance figures relevant to practitioners using
 similar datasets.
 
 Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}). In~\Cref{q1}, we
-calculate the average height for users based on their income data. In~\Cref{q2}, we compare
-cholesterol levels for individuals with low, medium, and high incomes spectrum and above a
-certain weight. In~\Cref{q3}, we extract the maximum blood lead levels for children under
+calculate the average cuff size for users based on their income data. In~\Cref{q2}, we compare
+creatine levels for individuals with low, medium, and high incomes spectrum and above a
+certain weight. In~\Cref{q3}, we extract the average blood lead levels for children under
 the age of 6 years. In~\Cref{q4}, we calculate the average systolic blood pressure, by
 gender, for subjects with a body mass index indicating obesity. 
 
-Our second set of queries is on the FCC data (\Cref{fig:queries-fcc}).
+Our second set of queries is on the fCC data (\Cref{fig:queries-fcc}).
 \Cref{q5} calculates the average income for survey participants, based on their bootcamp attendance.
-\Cref{q6} estimates the average age of women from the United States who participated.
-\Cref{q7} calculates the average amount of money survey participants with student debt spent on learning based on their school degree.
+\Cref{q6} estimates the average commute time of women from the United States who participated.
+\Cref{q7} calculates the average amount of student debt based on school degree for survey participants who have student debt.
 \Cref{q8} joins the freeCodeCamp data with a reference table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
 The query calculates the average GDP per-capita of countries with and without bootcamp participants. 
 \begin{table*}
@@ -117,7 +119,7 @@ The query calculates the average GDP per-capita of countries with and without bo
  ~
  \begin{subtable}{\linewidth}
  \input{queries-fcc}
- \caption{Queries on FCC data}
+ \caption{Queries on fCC data}
  \label{fig:queries-fcc}
  \end{subtable}
  ~
@@ -143,23 +145,23 @@ The query calculates the average GDP per-capita of countries with and without bo
 All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
 four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
 
-\Cref{fig:runtimes} shows a summary of the performance results. The first plot
-shows average running times for \ProjectName{} plans in two configurations:
-quality-optimized and runtime-optimized. The second plot shows, for comparison, the average
-running times required for each query when performing imputation at the base tables.  In all
-cases, running a query through \ProjectName{} is cheaper than imputing a single base table,
-with performance improvement on a factor of ten\todo{give range of performance}. This performance differential means it is feasible
+\Cref{fig:runtimes} shows a summary of the performance results. We evaluated three different
+configurations for each query. We compare \ProjectName{} optimizing for quality ($\alpha=0$),
+\ProjectName{} optimizing for performance($\alpha=1$), and imputing at the base tables followed
+by executing the query traditionally. The quality-optimized queries are an order-of-magnitude
+faster than imputing on the base tables. We can get another order-of-magnitude speedup when
+optimizing for performance. This performance differential means it is feasible
 to explore multiple imputations operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined.png}
-\caption{Query runtimes with imputation on base tables, \ProjectName{} imputation
-    optimizing for quality ($\alpha=0$), and \ProjectName{} imputation optimizing for
-    efficiency ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
+\caption{Query runtimes with imputation on base tables, \ProjectName{}
+    optimizing for quality ($\alpha=0$), and \ProjectName{} optimizing for
+    performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
     magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
     imputation can provide another order-of-magnitude speedup at the expense of quality. For
-    relatively large queries (Query 9), runtime of imputation can be reduced from 6.5
+    relatively expensive queries over large datasets (Query 9), runtime of imputation can be reduced from 6.5
     hours to 7 seconds. }
 \label{fig:runtimes}
 \end{figure}
@@ -200,10 +202,9 @@ In general, the SMAPE relative to the base-imputation approach are low in all ca
 
 In many real-world cases, applying the imputation step at the base table is prohibitively
 expensive.
-To illustrate the increasing difficulty of such an approach as datasets scale, we run the
-query in (\Cref{fig:query-acs}) over the ACS dataset.
+To illustrate the increasing difficulty of such an approach as datasets scale, we run~\Cref{q9} over the ACS dataset.
 Applying the imputation operation to the base table is extremely expensive, in our case
-completing in 355 minutes(\ref{fig:runtimes}). In contrast, \ProjectName{} executes a quality-optimized version
+completing in 355 minutes(\Cref{fig:runtimes})\todo{Micah: this doesn't match the 6.5 hours in the figure}. In contrast, \ProjectName{} executes a quality-optimized version
 in 7 seconds and a runtime-optimized version in 1 second. This highlights the potential
 benefit of using our system for early data exploration.
 
