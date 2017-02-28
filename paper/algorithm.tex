@@ -209,22 +209,22 @@ Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}
   \label{fig:semantics-plan-cache}
 \end{figure}
 
-To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
+To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp.\ drop) only imputes (resp.\ drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
 
 \Cref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in~\Cref{algo:top-level-planner}.
 
 The planner operates as follows.
-First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}-\Cref{lst:line:attr-end}).
+First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}--\Cref{lst:line:attr-end}).
 This set will be used to determine which attributes are imputed.
 Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
 a search over imputation operations produces various possible plans, which are added to the cache (\Cref{lst:line:sel}). If no selections are available, a 
 simple scan is added to the plan cache (\Cref{lst:line:scan}). Join order is jointly optimized with imputation placements and a set of
 plans encompassing all necessary tables is produced (\Cref{lst:line:join}). This set is now extended for any necessary grouping and aggregation
-operations (\Cref{lst:line:group}). After a similar step has been taken for projections, the planner now contains the plan frontier (i.e. the
+operations (\Cref{lst:line:group}). After a similar step has been taken for projections, the planner now contains the plan frontier (i.e.\ the
 best possible set from which to pick our final plan). The final step in the planner is to find all plans that are
 $\alpha$-bound and return the one that has the lowest runtime: the $\alpha$-bound optimal plan.
 
-The join optimization is based on the algorithm used in System R\cite{blasgen1981system},
+The join optimization is based on the algorithm used in System R~\cite{blasgen1981system},
 but rather than select the best plan at every point, we use our plan cache, which keeps track of the tables joined and the dirty-set specific Pareto frontiers.
 The output of the join optimizer is the set of plans which satisfy all join predicates and lie along their respective frontier.
 
@@ -247,20 +247,12 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 \subsection{Imputation Strategies}
 \label{sec:imputation}
 
-We design our system such that any imputation strategy can be plugged in with minimal effort
-and without changes to the optimizer, so the strategy can in principle be targeted to a
-specific domain. The current version of the system uses a general-purpose imputation
-strategy based on chained-equation classification and regression trees (CE-CART). Chained
-equation imputation methods \cite{vanbuuren2011mice} (sometimes called \textit{iterative
-regression} \cite{gelman2006data}) impute multiple missing attributes by
-iteratively estimating predictive models of one missing attribute conditional on all
-complete attributes and the other missing attributes. The individual predictive models can
-be customized by the analyst to the problem at hand. Decision tree algorithms, like CART,
-are found to be effective \cite{akande2015empirical} in empirical studies in general-purpose
-routines and are widely used in epidemiological domains \cite{burgette2010multiple}. Though
-we provide quantitative results for the CE-CART implementation, ImputeDB is designed to be
-agnostic to the choice of imputation algorithm, and additional algorithms --- with
-associated time and loss functions --- could be inserted without any change in design.
+\ProjectName{} uses a general-purpose imputation strategy based on chained-equation classification and regression trees (CE-CART).
+Chained equation imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting a predictive model of one missing attribute which is conditional on all complete attributes and the other missing attributes.
+Decision tree algorithms like CART are found to be effective~\cite{akande2015empirical} and are widely used in epidemiological domains~\cite{burgette2010multiple}.
+
+\ProjectName{} is designed so that any imputation strategy can be plugged in with minimal effort and without changes to the optimizer, simply by adding time and loss functions (\Cref{sec:cost}) which describe the new algorithm.
+In principle, new imputation algorithms can be added which are targeted to a specific domain.
 
 These imputation algorithms are rarely used in isolation --- rather, the ultimate goal is to
 perform statistical analysis of the complete data. To this end, the technique of
@@ -274,7 +266,7 @@ Our algorithm proceeds by iteratively fitting regression trees to a subset of th
 the target imputation columns. In each iteration, the missing values of a column are
 replaced with newly imputed values. With each epoch, the quality of the imputation improves
 as values progressively reflect more accurate relationships amongst attributes. The
-algorithm terminates when convergence is achieved (i.e. the imputed values do not change across
+algorithm terminates when convergence is achieved (i.e.\ the imputed values do not change across
 epochs) or a fixed number of epochs is reached. 
 
 The flexibility of this non-parametric imputation approach aligns well with the spirit of
@@ -363,7 +355,7 @@ Therefore, our algorithm has a complexity of at least $O(2^J)$, where $J$ is the
 The addition of imputation operators increases the number of plans exponentially, as an imputation may be placed before any of the relational operators.
 We restrict imputations to two classes: those that impute only attributes used in the operator and those that impute all the attributes that are needed downstream in the query.
 By doing so we limit the number of imputations at any point to four: \textit{Drop} or \textit{Impute} over the attributes used in the operator or over all the downstream attributes.
-This modification increases the complexity of our planning algorithm to $O(16^J)$.\todo{I think this is right, but should check}
+This modification increases the complexity of our planning algorithm to $O(2^{4J})$.
 
 To motivate the restriction of imputation types, we consider the implications of allowing arbitrary imputations.
 If we allow any arbitrary subset of attributes to be imputed, then we would need to consider $O(2^{|D|+1})$ different imputation operators before each relational operator where $D$ is the set of dirty attributes in all tables.
@@ -373,7 +365,7 @@ Finally, we note that for the queries we have examined, this exponential blowup 
 Recall that the planner maintains different plans for different dirty sets, keeping only those that are not dominated by other plans with the same dirty set.
 So in many cases we can drop some of these intermediate plans generated at each operator.
 The worst case complexity only occurs if the dirty sets tracked are distinct through the entire planning phase.
-Planning times are discussed in more detail in \Cref{sec:results}.
+Planning times are discussed in \Cref{sec:results}.
 
 %%% Local Variables:
 %%% mode: latex
