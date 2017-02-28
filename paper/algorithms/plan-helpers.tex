@@ -30,7 +30,7 @@
     \State
 
     \Require{$q$ is a query plan, $G$ is a set of grouping attributes, $A$ is an aggregation function, $C_g$ is a set of attributes which are used in the final plan.}
-    \Ensure{A set of plans for grouping \& aggregating with $G$ and $A$.}
+    \Ensure{A set of plans for grouping and aggregating with $G$ and $A$.}
     \Function{OptGroupBy}{$q, G, A, C_g$}
     \State $C \gets G \cup \Call{Attrs}{A}$
     \State $Q' \gets \Call{AddImpute}{q, C, C_g}$
@@ -39,7 +39,7 @@
 
     \State
 
-    \Require{$q$ is a query plan, $P$ is a set of projection attributes.}
+    \Require{$q$ is a query plan, $P$ is a set of attributes to be projected at the top of the plan.}
     \Ensure{A set of plans with the attributes in $P$ projected.}
     \Function{OptProject}{$q, P$}
     \State \Return $\{\pi_P(q') ~|~ q' \in \Call{AddImpute}{q, P, P}\}$

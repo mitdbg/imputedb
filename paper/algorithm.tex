@@ -1,11 +1,12 @@
 \section{Algorithm}
+In order to correctly plan around missing values, we first extend the relational algebra operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) 
+with two new operators (\Cref{sec:operators}). We then define the search space (\Cref{sec:search-space}) of plans to encompass non-trivial operations, such as joins and 
+aggregations. The decision to place imputation operators is driven by our cost model (\Cref{sec:cost-model}), which characterizes a plan based on estimates for the 
+quality of the imputations performed and the runtime performance. Soundness of query execution is provided by our main design invariant, which guarantees traditional relational
+algebra operators must never observe a missing value in any attribute that they operate on directly (\Cref{sec:placement}). Our imputation planning algorithm is
+agnostic to the type of imputation used (\Cref{sec:imputation}). Finally, we show
+that while our algorithm is exponential in the number of joins(\Cref{sec:complexity}), in practice, planning times are not a concern.
 
-Our optimizer searches (\Cref{sec:planning}) a restricted space (\Cref{sec:search-space}) of query plans containing imputation operators (\Cref{sec:operators}) for an optimal plan given an estimate of the runtime of the query, information lost through imputation operations, and a parameter trading off the two.
-
-This plan is subject to two constraints (\Cref{sec:placement}).
-First, it must not emit any tuples which contain null values, regardless of the state of the base tables.
-Second, the traditional relational operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) must never observe a null value in any attribute that they operate on directly.
-Our planning algorithm is agnostic to the type of imputation used (\Cref{sec:imputation}), as the properties of the imputation are summarized by the cost model (\Cref{sec:cost-model}).
 
 \subsection{Imputation operators}
 \label{sec:operators}
@@ -13,6 +14,8 @@ We introduce two new relational operators to perform imputation: \textit{Impute}
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
 replace all null values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
+In our experiments, we instantiate \textit{Impute} with the CE-CART\cite{burgette2010multiple} algorithm, but we highlight that
+our system is agnostic to this choice.
 \textit{Drop} simply removes from $R$ all tuples which have a null value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no null values for
 attributes in $C$.  
@@ -26,7 +29,7 @@ To keep the query plan search space tractable, only plans that fit the following
 
 \item Joins are performed after filtering, and only left-deep plans are considered.
 
-\item A grouping \& aggregation operator is optional, and if present will be performed after the final join.
+\item A grouping and aggregation operator is optional and if present will be performed after the final join.
 
 \item Projections are placed at the root of the query tree.
 \end{itemize}
@@ -43,7 +46,8 @@ The space of query plans is similar to that considered by System R~\cite{blasgen
 \subsection{Cost model}
 \label{sec:cost-model}
 The cost of a plan $q$ is expressed as a tuple $\langle \textsc{Loss}(q), \textsc{Time}(q) \rangle$.
-$\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. $\textsc{Loss}(q) \in [0,1]$ is an estimate of the amount of information lost by the imputation procedures used.
+$\textsc{Loss}(q) \in [0,1]$ is an estimate of the amount of information lost by the imputation procedures used.
+$\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
 
 \begin{definition}
 We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$ if $(l \leq l' \land t < t') \lor (l < l' \land t \leq t')$. We denote this as $\doms{p}{p'}$. 
@@ -51,9 +55,9 @@ We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ wi
 
 Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[P= \{ p ~|~ \not\exists p' \in S.\ p \neq p' \land \doms{p'}{p} \}.\]
  
-This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of performance and cost for the current query.
+This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of $\textsc{Time}$ and $\textsc{Loss}$ for the current query.
 
-In order to pick a final plan from the frontier, our model introduces a parameter $\alpha$ which encodes an upper bound on the $\textsc{Loss}$ value that the user is willing
+In order to pick a final plan from the frontier, our model introduces a tradeoff parameter $\alpha$ which encodes an upper bound on the $\textsc{Loss}$ value that the user is willing
 to tolerate relative to the minimum possible amongst frontier plans.
 
 \begin{definition}
@@ -73,11 +77,10 @@ The computation of $\textsc{Time}(q)$ and $\textsc{Loss}(q)$ relies on having an
 These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational calculus, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 For simplicity, each of the logical nodes in a query plan points to a set of histograms.
-When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for new operation in the plan.
+When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for the new operation in the plan.
 \Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
-For each sub-plan, we keep track of the estimated number of
-null values in a column  ($\textsc{Missing}(c, Q)$) by using the histograms associated with
+For each sub-plan, we keep track of the estimated cardinality by using the histograms associated with
 that plan. We use this estimate to compute $\text{Loss}(Q)$, a measure averaged over imputation operations, as follows.
 
 \begin{align*}
@@ -91,6 +94,7 @@ that plan. We use this estimate to compute $\text{Loss}(Q)$, a measure averaged 
   \textsc{Loss}(q) &= \frac{\Sigma \textsc{L}(q)}{|\textsc{L}(q)|}
 \end{align*}
 
+\srm{I find this table hard to follow -- I think it'd be good to explain one or two of the rows in detail, and to explain what the set L contains.}
 Using the drop operator incurs a loss of information of 1 (i.e. we lose all information that
 the dropped tuples might have encoded). Imputing null fields incurs a loss penalty $p \in (0, 1]$,
 which is inversely proportional to the number of total cells available to train the imputation algorithm. 
@@ -102,7 +106,7 @@ with. Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
 
-To compute $\text{Time}(Q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard 
+To compute $\textsc{Time}(Q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard 
 database. 
 
 %\begin{align*}
@@ -118,12 +122,12 @@ database.
 %\end{align*}
 
 Scan costs are estimated based on the number of tuples, 
-page size, and an unit-less IO cost per page. Join costs are estimated as a function
+page size, and an unit-less I/O cost per page. Join costs are estimated as a function
 of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
 Filtering, projecting, and aggregating are all done in memory and have low computational overhead
 so we assume negligible time costs for those operations. We extend these heuristics to 
 account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and its time
-complexity can be expressed as a function of the number of heap pages read and the IO cost
+complexity can be expressed as a function of the number of heap pages read and the I/O cost
 per page.
 
 The time computation for \textit{Impute} depends on the properties of the underlying
@@ -135,8 +139,8 @@ missing data being imputed, number of tuples, and the number of iterations for t
 
 In general, evaluating the time complexity for different \textit{Impute} operators is
 complicated, as the properties of
-different algorithms can vary significantly, the underlying IO cost
-is not easily extracted (especially in the case that the entire stream of tuples does not
+different algorithms can vary significantly, the underlying I/O cost
+is not easily extracted (especially in the case that the entire set of tuples does not
 fit in memory), and the CPU cost dominates (in contrast to the other operators, which may
 not even consider CPU cost explicitly). For example, \cite{martin1995time} find that the
 time complexity of the \textit{build tree} algorithm for one commonly-used class of
@@ -153,7 +157,7 @@ plans).
 \label{sec:placement}
 Imputation operators must be placed so that no relational operator receives a tuple containing null in an attribute that the operator examines, regardless of the state of the data in the base tables.
 
-Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan $q$ is associated with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each table using the table statistics, which track the number of null values in each column. The dirty set for a query plan can be computed recursively as follows:
+Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan $q$ is associated with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each table using the table histograms, which track the number of null values in each column. The dirty set for a query plan can be computed recursively as follows:
 
 \begin{align*}
   \textsc{Dirty}(q) = \begin{cases}
@@ -181,9 +185,10 @@ The input to our query planner is a tuple $(T, F, J, P, G, A)$:
 The query planner must select a join ordering in addition to placing imputation operators as described in~\Cref{sec:placement}.
 
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
-At a high level, a plan cache is a mapping from a set of tables to a set of dominating plans that perform the required joins and filters over these tables.
-We store multiple plans rather than a single plan because each plan has a distinct set of dirty attributes and a choice over the plan frontier
-can only be made once the set is final. Details are shown in~\Cref{fig:semantics-plan-cache}.
+At a high level, a plan cache is a mapping from a set of tables to a set of dirty-set specific dominating plans that perform the required joins and filters over these tables.
+We store multiple plans rather than a single plan because each plan has a distinct set of dirty attributes, each of which maintains its own Pareto frontier. 
+Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
+
 
 \begin{figure}
   \begin{align*}
@@ -196,7 +201,7 @@ can only be made once the set is final. Details are shown in~\Cref{fig:semantics
                                            P' &= \left\{q ~|~ \begin{aligned}
                                                                      q \in \llbracket Q[T] \rrbracket \cup \{p\}, \\
                                                                      \textsc{Dirty}(q) = \textsc{Dirty}(p),\\
-                                                                     \forall q' \in \llbracket Q[T] \rrbracket.  \doms{q} {q'} 
+                                                                     \forall q' \in \llbracket Q[T] \rrbracket, \textsc{Dirty}(q')=\textsc{Dirty}(q).  \doms{q} {q'} 
                                                                    \end{aligned}
                                            \right\}
   \end{align*}
@@ -204,23 +209,30 @@ can only be made once the set is final. Details are shown in~\Cref{fig:semantics
   \label{fig:semantics-plan-cache}
 \end{figure}
 
-To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp. drop) only imputes (resp. drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
+\todobox{jose rewrite this clearly}{
+While $\textsc{Loss}$ is not monotonically increasing in our model, we maintain a collection of sound and complete Pareto frontiers by 
+computing these specific to each dirty set. That is to say, that the combination of $\textsc{Loss}(p) \times \textsc{Dirty}(p)$ for some
+plan $p$ behaves monotonically, as the dirty-set is strictly decreasing through the application of $\delta, \mu$ operations. 
+The final Pareto frontier corresponds to the collection of plans associated with the empty dirty set.}
+
+To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp.\ drop) only imputes (resp.\ drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
 
 \Cref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in~\Cref{algo:top-level-planner}.
 
 The planner operates as follows.
-First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}-\Cref{lst:line:attr-end}).
+First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}--\Cref{lst:line:attr-end}).
 This set will be used to determine which attributes are imputed.
 Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
 a search over imputation operations produces various possible plans, which are added to the cache (\Cref{lst:line:sel}). If no selections are available, a 
 simple scan is added to the plan cache (\Cref{lst:line:scan}). Join order is jointly optimized with imputation placements and a set of
 plans encompassing all necessary tables is produced (\Cref{lst:line:join}). This set is now extended for any necessary grouping and aggregation
-operations (\Cref{lst:line:group}). After a similar step has been taken for projections, the planner now contains the plan frontier (i.e. the
+operations (\Cref{lst:line:group}). After a similar step has been taken for projections, the planner now contains the plan frontier (i.e.\ the
 best possible set from which to pick our final plan). The final step in the planner is to find all plans that are
 $\alpha$-bound and return the one that has the lowest runtime: the $\alpha$-bound optimal plan.
 
-The join optimization is based on the algorithm used in System R\cite{blasgen1981system},
-but rather than select the best plan at every point, we use our plan cache, which maintains the Pareto frontier of possible plans. The output of the join optimizer is the set of plans which satisfy all join predicates and lie along the frontier.
+The join optimization is based on the algorithm used in System R~\cite{blasgen1981system},
+but rather than select the best plan at every point, we use our plan cache, which keeps track of the tables joined and the dirty-set specific Pareto frontiers.
+The output of the join optimizer is the set of plans which satisfy all join predicates and lie along their respective frontier.
 
 \begin{algorithm}
 \input{algorithms/plan-helpers.tex}
@@ -238,23 +250,17 @@ but rather than select the best plan at every point, we use our plan cache, whic
 \input{algorithms/histogram-transform.tex}
 \end{algorithm}
 
+
+
 \subsection{Imputation Strategies}
 \label{sec:imputation}
 
-We design our system such that any imputation strategy can be plugged in with minimal effort
-and without changes to the optimizer, so the strategy can in principle be targeted to a
-specific domain. The current version of the system uses a general-purpose imputation
-strategy based on chained-equation classification and regression trees (CE-CART). Chained
-equation imputation methods \cite{vanbuuren2011mice} (sometimes called \textit{iterative
-regression} \cite{gelman2006data}) impute multiple missing attributes by
-iteratively estimating predictive models of one missing attribute conditional on all
-complete attributes and the other missing attributes. The individual predictive models can
-be customized by the analyst to the problem at hand. Decision tree algorithms, like CART,
-are found to be effective \cite{akande2015empirical} in empirical studies in general-purpose
-routines and are widely used in epidemiological domains \cite{burgette2010multiple}. Though
-we provide quantitative results for the CE-CART implementation, ImputeDB is designed to be
-agnostic to the choice of imputation algorithm, and additional algorithms --- with
-associated time and loss functions --- could be inserted without any change in design.
+\ProjectName{} uses a general-purpose imputation strategy based on chained-equation classification and regression trees (CE-CART).
+Chained equation imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting a predictive model of one missing attribute which is conditional on all complete attributes and the other missing attributes.
+Decision tree algorithms like CART are found to be effective~\cite{akande2015empirical} and are widely used in epidemiological domains~\cite{burgette2010multiple}.
+
+\ProjectName{} is designed so that any imputation strategy can be plugged in with minimal effort and without changes to the optimizer, simply by adding time and loss functions (\Cref{sec:cost}) which describe the new algorithm.
+In principle, new imputation algorithms can be added which are targeted to a specific domain.
 
 These imputation algorithms are rarely used in isolation --- rather, the ultimate goal is to
 perform statistical analysis of the complete data. To this end, the technique of
@@ -268,13 +274,12 @@ Our algorithm proceeds by iteratively fitting regression trees to a subset of th
 the target imputation columns. In each iteration, the missing values of a column are
 replaced with newly imputed values. With each epoch, the quality of the imputation improves
 as values progressively reflect more accurate relationships amongst attributes. The
-algorithm terminates when convergence is achieved (i.e. the imputed values do not change across
+algorithm terminates when convergence is achieved (i.e.\ the imputed values do not change across
 epochs) or a fixed number of epochs is reached. 
 
 The flexibility of this non-parametric imputation approach aligns well with the spirit of
 query optimization, which aims to reconcile performance with a declarative interface to data
-manipulation. By removing concerns for imputation, users executing queries in \ProjectName{}
-do not need to consider the potential nature of missing data.
+manipulation. 
 
 It is worth noting that given the nature of the imputation strategy used here, imputation
 operators become blocking in our system. An extension of ImputeDB could consider regression
@@ -286,83 +291,89 @@ ImputeDB, this would not pose a problem.
 %    \input{algorithms/cart.tex}
 %\end{algorithm}
 
-\subsection{Optimality}
-We prove the optimality of the final plan selected by showing that our cost-model and algorithm
-construct a complete Pareto frontier.
+%\subsection{Optimality}\label{sec:optimal}
+%We prove the optimality of the final plan selected by showing that our cost-model and algorithm
+%construct a complete Pareto frontier.
+%
+%\begin{definition}
+%$I: \mathcal{P}(D) \rightarrow \mathcal{P}(\{ \delta, \mu \})$, where
+%$D$ is the dirty set for a relation, is an abstract imputation operator mapping a set of
+%attributes with missing values to a set of imputation operations.
+%
+%For convenience we denote applying the set of imputation operations to a plan $p$ as $I(p)$ and understand that this
+%is shorthand for $\{ op(p)   | op \in I(\textsc{Dirty}(p)) \}$.
+%\end{definition}
+%
+%We can succinctly describe possible imputation transformations to a plan at a given point in the planning algorithm solely through $I$.
+%
+%\begin{theorem}\label{theorem:no-bad-sit}
+%By computing dirty-set specific Pareto frontiers, it is never the case that we discard a plan $p_1$ s.t. $\doms{p_2}{p_1}$, but 
+%$\exists p_1' \in I(p_1), p_2' \in I(p_2). \doms{p_1'}{p_2'} \land \textsc{Dirty}(p_1') = \textsc{Dirty}(p_2') \land p_1' \not \in I(p_2)$
+%\end{theorem}
+%
+%\Cref{theorem:no-bad-sit} states that there is no \textit{bad situation} such as that depicted in~\Cref{fig:bad-sit-diagram}
+%
+%\begin{figure}
+%\centering
+%\begin{tikzpicture}
+%% before I
+%\node(p1) {$p_1$};
+%\node[right=of p1](dom1){$\prec$};
+%\node[right=of dom1](p2) {$p_2$};
+%
+%% after I
+%\node[below=of p1](p1'){$p_1'$};
+%\node[right=of p1'](dom2) {$\succ$};
+%\node[right=of dom2](p2'){$p_2'$};
+%
+%% arrows
+%\draw[->] (p1) -- node[right] {$\scriptstyle I$} (p1');
+%\draw[->] (p2) -- node[right] {$\scriptstyle I$} (p2');
+%\end{tikzpicture}
+%\caption{A bad Pareto frontier selection would choose $p_2$ over $p_1$, as it is locally optimal, but with the available transformations ($I$) $p_2$  can only reach $p_2'$, which is dominated by the inaccessible $p_1'$.~\Cref{theorem:no-bad-sit} says such a situation cannot arise when constructing Pareto frontiers on a dirty-set basis.}
+%\label{fig:bad-sit-diagram}
+%\end{figure}
+%
+%\begin{proof}
+%For contradiction, let $p_1$ and $p_2$ be plans such that $\doms{p_2}{p_1}$, $p_1$ is removed from the plan cache
+%in favor of $p_2$, but there  $\exists p_1' \in I(p_1), p_2' \in I(p_2). \doms{p_1'}{p_2'} \land \textsc{Dirty}(p_1') = \textsc{Dirty}(p_2')$
+%and $p_1'$ is not reachable from $p_2$ by $I$.
+%
+%There are two possible cases :
+%
+%\begin{case}
+%$\textsc{Dirty}(p_1) = \textsc{Dirty}(p_2)$, in which case $I(p_1) = I(p_2)$, as $I$ uniquely determines the possible transformations. This makes $p_2$ and $p_1$ substitutable, so $p_1'$ is reachable from $p_2$. This is a contradiction.
+%\end{case}
+%
+%\begin{case}
+%$\textsc{Dirty}(p_1) \not= \textsc{Dirty}(p_2)$, in which case $p_1$ is not removed from the plan cache as the $\doms{p_2}{p_1}$ relation does not occur within the same dirty set. This is a contradiction
+%\end{case}
+%
+%So it must be the case that no such situation arises.
+%\end{proof}
+%
+%
+%Given that no desirable plans are discarded by computing Pareto frontiers for each dirty set, the final Pareto frontier (for dirty set $\emptyset$) is optimal.
 
-\begin{definition}
-$I: \mathcal{P}(D) \rightarrow \mathcal{P}(\{ \delta, \mu \})$, where
-$D$ is the set of dirty attributes for a relation, is an abstract imputation operator mapping a set of dirty
-attributes to a set of imputation operations.
+\subsection{Complexity}\label{sec:complexity}
+Our optimization algorithm builds off the approach taken by System R~\cite{blasgen1981system}.
+If imputation operators are ignored, we search the same plan space.
+Therefore, our algorithm has a complexity of at least $O(2^J)$, where $J$ is the number of joins.
 
-For convenience we denote applying the set of imputation operations to a plan $p$ as $I(p)$ and understand that this
-is shorthand for $\{ op(p)   | op \in I(\textsc{Dirty}(p)) \}$.
-\end{definition}
+The addition of imputation operators increases the number of plans exponentially, as an imputation may be placed before any of the relational operators.
+We restrict imputations to two classes: those that impute only attributes used in the operator and those that impute all the attributes that are needed downstream in the query.
+By doing so we limit the number of imputations at any point to four: \textit{Drop} or \textit{Impute} over the attributes used in the operator or over all the downstream attributes.
+This modification increases the complexity of our planning algorithm to $O(2^{4J})$.
 
-We can succinctly describe possible imputation transformations to a plan at a given point in the planning algorithm solely through $I$.
+To motivate the restriction of imputation types, we consider the implications of allowing arbitrary imputations.
+If we allow any arbitrary subset of attributes to be imputed, then we would need to consider $O(2^{|D|+1})$ different imputation operators before each relational operator where $D$ is the set of dirty attributes in all tables.
+This would increase the overall complexity of the algorithm drastically.
 
-\begin{theorem}\label{theorem:no-bad-sit}
-By computing dirty-set specific Pareto frontiers, it is never the case that we discard a plan $p_1$ s.t. $\doms{p_2}{p_1}$, but $\exists p_1' \in I(p_1), p_2' \in I(p_2). \doms{p_1'}{p_2'} \land \textsc{Dirty}(p_1') = \textsc{Dirty}(p_2')$
-\end{theorem}
-
-\Cref{theorem:no-bad-sit} states that there is no \textit{bad situation} such as that depicted in~\Cref{fig:bad-sit-diagram}
-
-\begin{figure}
-\centering
-\begin{tikzpicture}
-% before I
-\node(p1) {$p_1$};
-\node[right=of p1](dom1){$\prec$};
-\node[right=of dom1](p2) {$p_2$};
-
-% after I
-\node[below=of p1](p1'){$p_1'$};
-\node[right=of p1'](dom2) {$\succ$};
-\node[right=of dom2](p2'){$p_2'$};
-
-% arrows
-\draw[->] (p1) -- node[right] {$\scriptstyle I$} (p1');
-\draw[->] (p2) -- node[right] {$\scriptstyle I$} (p2');
-\end{tikzpicture}
-\caption{A bad Pareto frontier selection would choose $p_2$ over $p_1$, as it is locally optimal, but with the available transformations ($I$) $p_2$  can only reach $p_2'$, which is dominated by the inaccessible $p_1'$.~\Cref{theorem:no-bad-sit} says such a situation cannot arise when constructing Pareto frontiers on a dirty-set basis.}
-\label{fig:bad-sit-diagram}
-\end{figure}
-
-\begin{proof}
-For contradiction, let $p_1$ and $p_2$ be plans such that $\doms{p_2}{p_1}$, $p_1$ is removed from the plan cache
-in favor of $p_2$, but there  $\exists p_1' \in I(p_1), p_2' \in I(p_2). \doms{p_1'}{p_2'} \land \textsc{Dirty}(p_1') = \textsc{Dirty}(p_2')$
-and $p_1'$ is not reachable from $p_2$ by $I$.
-
-There are two possible cases :
-
-\begin{case}
-$\textsc{Dirty}(p_1) = \textsc{Dirty}(p_2)$, in which case $I(p_1) = I(p_2)$, as $I$ uniquely determines the possible transformations. This makes $p_2$ and $p_1$ substitutable, so $p_1'$ is reachable from $p_2$. This is a contradiction.
-\end{case}
-
-\begin{case}
-$\textsc{Dirty}(p_1) \not= \textsc{Dirty}(p_2)$, in which case $p_1$ is not removed from the plan cache as the $\doms{p_2}{p_1}$ is not within the same dirty set. This is a contradiction
-\end{case}
-
-So it must be the case that no such situation arises.
-\end{proof}
-
-
-Given that no desirable plans are discarded by computing Pareto frontiers for each dirty set, the final Pareto frontier (for dirty set $\emptyset$) is optimal.
-
-\subsection{Complexity}
-Our optimization algorithm builds off the approach taken by System R \cite{blasgen1981system}, therefore our planning algorithm still operates in exponential time. 
-If we removed our restriction on imputation operators to consider not just minimal versus maximal imputations, and instead allowed any arbitrary subset
-of attributes to be imputed at a plan node (including those not operated on by that node), then every single operator in the query plan would have a
-number of plans exponential in the number of dirty columns.
-
-By restricting imputations to two classes: those that impute only attributes used in the operator and those that impute all attributes needed downstream in the query,
-we limit the factor of plans at each operator to three: \textit{Drop}, \textit{Impute} over attributes used in operator, and \textit{Impute} over all attributes needed.
-Recall that the planner maintains different plans for different dirty sets, keeping only those that are not dominated by other plans with the same dirty set. So in many
-cases we can drop some of these intermediate plans generated at each operator. However, if the dirty sets tracked are distinct through the entire planning phase,
-then we could explore exponentially more plans than System R.
-
-However, we note that in all cases we have considered, this exponential blowup does not affect the practical performance of our optimizer and results in relatively short
-planning times.
+Finally, we note that for the queries we have examined, this exponential blowup does not affect the practical performance of our optimizer.
+Recall that the planner maintains different plans for different dirty sets, keeping only those that are not dominated by other plans with the same dirty set.
+So in many cases we can drop some of these intermediate plans generated at each operator.
+The worst case complexity only occurs if the dirty sets tracked are distinct through the entire planning phase.
+Planning times are discussed in \Cref{sec:results}.
 
 %%% Local Variables:
 %%% mode: latex

@@ -23,7 +23,9 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 \usepackage{cleveref}
+\usepackage{xspace}
 
+\newcommand{\srm}[1]{\textcolor{red}{SAM:#1}}
 \addbibresource{references.bib}
 
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
@@ -45,7 +47,7 @@
 %  numberstyle=\tiny\color{gray}, % the style that is used for the line-numbers
   rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
 %  stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
-  stringstyle=\color{mauve},     % string literal style
+  stringstyle=\color{red},     % string literal style
   tabsize=2,	                   % sets default tabsize to 2 spaces
   language=SQL
 }
@@ -65,7 +67,8 @@
 
 \renewcommand{\emptyset}{\varnothing}
 
-\newcommand{\ProjectName}{ImputeDB}
+\newcommand{\ProjectName}{ImputeDB\xspace}
+\newcommand{\sys}{\ProjectName}
 \newcommand{\doms}[2]{#1 \succ #2}
 
 % definitions/theorems etc
@@ -86,41 +89,59 @@
   \texttt{feser@csail.mit.edu}
   \and
   Micah J. Smith \\
-  \texttt{micahs@mit.edu}}
+  \texttt{micahs@mit.edu}
+  \and
+  Samuel Madden \\
+  \texttt{madden@csail.mit.edu}}
 
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 \newcommand{\todo}[1]{{\color{red}\textbf{TODO:} #1}}
 \newcommand{\todobox}[2]{{\color{red}\fbox{\parbox{\columnwidth}{\textbf{TODO:} #1\\#2}}}}
+
+% results that can be used in any section
+\newcommand{\demorows}{10175}
+\newcommand{\labexrows}{9813}
+\newcommand{\acsbaseresultminutes}{355 minutes}
+\newcommand{\acsbaseresulthours}{just under 6 hours}
+\newcommand{\acsimputedbzeroresult}{4 seconds}
+\newcommand{\acsimputedboneresult}{1 second}
+\newcommand{\lowxalphazero}{10}
+\newcommand{\lowsmapealphazero}{0}
+\newcommand{\highxalphaoneexacs}{1000}
+\newcommand{\highsmapealphaoneexacs}{24}
+\newcommand{\highxalphaone}{16000}
+
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-Missing values abound in data analysis and often present a serious challenge for users, who
+Missing values abound in data analysis and often present a serious challenge for usability of data. Users
 are forced to pick between removing tuples with missing values or creating a clean duplicate of their data
-by  applying a potentially expensive imputation strategy. We show that it is possible
+by  applying a potentially-expensive imputation strategy. We show that it is possible
 to incorporate imputation into a cost-based query optimizer, performing imputation on the fly
 for each query. This allows users to immediately explore
-their data, while the system picks the optimal placement of imputation operations based
-on the specific query issued and a parameter that the user selects for evaluating the tradeoff between data
+their data, while the system picks the optimal placement of imputation operations. This placement is based
+on the specific query issued and a user-provided parameter that trades off data
 quality and runtime performance. We incorporate the imputation operators into the relational algebra, allowing
 for traditional optimizations to take place. Our experiments evaluate this approach on two real-world survey-based datasets
-from the \textit{Center for Disease Control and Prevention} and \textit{freeCodeCamp}, showing that the 
-optimizer generates query plans that execute in a fraction of the time that it takes to impute values at the base
-tables, making exploratory data analysis using our system feasible. Furthermore, we show that the query results
-from on-the-fly imputation are comparable to those generated with the standard full-table imputation approach.
+from the \textit{Center for Disease Control and Prevention} and \textit{freeCodeCamp}. Our results show that the optimizer
+generates query plans that execute between \lowxalphazero{} and \highxalphaoneexacs{} times as fast as imputing at the base
+tables and then executing queries, making exploratory data analysis using our system feasible. Furthermore, we show that the query results
+from on-the-fly imputation have Symmetric-Mean-Absolute-Percentage-Error between \lowsmapealphazero{} and \highsmapealphaoneexacs{} percent
+when compared to standard full-table imputation approach.
 \end{abstract}
 
 \input{introduction}
 \input{examples}
-\input{relatedwork}
 \input{algorithm}
 \input{experiments}
+\input{relatedwork}
 \input{conclusion}
-\balance
-\nocite{*}
+\bibstyle{abbrv}
 \printbibliography
+\balance
 
 \end{document}
 

@@ -17,8 +17,7 @@ GROUP BY income;
 \begin{lstlisting}[breaklines]
 SELECT income, AVG(creatine)
 FROM demo, exams, labs
-WHERE demo.id = exams.id AND exams.id = labs.id AND
-income >= 13 AND income <= 15 AND weight >= 6300
+WHERE demo.id = exams.id AND exams.id = labs.id AND income >= 13 AND income <= 15 AND weight >= 63
 GROUP BY income;
 \end{lstlisting}
 \end{minipage}
@@ -36,8 +35,7 @@ WHERE demo.id = labs.id AND labs.id = exams.id AND age_yrs <= 6;
 \begin{lstlisting}[breaklines]
 SELECT gender, AVG(blood_pressure_systolic)
 FROM demo, labs, exams
-WHERE demo.id = labs.id AND labs.id = exams.id AND
-      body_mass_index >= 3000
+WHERE demo.id = labs.id AND labs.id = exams.id AND body_mass_index >= 30
 GROUP BY gender;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno} \label[query]{q4}\\
@@ -52,3 +50,8 @@ GROUP BY gender;
 %\end{minipage}\refstepcounter{queryno} \label{q5}\\
 \bottomrule
 \end{tabular}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:

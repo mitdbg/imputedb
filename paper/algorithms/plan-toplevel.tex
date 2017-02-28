@@ -1,6 +1,6 @@
 % \begin{algorithm}
 \begin{algorithmic}[1]
-  \Require{A set of tables $T$, a relation $F: T \times \Phi$ between tables and filter predicates, a relation $J : T \times \Psi \times T$ between tables and join predicates, a set of projection attributes $P$,  an optional set of grouping attributes $G$ and aggregator function $A$, and a parameter $\alpha \in [0, 1]$ that expresses trade-off performance and information lost}
+  \Require{A set of tables $T$, a relation $F: T \times \Phi$ between tables and filter predicates, a relation $J : T \times \Psi \times T$ between tables and join predicates, a set of projection attributes $P$,  an optional set of grouping attributes $G$ and aggregator function $A$, and a parameter $\alpha \in [0, 1]$ that expresses the trade-off between performance and imputation quality.}
   \Ensure{An optimized query plan.}
   
   \Function{Plan}{$T, F, J, P, G, A$}
