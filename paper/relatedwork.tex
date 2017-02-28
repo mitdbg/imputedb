@@ -17,7 +17,7 @@ tables are well known and can limit approaches. For example, Akande finds that
 one approach (MI-GLM) is prohibitively expensive when attempting to impute on data that
 includes variables with potentially large domains (ten categories in their case).
 In contrast, \ProjectName{} allows users to specify a tradeoff between
-information lost and runtime performance, allowing users to perform queries
+imputation quality and runtime performance, allowing users to perform queries
 directly on the entire dataset. Furthermore,
 the query planner's imputation is guided by the requirements of each specific
 query's operators, rather than requiring broad assumptions about query
@@ -51,9 +51,15 @@ Designers of data stream processing systems frequently confront missing values
 and consider them carefully in query processing. Often, if sensor error is the
 cause of missing values, values can be imputed with high confidence. In
 \cite{fernandez2009inter}, feedback punctuation is used to dynamically
-reconfigure the query plan as data continue to arrive for state-dependent
-optimizations. In this framework, expensive imputations can be avoided as
-real-time conditions change.
+reconfigure the query plan for state-dependent
+optimizations as data continue to arrive. One of the applications of this framework is to avoid
+expensive imputations as real-time conditions change. 
+\ProjectName{} focuses on handling
+missing values, rather than providing a general framework for planning feedback. Furthermore,
+it provides the ability
+to trade imputation quality for runtime performance. We prove our
+algorithm and cost model produces an optimal set of plans to choose from,
+given the constraints of the search space.
 
 BayesDB \cite{mansinghka2015bayesdb} provides users with a simple interface to 
 leverage statistical inference techniques in a database. Non-experts
@@ -83,13 +89,13 @@ properties of forecast operators and generalizes them into a family of operators
 the type of predictions returned. They highlight the use of forecasting for replacing missing values.
 In their follow on work\cite{parisi2013temporal}, they identify various equivalence and containment
 relationships when using forecast operators, which could be used to perform query plan transformations that guarantee the same result. They
-explore forecast-first and forecast-last plans, which perform forecasting operations before and after traditional
+explore forecast-first and forecast-last plans, which perform forecasting operations before and after executing all traditional
 relational operators, respectively.
 
 In contrast to this work, \ProjectName{} is targeted at generic value imputation, not necessarily tailored to 
 time-series. The optimizer is not based on equivalence transformations, nor are there guarantees of equal
 results under different conditions. Instead, the optimizer allows users to pick their tradeoff between
-runtime cost and information lost. The search space considered by our optimizer is broader, not just
+runtime cost and imputation quality. The search space considered by our optimizer is broader, not just
 forecast-first/forecast-last plans, but rather imputation operators can be placed anywhere in the query plan
 (with some restrictions). The novelty of our contribution lies in the successful incorporation of
 imputation operations in non-trivial query plans with cost-based optimization.
