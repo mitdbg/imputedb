@@ -161,13 +161,13 @@ to explore multiple imputations operations (including more expensive operators) 
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
-\includegraphics[width=\columnwidth]{figures/running_times_combined.png}
+\includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
 \caption{Query runtimes with imputation on base tables, \ProjectName{}
     optimizing for quality ($\alpha=0$), and \ProjectName{} optimizing for
     performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
     magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
     imputation can provide another order-of-magnitude speedup at the expense of quality. For
-    relatively expensive queries over large datasets (Query 9), runtime of imputation can be reduced from \acsbaseresulthours~to \acsimputedbzeroresult. \srm{make this a bar graph}}
+    relatively expensive queries over large datasets (Query 9), runtime of imputation can be reduced from \acsbaseresulthours~to \acsimputedbzeroresult.}
     
 \label{fig:runtimes}
 \end{figure}
