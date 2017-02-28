@@ -83,7 +83,7 @@ def run_acs_experiment():
     max_alpha = 1.00
     step      = 1.00
 
-    subprocess.call(executable +
+    subprocess.call(executable_longimpute +
         ["experiment", catalog, acs_query, this_output_dir,
          str(iters), str(min_alpha), str(max_alpha), str(step)])
 
