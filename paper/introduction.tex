@@ -12,8 +12,8 @@ In this paper, we present a new system, called \ProjectName{}, which is the desi
 only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.}  
 % Background
-While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive -- out experiments show that even a relatively simple regression algorithm algorithms tables about XXX minutes to train and run
-on a 600K row database;  prior work~\cite{AkandeEtAl} reports times of 45 minutes to impute missing values on a 1\% sample of an XXX row database.
+While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive---our experiments show that even a relatively simple regression algorithm takes about XXX minutes to train and run
+on a 600K row database; prior work~\cite{akande2015empirical} reports times of 45 minutes to impute missing values on a 1\% sample of an XXX row database.
 \srm{Make numbers above consistent with experiments.}
 A simpler approach might drop all rows with missing values, but not only can this introduce bias into the results, but this may result in discarding all of the data.
 In contrast to existing systems~\cite{burgette2010multiple,akande2015empirical}, \ProjectName{} avoids imputing over the entire data set, as done with traditional methods. Specifically, \ProjectName{}
