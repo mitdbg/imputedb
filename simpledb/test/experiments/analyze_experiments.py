@@ -5,11 +5,6 @@ from __future__ import print_function
 import pandas as pd
 import numpy as np
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-plt.ioff()
-
 import os
 import glob
 import sys
@@ -46,29 +41,6 @@ def drop_warmup(df, by, drop=20):
 def summarize(df, by, a):
     ops = {'mean': np.mean, 'std': np.std}
     return df.groupby(by)[a].agg(ops).reset_index()
-  
-def myplot(df,alphas=None,**kwargs):
-    _, ax = plt.subplots(1)
-
-    if alphas is not None:
-        aset = set(alphas).intersection(set(df['alpha']))
-    else:
-        aset = set(df['alpha'])
-
-    if set(aset).issubset(set([0.0,1.0])):
-        label_str = r'$\alpha=%.0f$'
-    else:
-        label_str = r'$\alpha=%.2f$'
-
-    for a in aset:
-        data = df[df['alpha'] == a]
-        try:
-            data.plot(ax=ax, label=(label_str % a), **kwargs)
-        except TypeError:
-            data.plot(ax=ax, label=a, **kwargs)
-        # get around bug in legend drawing in pandas
-        plt.legend()
-    return ax
   
 def get_query_results(experiments_dir, headers, restrict_alpha=False, base=False):
     # results has
@@ -168,17 +140,9 @@ def explore(experiments_dir, base=False):
     planning_times = summarize(data, by, 'plan_time')
     running_times = summarize(data, by, 'run_time')
 
-    print(planning_times)
-    print(running_times)
-
     return planning_times, running_times, data
 
-def main(experiments_dir, output_dir):
-    make_plots(experiments_dir, output_dir)
-    make_plots(experiments_dir, output_dir, base=True)
-    write_perf_summary(experiments_dir, output_dir)
-
-def make_plots(experiments_dir, output_dir, base=False):
+def collapse_results(experiments_dir, output_dir, base=False):
     if not os.path.isdir(experiments_dir):
         raise FileNotFoundError
 
@@ -200,10 +164,8 @@ def make_plots(experiments_dir, output_dir, base=False):
     by = ['query', 'alpha']
     if base:
         name = 'base_tables'
-        alphas = ['Impute at base tables']
     else:
         name = 'imputedb'
-        alphas = [0.0, 1.0]
 
     planning_times = summarize(data, by, 'plan_time')
     running_times = summarize(data, by, 'run_time')
@@ -213,60 +175,6 @@ def make_plots(experiments_dir, output_dir, base=False):
         'planning_times_{}.csv'.format(name)))
     running_times.to_csv(os.path.join(output_dir,
         'running_times_{}.csv'.format(name)))
-        
-    # plots
-    xticks = range(0, nqueries)
-    xlabels = ["%i" % (q + 1) for q in xticks]
-
-    # plot 1: planning times
-    print('planning_times ({})'.format(name))
-    print(planning_times)
-    df = planning_times
-    plt.figure()
-    myplot(df, alphas=alphas,x='query',y='mean',yerr='std',linestyle='none',marker='o')
-    plt.xlim(xticks[0] - 1, xticks[-1] + 1)
-    plt.ylim(ymin=0)
-    plt.xticks(xticks, xlabels)
-    plt.xlabel('Query')
-    plt.ylabel('Planning Time (ms)')
-    plt.legend(loc='best', numpoints=1)
-    plt.savefig(os.path.join(output_dir, 'planning_times_%s.png' % name))
-
-    # plot 2: planning times, all alpha
-    plt.figure()
-    myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
-    plt.xlim(xticks[0] - 1, xticks[-1] + 1)
-    plt.ylim(ymin=0)
-    plt.xticks(xticks, xlabels)
-    plt.xlabel('Query')
-    plt.ylabel('Planning Time (ms)')
-    plt.legend(loc='best', numpoints=1)
-    plt.savefig(os.path.join(output_dir, 'planning_times_all_%s.png' % name))
-      
-    # plot 3: running times,
-    print('running_times ({})'.format(name))
-    print(running_times)
-    df = running_times
-    plt.figure()
-    myplot(df, alphas=alphas, x='query',y='mean',yerr='std',linestyle='none',marker='o')
-    plt.xlim(xticks[0] - 1, xticks[-1] + 1)
-    plt.ylim(ymin=0)
-    plt.xticks(xticks, xlabels)
-    plt.xlabel('Query')
-    plt.ylabel('Running Time (ms)')
-    plt.legend(loc='best', numpoints=1)
-    plt.savefig(os.path.join(output_dir, 'running_times_%s.png' % name))
-
-    # plot 4: running times, all alpha
-    plt.figure()
-    myplot(df, x='query',y='mean',yerr='std',linestyle='none',marker='o')
-    plt.xlim(xticks[0] - 1, xticks[-1] + 1)
-    plt.ylim(ymin=0)
-    plt.xticks(xticks, xlabels)
-    plt.xlabel('Query')
-    plt.ylabel('Running Time (ms)')
-    plt.legend(loc='best', numpoints=1)
-    plt.savefig(os.path.join(output_dir, 'running_times_all_%s.png' % name))
 
 def write_perf_summary(experiments_dir, output_dir):
     if not os.path.isdir(experiments_dir):
@@ -297,6 +205,11 @@ def write_perf_summary(experiments_dir, output_dir):
     perf_summary_latex.columns = ['Query', r'\alpha', 'SMAPE']
     perf_summary_latex.to_latex(os.path.join(output_dir, 'perf_summary.tex'),
             float_format='%.2f', index=False)
+
+def main(experiments_dir, output_dir):
+    collapse_results(experiments_dir, output_dir)
+    collapse_results(experiments_dir, output_dir, base=True)
+    write_perf_summary(experiments_dir, output_dir)
 
 if __name__ == "__main__":
     def print_usage_and_exit():
