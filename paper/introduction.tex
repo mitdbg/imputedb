@@ -13,7 +13,7 @@ only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.}  
 % Background
 While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive -- out experiments show that even a relatively simple regression algorithm algorithms tables about XXX minutes to train and run
-on a 600K row database;  prior work~\cite{AkandeEtAl} reports times of 45 minutes to impute missing values on a 1\% sample of an XXX row database.
+on a 600K row database;  prior work~\cite{akande2015empirical} reports times of 45 minutes to impute missing values on a 1\% sample of an XXX row database.
 \srm{Make numbers above consistent with experiments.}
 A simpler approach might drop all rows with missing values, but not only can this introduce bias into the results, but this may result in discarding all of the data.
 In contrast to existing systems~\cite{burgette2010multiple,akande2015empirical}, \ProjectName{} avoids imputing over the entire data set, as done with traditional methods. Specifically, \ProjectName{}
@@ -61,8 +61,8 @@ increasing productivity for users who frequently encounter missing values in the
   We present the first query planning algorithm to jointly optimize for running time and the quality of the imputed results.
   It does so by maintaining multiple sets of Pareto optimal plans according to the cost model.
   By deferring selection of the final plan, we make it possible for the user to trade off running time and result quality.
-\item \textbf{Proof of optimality:}
- We prove that our cost-model and planning algorithm produce a sound and complete final Pareto frontier, making the final plan choice optimal under our search space and the user's preferences.
+%\item \textbf{Proof of optimality:}
+% We prove that our cost-model and planning algorithm produce a sound and complete final Pareto frontier, making the final plan choice optimal under our search space and the user's preferences.
 \end{itemize}
 
 
