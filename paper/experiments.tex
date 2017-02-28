@@ -191,12 +191,10 @@ We can see that optimizing for quality indeed reduces the SMAPE of query results
 In general, the SMAPE relative to the base-imputation approach are low in all cases\todo{give actual value}, indicating that on-the-fly imputation produces similar results to imputation at the base tables.
 
 \begin{table}
-\todo{Consider switching to graph, or changing table layout..not very intuitive right now.}
 \centering
 \input{tables/perf_summary.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
-    parameterizations relative to results when imputing on base table. Values of $0.0$,
-    $100.0$, or $NaN$ indicate uninformative values\todo{use one flag value (-) or explain why value is uninformative}.} %TODO MJS
+    parameterizations relative to results when imputing on base table. Queries optimized for quality ($\alpha=0$) generally achieve lower error than queries optimized for efficiency ($\alpha=1$).}
 \label{table:smape}
 \end{table}
 
