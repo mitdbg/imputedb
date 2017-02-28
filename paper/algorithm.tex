@@ -254,37 +254,41 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 \subsection{Imputation Strategies}
 \label{sec:imputation}
 
-\ProjectName{} uses a general-purpose imputation strategy based on chained-equation classification and regression trees (CE-CART).
-Chained equation imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting a predictive model of one missing attribute which is conditional on all complete attributes and the other missing attributes.
-Decision tree algorithms like CART are found to be effective~\cite{akande2015empirical} and are widely used in epidemiological domains~\cite{burgette2010multiple}.
+\ProjectName{} is designed so that any imputation strategy can be plugged in with minimal
+effort and without changes to the optimizer, simply by adding time and loss functions
+(\Cref{sec:cost}) which describe the new algorithm. In principle, new imputation algorithms
+can be added, possibly targeted to a specific domain. The flexibility of this approach
+aligns well with the spirit of query optimization, which aims to reconcile performance with
+a declarative interface to data manipulation. 
 
-\ProjectName{} is designed so that any imputation strategy can be plugged in with minimal effort and without changes to the optimizer, simply by adding time and loss functions (\Cref{sec:cost}) which describe the new algorithm.
-In principle, new imputation algorithms can be added which are targeted to a specific domain.
+As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
+based on chained-equation decision trees.  Chained equation
+imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
+regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
+a predictive model of one missing attribute, conditional on all complete attributes
+and all other missing attributes. Chained-equation decision tree algorithms are found to be
+effective~\cite{akande2015empirical} and are widely used in epidemiological
+domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REPTree}
+implementation (\cite{witten2016data}).
 
-These imputation algorithms are rarely used in isolation --- rather, the ultimate goal is to
-perform statistical analysis of the complete data. To this end, the technique of
-\textit{multiple imputation} can be used, in which multiple distinct copies of the complete
-data are generated and estimators are computed by averaging over the multiple datasets. In
-ImputeDB, we cannot assume the user desires multiple copies of the query result, though we
-note that in further work, multiple imputation could be used within ImputeDB to reduce the
-variance of estimates of some aggregates, like averages.
+Our imputation algorithm proceeds by iteratively fitting regression trees to a subset of the
+data and the target imputation columns. In each iteration, the missing values of a column are
+replaced with newly imputed values. With each {\it epoch}, the quality of the imputation
+improves as values progressively reflect more accurate relationships amongst attributes. The
+algorithm terminates when convergence is achieved (i.e.\ the imputed values do not change
+across epochs) or a fixed number of epochs is reached. 
 
-Our algorithm proceeds by iteratively fitting regression trees to a subset of the data and
-the target imputation columns. In each iteration, the missing values of a column are
-replaced with newly imputed values. With each epoch, the quality of the imputation improves
-as values progressively reflect more accurate relationships amongst attributes. The
-algorithm terminates when convergence is achieved (i.e.\ the imputed values do not change across
-epochs) or a fixed number of epochs is reached. 
+These imputation algorithms are used as part of a larger \textit{multiple imputation}
+process, in which multiple distinct copies of the complete data are generated and estimators
+are computed by averaging over the multiple datasets to form a single completed dataset
+(\cite{gelman2006data}). In \ProjectName{}, we consider only single imputation, though in
+further work, multiple imputation could be considered as another avenue of assessing
+imputation confidence.
 
-The flexibility of this non-parametric imputation approach aligns well with the spirit of
-query optimization, which aims to reconcile performance with a declarative interface to data
-manipulation. 
-
-It is worth noting that given the nature of the imputation strategy used here, imputation
-operators become blocking in our system. An extension of ImputeDB could consider regression
-algorithms that learn in an online nature; this would reduce the cost of the imputation at
-the possible expense of quality. Again, given the imputation strategy-agnostic design of
-ImputeDB, this would not pose a problem.
+Given the nature of the imputation strategy used here, {\it Impute} operators are blocking
+in our system. An extension of \ProjectName{} could consider regression algorithms that learn in
+an online nature; this would reduce the cost of the imputation at the possible expense of
+quality.
 
 %\begin{algorithm}
 %    \input{algorithms/cart.tex}
