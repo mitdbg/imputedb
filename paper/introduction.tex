@@ -17,8 +17,7 @@ that this subset is generally much smaller than the entire database.}
 % Background
 While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive.
 A simpler approach might drop all rows with missing values, but not only can this introduce bias into the results, but this may result in discarding all of the data.
-Finally, for many queries, it is not necessary to clean the entire data set, and a significant speed up can be obtained by cleaning only the necessary parts.
-In contrast to existing systems, \ProjectName{} exploits this observation and avoids imputing over the entire data set, as done with traditional methods. \ProjectName{}
+In contrast to existing systems, \ProjectName{} avoids imputing over the entire data set, as done with traditional methods. \ProjectName{}
 carefully plans the placement of different imputation operations throughout the query plan, resulting in a 
 significant speedup in query execution. The focus on of our work is not on the imputation algorithm but rather on the planning involved in its use in non-trivial query plans. 
 
@@ -30,7 +29,7 @@ dataset took around 75 minutes\todo{Here, we can reference the number from our o
 % Prior work
 There is relevant prior work in three broad areas: statistics, databases, and time-series forecasting.
 Prior work in statistics\todo{add more specific subarea qualifier} has focused on imputation quality~\cite{burgette2010multiple} and runtime cost~\cite{akande2015empirical}.
-Prior work in databases has a established simple semantics for handling tuples with missing values~\cite{codd1973understanding,grant1977null}.
+Prior work in databases has established simple semantics for handling tuples with missing values~\cite{codd1973understanding,grant1977null}.
 Prior work in time-series forecasting has incorporated forecasting extensions into domain-specific databases and characterized their behavior~\cite{parisi2011embedding,parisi2013temporal,duan2007processing}.
 \ProjectName{} contributes the first optimizer to plan data imputation on a per query basis, allowing users to use standard SQL on real-world data sets with missing values
 and express preferences in quality of data imputation versus running time. The guiding design principle behind \ProjectName{} is that the user should never see missing data or have to modify their queries to account for it.
@@ -50,7 +49,7 @@ This paper makes the following contributions:
 \begin{itemize}
 \item \textbf{Relational algebra with imputation:}
   We extend the standard relational algebra with two new operators to represent imputation operations: impute ($\mu$) and drop ($\delta$).
-  Impute operation fills in missing data values using a regression model (CE-CART)~\cite{burgette2010multiple}.
+  Impute operation fills in missing data values using an iterative regression model (CE-CART)~\cite{burgette2010multiple}.
   Drop operation simply drops tuples which contain null values.
 \item \textbf{Model of imputation quality and cost:}
   We extend the traditional cost model for query plans to incorporate a measure of the quality of the imputations performed.
@@ -61,7 +60,7 @@ This paper makes the following contributions:
   It does so by maintaining multiple sets of Pareto optimal plans according to the cost model.
   By deferring selection of the final plan, we make it possible for the user to trade off running time and result quality.
 \item \textbf{Proof of optimality:}
- We prove that our cost-model and planning algorithm produces a sound and complete final Pareto frontier, making the final plan choice optimal under our search space and the user's preferences.
+ We prove that our cost-model and planning algorithm produce a sound and complete final Pareto frontier, making the final plan choice optimal under our search space and the user's preferences.
 \end{itemize}
 
 \ProjectName{} leverages the combined contributions to plan fast queries on data with missing values, while producing comparable results to traditional approaches.
