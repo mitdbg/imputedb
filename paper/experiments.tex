@@ -56,19 +56,21 @@ For readability, we have replaced the NHANES variable names with self-explanator
 \end{table}
 
 \subsubsection{freeCodeCamp 2016 New Coder Survey}
-For our second set of experiments, we chose to use data collected
-by freeCodeCamp as a part of a survey of new software developers
-(both professional and amateur)~\cite{fcc-data}. freeCodeCamp is an open-source
-community that helps users learn how to program. Their \textit{2016 New Coder Survey} consists of responses by over 15,000 people to 48 different
-demographic and programming-related questions.
-The survey targeted users who were related to coding organizations.
+For our second set of experiments, we use data collected by freeCodeCamp, an open-source
+community for learning to code, as a part of a survey of new software
+developers~\cite{fcc-data}.  The \textit{2016 New Coder Survey} consists of responses by
+over 15,000 people to 48 different demographic and programming-related questions.  The
+survey targeted users who were related to coding organizations.
 
 We use a version of the data that has been pre-processed, but where missing values remain.
-For example, 46.6\% of entries for entry \textit{commutetime} are missing. However, it is worth noting that some of the missing values
-are also expected, given the way the data has been de-normalized. For example, \textit{bootcamploanyesno}, a binary attribute encoding
-whether a respondent had a loan for a bootcamp, is expected to be null for participants who did not attend a bootcamp.
+For example, 46.6\% of \textit{commutetime} responses are missing. However, it is worth
+noting that some of the missing values are also expected, given the way the data has been
+de-normalized. For example, \textit{bootcamploanyesno}, a binary attribute encoding whether
+a respondent had a loan for a bootcamp, is expected to be null for participants who did not
+attend a bootcamp.
 
-We chose a subset of 17 attributes, shown in~\Cref{table:fcc-description}, along with the percentage of missing values.
+We choose a subset of 17 attributes, which are shown in~\Cref{table:fcc-description} along
+with the percentage of missing values.
 
 \begin{table}
   \centering
@@ -77,27 +79,26 @@ We chose a subset of 17 attributes, shown in~\Cref{table:fcc-description}, along
 \end{table}
 
 \subsubsection{American Community Survey}
-For our final experiment, we introduce a simple aggregate query over data from the American Community Survey (ACS), which
-provides a number of public data sets collected by the U.S. Census Bureau.
-We used a cleaned version of the 2012 Public Use Microdata Sample (PUMS) data kindly provided by the authors of~\cite{akande2015empirical}.
-Given that the data had been cleaned, we artificially dirtied it by removing 40\% of the values uniformly at random.
+For our final experiment, we run a simple aggregate query over data from the American
+Community Survey (ACS), a comprehensive survey conducted by the U.S.
+Census Bureau. We use a cleaned version of the 2012 Public Use Microdata Sample (PUMS)
+data kindly provided by the authors of~\cite{akande2015empirical}. Given that the data had
+been cleaned, we artificially dirtied it by removing 40\% of the values uniformly at random.
 The final dataset consists of 671,153 rows and 37 integer columns.
 
 \subsection{Queries}
-We collected a set of queries (\Cref{fig:queries}) that we think are interesting to plan.
+We collect a set of queries (\Cref{fig:queries}) that we think are interesting to plan.
 We believe that they could reasonably be written by a user in the course of data analysis.
 
-The queries on the CDC NHANES data consist not only of projections and selections, but also interesting joins and aggregates.
-Our aim was to craft meaningful queries
-that would provide performance figures relevant to practitioners using
-similar datasets.
+The queries on the CDC NHANES data consist not only of projections and selections, but also
+interesting joins and aggregates.  Our aim was to craft meaningful queries that would
+provide performance figures relevant to practitioners using similar datasets.
 
-Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}). In~\Cref{q1}, we
-calculate the average cuff size for users based on their income data. In~\Cref{q2}, we compare
-creatine levels for individuals with low, medium, and high incomes spectrum and above a
-certain weight. In~\Cref{q3}, we extract the average blood lead levels for children under
-the age of 6 years. In~\Cref{q4}, we calculate the average systolic blood pressure, by
-gender, for subjects with a body mass index indicating obesity. 
+Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
+\Cref{q1} calculates calculate the average cuff size for users based on their income data.
+\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes spectrum and above a certain weight.
+\Cref{q3} extracts the average blood lead levels for children under the age of 6 years.
+\Cref{q4} calculates the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. 
 
 Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
 \Cref{q5} calculates the average income for survey participants, based on their bootcamp attendance.
