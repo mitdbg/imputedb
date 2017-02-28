@@ -13,7 +13,7 @@ only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.}  
 % Background
 While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive---our experiments show that even a relatively simple regression tree algorithm takes \acsbaseresulthours{} to train and run
-on a 600K row database; prior work~\cite{akande2015empirical} reports times of 45 minutes for multiple-imputation of missing values on a 1\% sample of the same database on a desktop computer.\todo{Explain the discrepancy between 45 * 100 and 355? They use L=10 datasets and unknown hardware. Or drop this comparison entirely?}
+on a 600K row database.
 
 A simpler approach might drop all rows with missing values, but not only can this introduce bias into the results, but this may result in discarding all of the data.
 In contrast to existing systems~\cite{burgette2010multiple,akande2015empirical}, \ProjectName{} avoids imputing over the entire data set, as done with traditional methods. Specifically, \ProjectName{}
