@@ -356,20 +356,24 @@ So it must be the case that no such situation arises.
 Given that no desirable plans are discarded by computing Pareto frontiers for each dirty set, the final Pareto frontier (for dirty set $\emptyset$) is optimal.
 
 \subsection{Complexity}\label{sec:complexity}
-\todo{Stengthen complexity argument, as per Sam's feedback}
-Our optimization algorithm builds off the approach taken by System R \cite{blasgen1981system}, therefore our planning algorithm is still exponential in the number of joins. 
-If we removed our restriction on imputation operators to consider not just minimal versus maximal imputations, and instead allowed any arbitrary subset
-of attributes to be imputed at a plan node (including those not operated on by that node), then every single operator in the query plan would have a
-number of plans exponential in the number of dirty columns.
+Our optimization algorithm builds off the approach taken by System R~\cite{blasgen1981system}.
+If imputation operators are ignored, we search the same plan space.
+Therefore, our algorithm has a complexity of at least $O(2^J)$, where $J$ is the number of joins.
 
-By restricting imputations to two classes: those that impute only attributes used in the operator and those that impute all attributes needed downstream in the query,
-we limit the factor of plans at each operator to three: \textit{Drop}, \textit{Impute} over attributes used in operator, and \textit{Impute} over all attributes needed.
-Recall that the planner maintains different plans for different dirty sets, keeping only those that are not dominated by other plans with the same dirty set. So in many
-cases we can drop some of these intermediate plans generated at each operator. However, if the dirty sets tracked are distinct through the entire planning phase,
-then we could explore exponentially more plans than System R.
+The addition of imputation operators increases the number of plans exponentially, as an imputation may be placed before any of the relational operators.
+We restrict imputations to two classes: those that impute only attributes used in the operator and those that impute all the attributes that are needed downstream in the query.
+By doing so we limit the number of imputations at any point to four: \textit{Drop} or \textit{Impute} over the attributes used in the operator or over all the downstream attributes.
+This modification increases the complexity of our planning algorithm to $O(16^J)$.\todo{I think this is right, but should check}
 
-However, we note that in all cases we have considered, this exponential blowup does not affect the practical performance of our optimizer and results in relatively short
-planning times.
+To motivate the restriction of imputation types, we consider the implications of allowing arbitrary imputations.
+If we allow any arbitrary subset of attributes to be imputed, then we would need to consider $O(2^{|D|+1})$ different imputation operators before each relational operator where $D$ is the set of dirty attributes in all tables.
+This would increase the overall complexity of the algorithm drastically.
+
+Finally, we note that for the queries we have examined, this exponential blowup does not affect the practical performance of our optimizer.
+Recall that the planner maintains different plans for different dirty sets, keeping only those that are not dominated by other plans with the same dirty set.
+So in many cases we can drop some of these intermediate plans generated at each operator.
+The worst case complexity only occurs if the dirty sets tracked are distinct through the entire planning phase.
+Planning times are discussed in more detail in \Cref{sec:results}.
 
 %%% Local Variables:
 %%% mode: latex
