@@ -10,13 +10,14 @@ learning communities. As highlighted in~\cite{gelman2006data}, missing data
 can appear for a variety of reasons.
 It can be missing uniformly at random or conditioned on
 existing values (observed and missing). Methods in the statistical community
-focus on correctly modeling relationships between attributes to account for different forms of missingness. For example, Burgette and Reiter~\cite{burgette2010multiple} discuss the usage of sequential regression trees
-for imputing missing data.
+focus on correctly modeling relationships between attributes to account for different forms
+of missingness. For example, \cite{burgette2010multiple} discuss the
+usage of iterative decision trees for imputing missing data.
 
-~\cite{akande2015empirical} analyzes the performance of various
+\cite{akande2015empirical} analyzes the performance of various
 multiple imputation techniques on the American Community Survey dataset. 
 The computational difficulties of imputing on large base
-tables are well-known and can limit approaches. For example, Akande finds that
+tables are well-known and can limit approaches. For example, \cite{akande2015empirical} finds that
 one approach (MI-GLM) is prohibitively expensive when attempting to impute on data that
 includes variables with potentially large domains (ten categories in their case).
 In contrast, \ProjectName{} allows users to specify a trade-off between
@@ -31,8 +32,8 @@ There is a long history in the database community surrounding the
 treatment of \nullv{}. As early as 1973,~\cite{codd1973understanding}
 provided a treatment of the semantics of \nullv{}. Multiple
 papers have described various (at times conflicting) treatments
-of nulls~\cite{grant1977null}. \ProjectName's main design invariant---no relational operator
-sees missing values for attributes it must operate on and users should never see
+of \nullv{}s~\cite{grant1977null}. \ProjectName's main design invariant---no relational operator
+sees missing values for attributes it must operate on nor do users see
 missing data---eliminates
 the need to handle \nullv{} value semantics, while guaranteeing query evaluation soundness.
 
@@ -41,7 +42,7 @@ detect dirty values, whether missing or otherwise, and rectify the errors if
 possible. A survey of methods and systems is provided in~\cite{hellerstein2008quantitative}.
 
 In~\cite{wolf2007query}, queries over databases with missing values are
-processed using a statistical approach, taking advantage of correlations between
+processed directly using a statistical approach, taking advantage of correlations between
 attributes. The tuples that match the original query as well as a ranking of
 tuples with incomplete data that may match are returned. Our work differs in
 that we allow any well-formed statistical technique to be used for imputation
@@ -52,12 +53,8 @@ Designers of data stream processing systems frequently confront missing values
 and consider them carefully in query processing. Often, if sensor error is the
 cause of missing values, values can be imputed with high confidence. In~\cite{fernandez2009inter}, feedback punctuation is used to dynamically
 reconfigure the query plan for state-dependent
-optimizations as data continue to arrive. One of the applications of this framework is to avoid
+optimizations as data continues to arrive. One of the applications of this framework is to avoid
 expensive imputations as real-time conditions change. 
-\ProjectName{} focuses on handling
-missing values, rather than providing a general framework for planning feedback. Furthermore,
-it provides the ability
-to trade imputation quality for runtime performance. 
 %We prove our
 %algorithm and cost model produces an optimal set of plans to choose from,
 %given the constraints of the search space.
@@ -108,7 +105,7 @@ imputation operations in non-trivial query plans with cost-based optimization.
 \cite{duan2007processing} describes the Fa system and its declarative language for time-series forecasting. Their
 system automatically searches the space of attribute combinations/transformations and statistical models
 to produce forecasts within a given accuracy threshold. Accuracy estimates are determined using
-standard techniques, such as k-fold cross-validation. 
+standard techniques, such as cross-validation. 
 
 Similarly to Fa, \ProjectName{} provides a declarative language, as
 a subset of standard SQL.\@ \ProjectName{}, however, is not searching the space of possible

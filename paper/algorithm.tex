@@ -1,4 +1,3 @@
-\vspace{0.5in}
 \section{Algorithm}
 In order to correctly plan around missing values, we first extend the relational algebra operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) 
 with two new operators (\Cref{sec:operators}). We then define the search space (\Cref{sec:search-space}) of plans to encompass non-trivial operations, such as joins and 
@@ -291,7 +290,7 @@ domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REP
 implementation~\cite{witten2016data}.
 
 The reference algorithm used by the \textit{Impute} operator proceeds by iteratively fitting
-regression trees to a subset of the data and the target imputation attribute. In each
+decision trees to a subset of the data and the target imputation attribute. In each
 iteration, the missing values of a single attribute are replaced with newly imputed values.
 In one {\it epoch} of the algorithm, each of the target imputation
 attributes is filled in with imputed values in a single iteration.
