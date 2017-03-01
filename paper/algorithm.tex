@@ -1,3 +1,4 @@
+\vspace{0.5in}
 \section{Algorithm}
 In order to correctly plan around missing values, we first extend the relational algebra operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) 
 with two new operators (\Cref{sec:operators}). We then define the search space (\Cref{sec:search-space}) of plans to encompass non-trivial operations, such as joins and 
@@ -201,6 +202,7 @@ The input to our query planner is a tuple $(T, F, J, P, G, A)$:
 
 The query planner must select a join ordering in addition to placing imputation operators as described in~\Cref{sec:placement}.
 
+\subsubsection{Plan cache}
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
 At a high level, a plan cache is a mapping from a set of tables to a set of dirty-set specific dominating plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single plan per dirty set, because maintaining a Pareto frontier as a plan progresses through the optimizer's pipeline
@@ -232,9 +234,8 @@ collect sound and complete Pareto frontiers. For plans with the same dirty set, 
 as a total order, allowing us to appropriately select the frontier. Meanwhile, plans with different $\textsc{Dirty}$ sets cannot be compared. The final
 Pareto frontier produced by the optimizer corresponds to the collection of plans associated with the empty dirty set.
 
-\Cref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in~\Cref{algo:top-level-planner}.
-
-The planner operates as follows.
+\subsubsection{Planning algorithm}
+The planner (\Cref{algo:top-level-planner}, with helper functions in \Cref{algo:plan-helpers}) operates as follows.
 First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}--\Cref{lst:line:attr-end}).
 This set will be used to determine which attributes are imputed.
 Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
@@ -265,8 +266,6 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 \input{algorithms/histogram-transform.tex}
 \end{algorithm}
 
-
-
 \subsection{Imputation Strategies}
 \label{sec:imputation}
 
@@ -280,7 +279,7 @@ aligns well with the spirit of query optimization, which aims to reconcile perfo
 a declarative interface to data manipulation. 
 
 As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
-based on chained-equation decision trees.  Chained equation
+based on chained-equation decision trees.  Chained-equation
 imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
 regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
 a predictive model of one missing attribute, conditional on all complete attributes
@@ -300,7 +299,7 @@ These imputation algorithms are used as part of a larger \textit{multiple imputa
 process, in which multiple distinct copies of the complete data are generated and estimators
 are computed by averaging over the multiple datasets to form a single completed dataset
 (\cite{gelman2006data}). In \ProjectName{}, we consider only single imputation, though in
-further work, multiple imputation could be considered as another avenue of assessing
+further work, multiple imputation could be another avenue of assessing
 imputation confidence.
 
 Given the nature of the imputation strategy used here, {\it Impute} operators are blocking

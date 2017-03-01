@@ -29,14 +29,15 @@ dataset will likely have varying imputation needs and that execution plans shoul
 \ProjectName{} opens up multiple avenues for further work. We sketch out some of these
 directions.
 
-\textbf{Imputation confidence:} Obtaining a confidence measure for query results
+\textbf{Imputation confidence:} Obtaining confidence measures for query results
 produced when missing values are imputed with a machine learning model is
-another possible improvement to the system. In most cases, the data imputed
-is unlikely to follow a standard distribution, but iterative approaches such as cross-validation\cite{kohavi1995study}
-can give confidence intervals.
-In contrast to standard confidence calculations, there is the added complexity
-of imputation taking place at various points in the plan, so the composition of results
+another possible improvement to the system. These measures could be obtained in general
+using resampling methods like cross-validation and bootstrapping\cite{kohavi1995study}.
+In contrast to standard confidence calculations, there is the added complexity that
+imputation takes place at various points in the plan, so the composition of results
 through standard query operations needs to be taken into account when computing confidence intervals.
+Finally, multiple imputation could be considered explicitly and confidence measures like variances could
+similarly propagate through the query plan.
 
 \textbf{Imputation operators:} We explored a subset of possible imputation operators.
 In particular, we explored two variants of the \textit{Drop} and \textit{Impute} operations. The system
