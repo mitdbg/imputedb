@@ -168,9 +168,10 @@ Each query with each value of $\alpha$ was run 200 times, after discarding a war
 %We exclude the planning time for queries that impute at base table, as that requires no
 %planning. 
 
-In the median query across a variety of queries and choices of $\alpha$, planning
-constituted \planningruntimepercent{} percent of total runtime. In all cases, the optimizer
-returned a query plan within \planningmaxtime{} ms, with times roughly constant between levels of $\alpha$.
+In the median query across a variety of queries and choices of $\alpha$, planning took
+\planningmediantime{} ms, 
+constituting \planningruntimepercent{} percent of total runtime. In all cases, the optimizer
+returned a query plan within \planningmaxtime{} ms, with times similar across values of $\alpha$.
 
 % The one-standard-deviation
 %intervals around the mean planning time often overlap, suggesting the planning component is
