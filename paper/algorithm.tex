@@ -83,7 +83,7 @@ to tolerate relative to the minimum possible amongst frontier plans.
 \begin{definition}
 Let $P$ be a set of plans. For $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Loss}(p) - \min_{p' \in P}(\textsc{Loss}(p')) \leq \alpha$. We denote this as $p^\alpha$.
 We define the set of $\alpha$-bound plans in $P$ as $P^\alpha$.
-We say a plan $p$ is $\alpha$-bound optimal if $\forall p' \in P^\alpha. \textsc{Time}(p) \leq \textsc{Time}(p'^\alpha)$. 
+We say a plan $p^\alpha$ is $\alpha$-bound optimal if $\forall p' \in P^\alpha. \textsc{Time}(p) \leq \textsc{Time}(p')$. 
 \end{definition}
 
 Given $\alpha$ and $P$, \ProjectName{} returns an $\alpha$-bound optimal plan in $P$.
