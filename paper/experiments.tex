@@ -108,6 +108,7 @@ Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
 The query calculates the average GDP per-capita of countries with and without bootcamp participants. 
 
 \begin{table*}
+\todo{update this with final queries}
   \centering
   \begin{subtable}{\linewidth}
     \input{queries-cdc}
@@ -185,10 +186,20 @@ executing the query on this cleaned base data \cite{tofallis2015better}.  Each q
 separately run 200 times in both settings and then results from the two approaches were
 paired up and compared tuple-wise.  We average tuple-wise absolute percentage deviations
 within each iteration of a query, and we report this value averaged over all iterations.  We
-can see that optimizing for quality indeed reduces the SMAPE of query results.  In general,
-the SMAPE relative to the base-imputation approach are low in all cases --- between
+can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
+to the base-imputation approach are low in all cases --- between
 \lowsmapealphazero{} and \highsmapealphaoneexacs{} percent ---, indicating that on-the-fly
 imputation produces similar results to imputation at the base tables.
+
+We also calculate SMAPE over the number of tuples used to produce the results
+in each configuration with respect to the number of tuples satisfying the same query when
+the base tables have been imputed. In many cases where the SMAPE reduction between $\alpha = 1$ and
+$\alpha = 0$ is small, for example \Cref{q6}, we highlight that the count of tuples can be significantly different between
+the two scenarios. So while the aggregate used might not have been significantly affected by the different population,
+other aggregates may well be. This highlights a challenge for a user handling data imputation traditionally: it is unclear if
+the missing data will have a large or small negative impact on their analysis until they have paid the cost of
+running it. By using \ProjectName{} this cost can be lowered significantly.
+
 
 \begin{table}
 \todo{extend this table to have counts with new results}
@@ -196,9 +207,12 @@ imputation produces similar results to imputation at the base tables.
 \input{tables/perf_summary_13.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
     parameterizations relative to results when imputing on base table. Queries optimized for quality ($\alpha=0$) generally achieve
-    lower error than queries optimized for efficiency ($\alpha=1$).}
+    lower error than queries optimized for efficiency ($\alpha=1$). Count values reflect the SMAPE over the number of tuples
+    used for each configuration with respect to the number of tuples used when executing the query after base table imputation. A higher
+    count difference reflects more potential for errors.}
 \label{table:smape}
 \end{table}
+
 
 \subsubsection{Runtime of Base-table Imputation}
 In many real-world cases, applying the imputation step at the base table is prohibitively
@@ -216,7 +230,7 @@ For every imputation inserted into the query plan, a new statistical model is in
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are not known until runtime.
 
-\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
+%\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
 %%% Local Variables:
 %%% mode: latex
