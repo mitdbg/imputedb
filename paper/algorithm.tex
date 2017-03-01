@@ -93,8 +93,9 @@ Given $\alpha$ and $P$, \ProjectName{} returns an $\alpha$-bound optimal plan in
 So in essence, $\alpha$ is a tunable parameter that determines whether the optimizer focuses on quality or on performance, as plans that
 lose a lot of information through dropping are also the fastest. 
 
-$\alpha = 1.0$ means that the optimal query should have the fastest runtime (at the expense of quality), while $\alpha=0.0$ means that the optimal query should lose
-as little information as possible (at the expense of performance).
+If $\alpha=0.0$, then the optimal query should lose as little information as possible (at
+the expense of performance). If $\alpha = 1.0$, then the optimal query should have the
+fastest runtime (at the expense of quality).
 
 \subsubsection{Cardinality estimation}
 The computation of $\textsc{Time}(q)$ and $\textsc{Loss}(q)$ rely on having an accurate cardinality estimate of a query plan $q$ and its sub-plans.
@@ -136,10 +137,8 @@ inversely proportional to the square root of the number of cells available to tr
 the product of the number of attributes and the number of tuples. Intuitively, imputation
 accuracy \textit{increases} when more complete attributes and complete tuples are available;
 correspondingly, the information lost \textit{decreases} with more values to work
-with. We wanted to encode the fact that the number of training observations has diminishing returns for imputation quality,
-and found that scaling the cell count by applying square root worked well in practice.
-
-To add an alternate imputation strategy to \ProjectName{}, the analyst must provide a corresponding loss with a reasonable parameterization.
+with. We encode the fact that the number of training observations has diminishing returns for imputation quality,
+and find that scaling the cell count by applying square root works well in practice.
 
 \subsubsection{Query runtime}
 To compute $\textsc{Time}(Q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard 
@@ -177,16 +176,16 @@ In general, evaluating the time complexity for different \textit{Impute} operato
 complicated, as the properties of
 different algorithms can vary significantly, the underlying I/O cost
 is not easily extracted (especially in the case that the entire set of tuples does not
-fit in memory), and the CPU cost dominates (in contrast to the other operators, which may
-not even consider CPU cost explicitly). For example,~\cite{martin1995time} find that the
+fit in memory), and the CPU cost dominates (in contrast to the other operators, which do
+not consider CPU cost explicitly). For example,~\cite{martin1995time} finds that the
 time complexity of the \textit{build tree} algorithm for one commonly-used class of
 decision trees is a function of the number of classes, several overhead constants, the
 parameterization of the partition and heuristic functions, and the \textit{arity} (the
 number of subsets considered for each split). The \textit{build tree} phase often
 does not even dominate computation, as post-processing steps like pruning, which are vital
-in achieving good performance, can have cost exponential in the height of the tree. In
-practice, we find that a simple parameterization can be acceptable (i.e. yield intelligent query
-plans).
+in achieving good performance, can have cost exponential in the height of the tree.
+Nonetheless, in practice, we find that a simple parameterization can be acceptable (i.e.
+yield intelligent query plans).
 
 \subsection{Query planning}
 \label{sec:planning}
@@ -203,9 +202,9 @@ The query planner must select a join ordering in addition to placing imputation 
 
 \subsubsection{Plan cache}
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
-At a high level, a plan cache is a mapping from a set of tables to a set of dirty-set specific dominating plans that perform the required joins and filters over these tables.
+At a high level, a plan cache is a mapping from a set of tables to a set of dirty set-specific dominating plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single plan per dirty set, because maintaining a Pareto frontier as a plan progresses through the optimizer's pipeline
-allows us to obtain the final set of plans that best trade computation
+allows us to obtain the final set of plans that best trade-off computation
 cost and imputation quality. Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
 
 
@@ -268,21 +267,23 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 \subsection{Imputation Strategies}
 \label{sec:imputation}
 
-\ProjectName{} is designed so that any imputation strategy, typically a predictive machine
-learning model,
+\ProjectName{} is designed so that any imputation strategy
 can be plugged in with minimal effort and without changes to the optimizer, simply by adding
 time and loss functions (\Cref{sec:cost-model}) which describe the new algorithm.
-An imputation strategy is a function $I(T, C) \rightarrow T'$ which fills in the missing
-attributes $C$ in a set of tuples $T$, returning a new set of tuples $T'$.
-In principle, new imputation algorithms
-can be added, possibly targeted to a specific domain. The flexibility of this approach
-aligns with the spirit of query optimization, which aims to reconcile performance with
-a declarative interface to data manipulation. 
+For our purposes, an imputation strategy is a function $I(R, C) \rightarrow R'$ which fills in the missing
+attributes $C$ in a relation $R$, returning a new set of tuples $R'$.
+The flexibility of this approach aligns with the spirit of query optimization, which aims to
+reconcile performance with a declarative interface to data manipulation.
+
+In principle, new imputation algorithms can be added, possibly targeted to a specific
+domain. However, \ProjectName{}'s planner will consider an arbitrary subset of the
+attributes in any imputation, thus it is feasible to customize the \textit{type} of
+algorithm but not necessarily a specific modelling relationships between attributes.
 
 As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
 based on chained-equation decision trees.  Chained-equation
 imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
-regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
+regression}~\cite{gelman2006data}) impute multiple missing attributes being imputed by iteratively fitting
 a predictive model of one missing attribute, conditional on all complete attributes
 and all other missing attributes. Chained-equation decision trees algorithms are found to be
 effective~\cite{akande2015empirical} and are widely used in epidemiological
@@ -290,11 +291,11 @@ domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REP
 implementation~\cite{witten2016data}.
 
 The reference algorithm used by the \textit{Impute} operator proceeds by iteratively fitting
-decision trees to a subset of the data and the target imputation attribute. In each
-iteration, the missing values of a single attribute are replaced with newly imputed values.
+decision trees for the target imputation attribute on a subset of the data. In each
+iteration, the missing values of a separate attribute are replaced with newly imputed values.
 In one {\it epoch} of the algorithm, each of the target imputation
 attributes is filled in with imputed values in a single iteration.
-With each {\it epoch}, the quality of the imputation improves as values progressively
+With each epoch, the quality of the imputation improves as values progressively
 reflect more accurate relationships between attributes. The algorithm terminates when
 convergence is achieved (i.e.\ the imputed values do not change across epochs) or a fixed
 number of epochs is reached. 
@@ -302,9 +303,8 @@ number of epochs is reached.
 These imputation algorithms are commonly used as part of a larger \textit{multiple imputation}
 process, in which multiple distinct copies of the complete data are generated and estimators
 are computed by averaging over the multiple datasets to form a single completed dataset~
-\cite{gelman2006data}. In \ProjectName{}, we consider only single imputation, though in
-further work, multiple imputation could be another avenue of assessing
-imputation confidence.
+\cite{gelman2006data}. In \ProjectName{}, we consider only single imputation, though
+multiple imputation could incorporated as another avenue of assessing imputation confidence.
 
 %\begin{algorithm}
 %    \input{algorithms/cart.tex}
