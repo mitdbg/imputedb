@@ -269,10 +269,12 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 \subsection{Imputation Strategies}
 \label{sec:imputation}
 
-\ProjectName{} is designed so that any imputation strategy can be plugged in with minimal
-effort and without changes to the optimizer, simply by adding time and loss functions
-(\Cref{sec:cost-model}) which describe the new algorithm.
-An imputation strategy is a function $I(T, C) \rightarrow T'$ which fills in the missing attributes $C$ in a set of tuples $T$, returning a new set of tuples $T'$.
+\ProjectName{} is designed so that any imputation strategy, typically a predictive machine
+learning model,
+can be plugged in with minimal effort and without changes to the optimizer, simply by adding
+time and loss functions (\Cref{sec:cost-model}) which describe the new algorithm.
+An imputation strategy is a function $I(T, C) \rightarrow T'$ which fills in the missing
+attributes $C$ in a set of tuples $T$, returning a new set of tuples $T'$.
 In principle, new imputation algorithms
 can be added, possibly targeted to a specific domain. The flexibility of this approach
 aligns well with the spirit of query optimization, which aims to reconcile performance with
@@ -286,26 +288,24 @@ a predictive model of one missing attribute, conditional on all complete attribu
 and all other missing attributes. Chained-equation decision trees algorithms are found to be
 effective~\cite{akande2015empirical} and are widely used in epidemiological
 domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REPTree}
-implementation (\cite{witten2016data}).
+implementation~\cite{witten2016data}.
 
-The algorithm used by the \textit{Impute} operator proceeds by iteratively fitting regression trees to a subset of the
-data and the target imputation columns. In each iteration, the missing values of a column are
-replaced with newly imputed values. With each {\it epoch}, the quality of the imputation
-improves as values progressively reflect more accurate relationships amongst attributes. The
-algorithm terminates when convergence is achieved (i.e.\ the imputed values do not change
-across epochs) or a fixed number of epochs is reached. 
+The reference algorithm used by the \textit{Impute} operator proceeds by iteratively fitting
+regression trees to a subset of the data and the target imputation attribute. In each
+iteration, the missing values of a single attribute are replaced with newly imputed values.
+In one {\it epoch} of the algorithm, each of the target imputation
+attributes is filled in with imputed values in a single iteration.
+With each {\it epoch}, the quality of the imputation improves as values progressively
+reflect more accurate relationships between attributes. The algorithm terminates when
+convergence is achieved (i.e.\ the imputed values do not change across epochs) or a fixed
+number of epochs is reached. 
 
 These imputation algorithms are used as part of a larger \textit{multiple imputation}
 process, in which multiple distinct copies of the complete data are generated and estimators
-are computed by averaging over the multiple datasets to form a single completed dataset
-(\cite{gelman2006data}). In \ProjectName{}, we consider only single imputation, though in
+are computed by averaging over the multiple datasets to form a single completed dataset~
+\cite{gelman2006data}. In \ProjectName{}, we consider only single imputation, though in
 further work, multiple imputation could be another avenue of assessing
 imputation confidence.
-
-Given the nature of the imputation strategy used here, {\it Impute} operators are blocking
-in our system. An extension of \ProjectName{} could consider regression algorithms that learn in
-an online nature; this would reduce the cost of the imputation at the possible expense of
-quality.
 
 %\begin{algorithm}
 %    \input{algorithms/cart.tex}
