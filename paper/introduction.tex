@@ -53,7 +53,8 @@ increasing productivity for users who frequently encounter missing values in the
 \begin{itemize}
 \item \textbf{Relational algebra extended with imputation:}
   We extend the standard relational algebra with two new operators to represent imputation operations: impute ($\mu$) and drop ($\delta$).
-  The impute operation fills in missing data values using an iterative regression model (CE-CART)~\cite{burgette2010multiple}.
+  The impute operation fills in missing data values using any statistical imputation
+  technique, such as chained-equation decision trees ~\cite{burgette2010multiple}.
   The drop operation simply drops tuples which contain \nullv{} values.
 \item \textbf{Model of imputation quality and cost:}
   We extend the traditional cost model for query plans to incorporate a measure of the quality of the imputations performed.
