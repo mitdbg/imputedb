@@ -193,15 +193,14 @@ to the base-imputation approach is low in all cases---between
 \lowsmapealphazero{} and \highsmapealphaoneexacs{} percent---indicating that on-the-fly
 imputation produces similar results to imputation at the base tables.
 
-We also calculate SMAPE over the number of tuples used to produce the results
-in each configuration with respect to the number of tuples satisfying the same query when
-the base tables have been imputed. In many cases where the SMAPE reduction between $\alpha = 1$ and
-$\alpha = 0$ is small, for example \Cref{q6}\todo{confirm}, we highlight that the count of tuples can be significantly different between
-the two scenarios. So while the aggregate used might not have been significantly affected by the different population,
-other aggregates may well be. This highlights a challenge for a user handling data imputation traditionally: it is unclear if
-the missing data will have a large or small negative impact on their analysis until they have paid the cost of
-running it. By using \ProjectName{} this cost can be lowered significantly.
-
+We also calculate the number of tuples used to produce each aggregate output.
+The Count columns in \Cref{table:smape} show the percentage difference between the number of tuples in the aggregate for $\alpha = 1$ and $\alpha = 0$ and running the query on the imputed base table.
+This shows that when optimizing for performance, not quality, many tuples are dropped.
+Even in cases where the SMAPE reduction between $\alpha = 1$ and $\alpha = 0$ is small (\Cref{q2}, \Cref{q6}) the tuple count is significantly different.
+In these cases, the aggregate value is not significantly impacted by the missing data.
+However, if the missing data is biased then the aggregate will have a significant error.
+This highlights a challenge for a user handling data imputation traditionally: it is unclear if the missing data will have a large or small negative impact on their analysis until they have paid the cost of running it.
+By using \ProjectName{} this cost can be lowered significantly.
 
 \begin{table}
 \centering
