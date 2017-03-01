@@ -36,7 +36,8 @@ To keep the query plan search space tractable, only plans that fit the following
 \item Projections are placed at the root of the query tree.
 \end{itemize}
   
-The space of query plans is similar to that considered by System R~\cite{blasgen1981system}, with the addition of imputation operators appearing before and after traditional operators.
+The space of query plans is similar to that considered in a canonical
+cost-based optimizer~\cite{blasgen1981system}, with the addition of imputation operators appearing before and after traditional operators.
 \Cref{fig:query-schematic} shows a plan schematic for a query involving three tables, absent any imputation operators.
 
 \begin{figure}
@@ -371,7 +372,8 @@ quality.
 %Given that no desirable plans are discarded by computing Pareto frontiers for each dirty set, the final Pareto frontier (for dirty set $\emptyset$) is optimal.
 
 \subsection{Complexity}\label{sec:complexity}
-Our optimization algorithm builds off the approach taken by System R~\cite{blasgen1981system}.
+Our optimization algorithm builds off the approach taken by 
+a canonical cost-base optimizer~\cite{blasgen1981system}.
 If imputation operators are ignored, we search the same plan space.
 Therefore, our algorithm has a complexity of at least $O(2^J)$, where $J$ is the number of joins.
 
