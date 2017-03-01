@@ -104,24 +104,32 @@ We use these histogram estimates to compute $\text{Loss}(Q)$, a measure averaged
 
 \begin{align*}
   \textsc{L}(q) &= \begin{cases}
-     \{1\} \cup \textsc{L}(q') & q = \delta_C(q') \\
-    \left\{\frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q')}}\right\} \cup \textsc{L}(q')  & q = \mu_C(q') \\
-    \textsc{L}(q_1') \cup \textsc{L}(q_2') & q = q_1' \bowtie_\psi q_2' \\
-    \textsc{L}(q') & q = \sigma_\phi(q'), \\ & q = \pi_C(q') \\
-    \emptyset\ multiset & q = t\\
+     1 + \textsc{L}(q') & q = \delta_C(q') \\
+    \frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q')}} + \textsc{L}(q')  & q = \mu_C(q') \\
+    \textsc{L}(q_1') + \textsc{L}(q_2') & q = q_1' \bowtie_\psi q_2' \\
+    \textsc{L}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
+    0 & q = t\\
   \end{cases}\\
-  \textsc{Loss}(q) &= \frac{\Sigma \textsc{L}(q)}{|\textsc{L}(q)|}
+    \textsc{N}(q) &= \begin{cases}
+     1 + \textsc{N}(q') & q = \delta_C(q') \\
+     1 + \textsc{L}(q')  & q = \mu_C(q') \\
+    \textsc{N}(q_1') + \textsc{N}(q_2') & q = q_1' \bowtie_\psi q_2' \\
+    \textsc{N}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
+    0 & q = t\\
+  \end{cases}\\
+  \textsc{Loss}(q) &= \frac{\textsc{L}(q)}{\textsc{N}(q)}
 \end{align*}
 
 Each imputation operator incurs a heuristic loss penalty. We define \textsc{Loss} as the average over the individual penalties incurred
-by $\mu,\delta$ operators. Our recursive definition of $L$ accumulates these penalties in a multi-set, as the order of the penalties is irrelevant,
-and averages them at the root of the plan. For example, $\delta$ contributes a loss of 1 (i.e. we lose all information  that dropped tuples
+by $\mu,\delta$ operators. Our recursive definition of $L$ accumulates these penalties, and $N$ counts the number of imputation operations.
+For example, $\delta$ contributes a loss of 1 (i.e. we lose all information  that dropped tuples
 might have encoded). Meanwhile, imputing \nullv{} fields with $\mu$ incurs a loss penalty $p \in (0, 1]$. In this case, the penalty is
 inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as
 as the product of the number of attributes and the number of tuples. Intuitively, imputation
 accuracy \textit{increases} when more complete attributes and complete tuples are available;
 correspondingly, the information lost \textit{decreases} with more values to work
-with. The square root captures the intuition that the benefits provided by more training observations has diminishing returns.
+with. We wanted to encode the fact that the number of training observations has diminishing returns for imputation quality,
+and found that scaling the cell count by applying square root worked well in practice.
 
 Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
