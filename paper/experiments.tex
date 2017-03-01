@@ -197,7 +197,8 @@ We also calculate the number of tuples used to produce each aggregate output.
 The Count columns in \Cref{table:smape} show the percentage difference between the number of tuples in the aggregate for $\alpha = 1$ and $\alpha = 0$ and running the query on the imputed base table.
 This shows that when optimizing for performance, not quality, many tuples are dropped.
 Even in cases where the SMAPE reduction between $\alpha = 1$ and $\alpha = 0$ is small (\Cref{q2}, \Cref{q6}) the tuple count is significantly different.
-In these cases, the aggregate value is not significantly impacted by the missing data.
+In these cases, the aggregate value is not significantly impacted by the missing data. In particular, if values are missing uniformly at random,
+the aggregate should not be affected.
 However, if the missing data is biased then the aggregate will have a significant error.
 This highlights a challenge for a user handling data imputation traditionally: it is unclear if the missing data will have a large or small negative impact on their analysis until they have paid the cost of running it.
 By using \ProjectName{} this cost can be lowered significantly.
