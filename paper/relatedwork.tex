@@ -18,7 +18,7 @@ The computational difficulties of imputing on large base
 tables are well-known and can limit approaches. For example, Akande finds that
 one approach (MI-GLM) is prohibitively expensive when attempting to impute on data that
 includes variables with potentially large domains (ten categories in their case).
-In contrast, \ProjectName{} allows users to specify a tradeoff between
+In contrast, \ProjectName{} allows users to specify a trade-off between
 imputation quality and runtime performance, allowing users to perform queries
 directly on the entire dataset. Furthermore,
 the query planner's imputation is guided by the requirements of each specific
@@ -97,7 +97,7 @@ the abstractions necessary to do so.
 
 In contrast to this work, \ProjectName{} is targeted at generic value imputation, not necessarily tailored to 
 time-series. The optimizer is not based on equivalence transformations, nor are there guarantees of equal
-results under different conditions. Instead, the optimizer allows users to pick their tradeoff between
+results under different conditions. Instead, the optimizer allows users to pick their trade-off between
 runtime cost and imputation quality. The search space considered by our optimizer is broader, not just
 forecast-first/forecast-last plans, but rather imputation operators can be placed anywhere in the query plan
 (with some restrictions). The novelty of our contribution lies in the successful incorporation of
@@ -111,7 +111,7 @@ standard techniques, such as k-fold cross-validation.
 Similarly to Fa, \ProjectName{} provides a declarative language, as
 a subset of standard SQL.\@ \ProjectName{}, however, is not searching the space of possible
 imputation models, but rather the space of query plans that incorporate imputation operators. Another major point
-of distinction between \ProjectName{} and Fa is that the latter doesn't consider tradeoffs between accuracy and computation time, but rather returns the most accurate forecast (with some stopping criterion).
+of distinction between \ProjectName{} and Fa is that the latter doesn't consider trade-offs between accuracy and computation time, but rather returns the most accurate forecast (with some stopping criterion).
 
 
 

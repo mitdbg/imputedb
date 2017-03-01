@@ -77,7 +77,7 @@ Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping 
  
 This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of $\textsc{Time}$ and $\textsc{Loss}$ for the current query.
 
-In order to pick a final plan from the frontier, our model introduces a tradeoff parameter $\alpha$ which encodes an upper bound on the $\textsc{Loss}$ value that the user is willing
+In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Loss}$ value that the user is willing
 to tolerate relative to the minimum possible amongst frontier plans.
 
 \begin{definition}
@@ -189,7 +189,7 @@ The query planner must select a join ordering in addition to placing imputation 
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
 At a high level, a plan cache is a mapping from a set of tables to a set of dirty-set specific dominating plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single plan per dirty set, because maintaining a Pareto frontier as a plan progresses through the optimizer's pipeline
-allows us to obtain the final set of plans that best tradeoff computation
+allows us to obtain the final set of plans that best traded computation
 cost and imputation quality. Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
 
 
