@@ -209,6 +209,73 @@ def write_perf_summary(experiments_dir, output_dir):
     perf_summary_latex.to_latex(os.path.join(output_dir, 'perf_summary.tex'),
             float_format='%.2f', index=False)
 
+    return perf
+
+def write_counts_summary(experiments_dir, output_dir):
+    if not os.path.isdir(experiments_dir):
+        raise FileNotFoundError
+
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
+    experiment_results = get_query_results(experiments_dir, table_headers)
+    base_results = get_query_results(experiments_dir, table_headers, base=True)
+
+    def compute_average_count_items(d):
+        try:
+            myitems = d.iteritems()
+        except AttributeError:
+            myitems = d.items()
+
+        df = pd.DataFrame(columns=["query","alpha","mean","std"])
+        for (query, alpha), res in myitems:
+            sums = []
+            for df1 in res:
+                s = df1.sum()
+                if len(s) != 1:
+                    print(len(s))
+                    print(query, alpha)
+                    raise Exception
+                sums.append(s.values[0])
+            avg = np.mean(sums)
+            std = np.std(sums)
+            df = df.append(pd.DataFrame(
+                data={"query": [query],
+                      "alpha": [alpha],
+                      "mean": [avg],
+                      "std": [std],
+                }))
+
+        return df
+
+    df1 = compute_average_count_items(experiment_results)
+    df2 = compute_average_count_items(base_results)
+
+    df2["alpha"] = -1.0 # impute at base table
+
+    # Write to file
+    df = df1.append(df2).sort_values(["query"])
+
+    print("Writing means...")
+    dfmean = df.pivot(index="query",columns="alpha",values="mean") 
+    dfmean.to_latex(os.path.join(output_dir, 'counts_mean.tex'),
+            float_format='%.2f')
+
+    print("Writing stds...")
+    dfstd = df.pivot(index="query",columns="alpha",values="std")
+    dfstd.to_latex(os.path.join(output_dir, 'counts_std.tex'),
+            float_format='%.2f')
+
+    dfmean["0.0 pct"] = dfmean[0.0]/dfmean[-1.0]
+    dfmean["1.0 pct"] = dfmean[1.0]/dfmean[-1.0]
+
+    print("Writing means (pct)...")
+    dfmean[["0.0 pct","1.0 pct"]].to_latex(
+        os.path.join(output_dir, 'counts_mean_pct.tex'), float_format='%.2f'
+    )
+
+    return df
+
 def main(experiments_dir, output_dir):
     collapse_results(experiments_dir, output_dir)
     collapse_results(experiments_dir, output_dir, base=True)
