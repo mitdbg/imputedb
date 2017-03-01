@@ -9,7 +9,7 @@
 SELECT income, AVG(cuff_size)
 FROM demo, exams
 WHERE demo.id = exams.id
-AND height >= 15000
+AND height >= 150
 GROUP BY income;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno}\label[query]{q1} \\
@@ -45,7 +45,7 @@ GROUP BY gender;
 \begin{lstlisting}[breaklines]
 SELECT AVG(waist_circumference)
 FROM demo, exams
-WHERE demo.id = exams.id AND height >= 15000 AND weight >= 10000;
+WHERE demo.id = exams.id AND height >= 150 AND weight >= 100;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno}\label[query]{q5}\\
 \bottomrule
