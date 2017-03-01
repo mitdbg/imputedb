@@ -201,7 +201,8 @@ results to imputation at the base tables. Notably, the results with largest erro
 most closely to one existing approach of dropping all \nullv{}s.
 
 We also calculate the number of tuples used to produce each aggregate output.
-The Count columns in \Cref{table:smape} show the percentage difference between the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ and running the query on the imputed base table.
+The count fraction columns in \Cref{table:smape} show the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ as a fraction of the number of tuples
+used when running the query on the imputed base table.
 This shows that when optimizing for performance, not quality, many tuples are dropped.
 Even in cases where the SMAPE reduction between $\alpha = 1$ and $\alpha = 0$ is small (\Cref{q2}, \Cref{q6}) the tuple count is significantly different.
 In these cases, the aggregate value is not significantly impacted by the missing data. In particular, if values are missing uniformly at random,
@@ -217,8 +218,8 @@ By using \ProjectName{} this cost can be lowered significantly.
     parameterizations. To calculate SMAPE, \ProjectName{} results are compared to query results returned
     from executions with base table imputation. Queries optimized
     for quality ($\alpha=0$) generally achieve lower error than queries optimized for
-    efficiency ($\alpha=1$). Count shares show the number of results returned from each
-    query as a percentage of the number of results returned when imputing on the base table.
+    efficiency ($\alpha=1$). The count fraction column shows the number of tuples used in calculating each aggregate
+     as a fraction of the number of tuples used when running the same query after imputing on the base table.
     A lower count share reflects more potential for errors.}
 \label{table:smape}
 \end{table}
