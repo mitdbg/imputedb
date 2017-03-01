@@ -12,7 +12,7 @@ WHERE demo.id = exams.id
 AND height >= 15000
 GROUP BY income;
 \end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label[query]{q1} \\
+\end{minipage}\refstepcounter{queryno}\label[query]{q1} \\
 2 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
@@ -22,7 +22,7 @@ WHERE demo.id = exams.id AND exams.id = labs.id AND income >= 13 AND income <= 1
 GROUP BY income;
 \end{lstlisting}
 \end{minipage}
-\refstepcounter{queryno} \label[query]{q2} \\
+\refstepcounter{queryno}\label[query]{q2} \\
 3 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
@@ -30,7 +30,7 @@ SELECT AVG(blood_lead)
 FROM demo, exams, labs
 WHERE demo.id = labs.id AND labs.id = exams.id AND age_yrs <= 6;
 \end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label[query]{q3}\\
+\end{minipage}\refstepcounter{queryno}\label[query]{q3}\\
 4 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
@@ -39,17 +39,15 @@ FROM demo, labs, exams
 WHERE demo.id = labs.id AND labs.id = exams.id AND body_mass_index >= 30
 GROUP BY gender;
 \end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label[query]{q4}\\
+\end{minipage}\refstepcounter{queryno}\label[query]{q4}\\
 5 & 
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
 SELECT AVG(waist_circumference)
 FROM demo, exams
-WHERE demo.id = exams.id 
-AND height >= 15000
-AND weight >= 10000;
+WHERE demo.id = exams.id AND height >= 15000 AND weight >= 10000;
 \end{lstlisting}
-\end{minipage}\refstepcounter{queryno} \label{q5}\\
+\end{minipage}\refstepcounter{queryno}\label[query]{q5}\\
 \bottomrule
 \end{tabular}
 
