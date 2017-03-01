@@ -62,4 +62,3 @@ AND commutetime >= 120;
 SELECT gender, COUNT(age)
 FROM fcc WHERE age >= 50
 GROUP BY gender;
-

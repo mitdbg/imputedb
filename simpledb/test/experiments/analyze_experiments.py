@@ -19,16 +19,19 @@ except ImportError:
 # configure this
 nqueries = 10
 table_headers = [
-    ['income', 'weight'],                                         # query 0
-    ['income', 'cholesterol'],                                    # query 1
-    ['blood_lead'],                                               # query 2
-    ['gender', 'blood_pressure_systolic'],                        # query 3
-    ['age_yrs', 'gender', 'triglyceride', 'waist_circumference'], # query 4
-    ['attendedbootcamp', 'income'],                               # query 5
-    ['age'],                                                      # query 6
-    ['schooldegree', 'moneyforlearning'],                         # query 7
-    ['attendedbootcamp', 'gdp_per_capita'],                       # query 8
-    ['bootcamppostsalary', 'gdp_per_capita'],                     # query 9
+    ['income', 'cuff_size'],                # query 0
+    ['income', 'creatine'],                 # query 1
+    ['blood_lead'],                         # query 2
+    ['gender', 'blood_pressure_systolic'],  # query 3
+    ['attendedbootcamp', 'income'],         # query 4
+    ['commutetime'],                        # query 5
+    ['schooldegree', 'studentdebtowe'],     # query 6
+    ['attendedbootcamp', 'gdp_per_capita'], # query 7
+    ['waist_circumference'],                # query 8
+    ['income','cuff_size'],                 # query 9
+    ['attendedbootcamp','income'],          # query 10
+    ['commutetime'],                        # query 11
+    ['gender','age'],                       # query 12
 ]
 
 # basic utils
