@@ -90,7 +90,10 @@ the type of predictions returned. They highlight the use of forecasting for repl
 In their follow on work\cite{parisi2013temporal}, they identify various equivalence and containment
 relationships when using forecast operators, which could be used to perform query plan transformations that guarantee the same result. They
 explore forecast-first and forecast-last plans, which perform forecasting operations before and after executing all traditional
-relational operators, respectively.
+relational operators, respectively. 
+
+\cite{fischer2013towards} describe the architecture of a DBMS with integrated forecasting operations for time-series, detailing
+the abstractions necessary to do so.
 
 In contrast to this work, \ProjectName{} is targeted at generic value imputation, not necessarily tailored to 
 time-series. The optimizer is not based on equivalence transformations, nor are there guarantees of equal
