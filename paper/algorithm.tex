@@ -201,6 +201,7 @@ The input to our query planner is a tuple $(T, F, J, P, G, A)$:
 
 The query planner must select a join ordering in addition to placing imputation operators as described in~\Cref{sec:placement}.
 
+\subsubsection{Plan cache}
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
 At a high level, a plan cache is a mapping from a set of tables to a set of dirty-set specific dominating plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single plan per dirty set, because maintaining a Pareto frontier as a plan progresses through the optimizer's pipeline
@@ -232,9 +233,8 @@ collect sound and complete Pareto frontiers. For plans with the same dirty set, 
 as a total order, allowing us to appropriately select the frontier. Meanwhile, plans with different $\textsc{Dirty}$ sets cannot be compared. The final
 Pareto frontier produced by the optimizer corresponds to the collection of plans associated with the empty dirty set.
 
-\Cref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in~\Cref{algo:top-level-planner}.
-
-The planner operates as follows.
+\subsubsection{Planning algorithm}
+The planner (\Cref{algo:top-level-planner}, with helper functions in \Cref{algo:plan-helpers}) operates as follows.
 First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}--\Cref{lst:line:attr-end}).
 This set will be used to determine which attributes are imputed.
 Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
