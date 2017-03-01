@@ -96,19 +96,21 @@ provide performance figures relevant to practitioners using similar datasets.
 
 Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
 \Cref{q1} calculates calculate the average cuff size for users based on their income data.
-\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes spectrum and above a certain weight.
-\Cref{q3} extracts the average blood lead levels for children under the age of 6 years.
+\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes and above a certain weight.
+\Cref{q3} extracts the average blood lead levels for children under 6 years of age.
 \Cref{q4} calculates the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. 
+\Cref{q5} calculates the average waist circumference for subjects above a certain height and
+weight.
 
 Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
-\Cref{q5} calculates the average income for survey participants, based on their bootcamp attendance.
-\Cref{q6} estimates the average commute time of women from the United States who participated.
-\Cref{q7} calculates the average amount of student debt based on school degree for survey participants who have student debt.
-\Cref{q8} joins the freeCodeCamp data with a reference table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
-The query calculates the average GDP per-capita of countries with and without bootcamp participants. 
+\Cref{q6} calculates the average income for higher-income survey participants, grouped by their bootcamp attendance.
+\Cref{q7} estimates the average commute time of women from the United States who participated.
+\Cref{q8} calculates the average amount of student debt based on school degree for survey participants who have student debt.
+\Cref{q9} joins the freeCodeCamp data with a reference table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
+The query calculates the average GDP per-capita of countries with and without bootcamp
+participants over 18 years of age. 
 
 \begin{table*}
-\todo{update this with final queries}
   \centering
   \begin{subtable}{\linewidth}
     \input{queries-cdc}
@@ -147,7 +149,7 @@ to explore multiple imputations operations (including more expensive operators) 
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
-\includegraphics[width=\columnwidth]{figures/running_times_combined_bar_13.png}
+\includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
 \caption{Query runtimes with imputation on base tables, \ProjectName{}
     optimizing for quality ($\alpha=0$), and \ProjectName{} optimizing for
     performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
@@ -191,7 +193,7 @@ imputation produces similar results to imputation at the base tables.
 We also calculate SMAPE over the number of tuples used to produce the results
 in each configuration with respect to the number of tuples satisfying the same query when
 the base tables have been imputed. In many cases where the SMAPE reduction between $\alpha = 1$ and
-$\alpha = 0$ is small, for example \Cref{q6}, we highlight that the count of tuples can be significantly different between
+$\alpha = 0$ is small, for example \Cref{q6}\todo{confirm}, we highlight that the count of tuples can be significantly different between
 the two scenarios. So while the aggregate used might not have been significantly affected by the different population,
 other aggregates may well be. This highlights a challenge for a user handling data imputation traditionally: it is unclear if
 the missing data will have a large or small negative impact on their analysis until they have paid the cost of
@@ -200,7 +202,7 @@ running it. By using \ProjectName{} this cost can be lowered significantly.
 
 \begin{table}
 \centering
-\input{tables/perf_summary_13.tex}
+\input{tables/perf_summary.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
     parameterizations relative to results when imputing on the base table. Queries optimized
     for quality ($\alpha=0$) generally achieve lower error than queries optimized for
