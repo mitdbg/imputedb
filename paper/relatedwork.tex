@@ -1,13 +1,15 @@
 \section{Related Work}
 
+There is related work in three primary areas: statistics, database research, and forecasting.
+
 \subsection{Missing Values and Statistics}
 
-Imputation of missing values is a widely studied field within the statistics and machine
+Imputation of missing values is widely studied in the statistics and machine
 learning communities. As highlighted in~\cite{gelman2006data}, missing data
-can appear for a variety of reasons, including both random and conditioned on
+can appear for a variety of reasons.
+It can be missing uniformly at random and or conditioned on
 existing values (observed and missing). Methods in the statistical community
-focus on correctly modeling relationships between the attributes to factor in
-varied forms of missingness. For example, Burgette and Reiter~\cite{burgette2010multiple} discuss the usage of sequential regression trees
+focus on correctly modeling relationships between attributes to account for different forms of missingness. For example, Burgette and Reiter~\cite{burgette2010multiple} discuss the usage of sequential regression trees
 for imputing missing data.
 
 In~\cite{akande2015empirical}, Akande et al analyze the performance of various
@@ -28,9 +30,9 @@ There is a long history in the database community surrounding the
 treatment of \nullv{}. As early as 1973,~\cite{codd1973understanding}
 provided a treatment of the semantics of \nullv{}. Multiple
 papers have described various (at times conflicting) treatments
-of nulls~\cite{grant1977null}. \ProjectName's main design invariant - no relational operator
+of nulls~\cite{grant1977null}. \ProjectName's main design invariant---no relational operator
 sees missing values for attributes it must operate on and users should never see
-missing data - eliminates
+missing data---eliminates
 the need to handle \nullv{} value semantics, while guaranteeing query evaluation soundness.
 
 Database system developers and others have worked on techniques to automatically
