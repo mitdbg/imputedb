@@ -185,7 +185,7 @@ number of subsets considered for each split). The \textit{build tree} phase ofte
 does not even dominate computation, as post-processing steps like pruning, which are vital
 in achieving good performance, can have cost exponential in the height of the tree.
 Nonetheless, in practice, we find that a simple parameterization can be acceptable (i.e.
-yield intelligent query plans).
+yields intelligent query plans).
 
 \subsection{Query planning}
 \label{sec:planning}
@@ -229,7 +229,7 @@ cost and imputation quality. Details of the plan-cache semantics are shown in~\C
 
 The plan cache uses the partial order of plans defined by  $\langle \textsc{Dirty}, \textsc{Loss}, \textsc{Time} \rangle$ to
 collect sound and complete Pareto frontiers. For plans with the same dirty set, we can treat $\langle \textsc{Loss}, \textsc{Time} \rangle$
-as a total order, allowing us to appropriately select the frontier. Meanwhile, plans with different $\textsc{Dirty}$ sets cannot be compared. The final
+as a total order, allowing us to appropriately select the frontier. Plans with different $\textsc{Dirty}$ sets cannot be compared. The final
 Pareto frontier produced by the optimizer corresponds to the collection of plans associated with the empty dirty set.
 
 \subsubsection{Planning algorithm}
@@ -271,7 +271,7 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 can be plugged in with minimal effort and without changes to the optimizer, simply by adding
 time and loss functions (\Cref{sec:cost-model}) which describe the new algorithm.
 For our purposes, an imputation strategy is a function $I(R, C) \rightarrow R'$ which fills in the missing
-attributes $C$ in a relation $R$, returning a new set of tuples $R'$.
+attributes $C$ in a relation $R$, returning a new relation $R'$.
 The flexibility of this approach aligns with the spirit of query optimization, which aims to
 reconcile performance with a declarative interface to data manipulation.
 
