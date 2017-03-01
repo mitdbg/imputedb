@@ -19,7 +19,7 @@ A simpler approach might drop all rows with missing values, which can not only i
 In contrast to existing systems~\cite{burgette2010multiple,akande2015empirical}, \ProjectName{} avoids imputing over the entire data set, as done with traditional methods. Specifically, \ProjectName{}
 carefully plans the placement of imputation / row drop operations inside the query plan, resulting in a 
 significant speedup in query execution while minimizing the number of dropped rows. Unlike previous work, the focus on of our work is not on the imputation algorithms themselves (we can employ almost any such algorithm), but rather on placing imputation operations
-optimally in query plans.   Specifically, our optimization algorithms generate the Pareto-optimal frontier of plans that trade imputation cost for result quality.
+optimally in query plans. Specifically, our optimization algorithms generate the Pareto-optimal frontier of plans that trade imputation cost for result quality.
 
 % \todobox{find appropriate location for this}
 % {In a previous project, she
@@ -48,8 +48,8 @@ for details).
 %However, we optimize query plans with respect to a heuristic measure of imputation quality, and provide no hard guarantees about the accuracy of the results.
 
 \subsection{Contributions}
-\ProjectName{} leverages a number of contributions to minimize imputation time while producing comparable results to traditional approaches,
-increasing productivity for users who frequently encounter missing values in their data. These contributions include:
+\ProjectName{} leverages a number of contributions to minimize imputation time while producing comparable results to traditional approaches.
+These contributions include:
 \begin{itemize}
 \item \textbf{Relational algebra extended with imputation:}
   We extend the standard relational algebra with two new operators to represent imputation operations: impute ($\mu$) and drop ($\delta$).
