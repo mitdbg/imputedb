@@ -8,7 +8,7 @@ is well suited for early dataset exploration.
 \subsection{Data sets}\label{subsec:datasets}
 We collected three data sets for our experiments.
 For all data sets, we selected a subset of the original attributes.
-We also transformed all data values to an integer representation by enumerating strings and transforming floating point values into an appropriate range.
+We also transformed all data values to an integer representation by enumerating strings and transforming floating-point values into an appropriate range.
 
 \subsubsection{CDC NHANES}
 For our first set of experiments, we use survey data collected by the 
@@ -96,7 +96,7 @@ provide performance figures relevant to practitioners using similar datasets.
 
 Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
 \Cref{q1} calculates calculate the average cuff size for users based on their income data.
-\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes spectrum and above a certain weight.
+\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes and above a certain weight.
 \Cref{q3} extracts the average blood lead levels for children under the age of 6 years.
 \Cref{q4} calculates the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. 
 
@@ -179,7 +179,7 @@ returned a query plan within \planningmaxtime{} ms, with times roughly constant 
 
 \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)~\cite{Makridakis2000451} for
 \ProjectName{}'s query results when compared to running imputation on the base tables and
-executing the query on this cleaned base data \cite{tofallis2015better}.  Each query was
+executing the query on this cleaned base data~\cite{tofallis2015better}.  Each query was
 separately run 200 times in both settings and then results from the two approaches were
 paired up and compared tuple-wise.  We average tuple-wise absolute percentage deviations
 within each iteration of a query, and we report this value averaged over all iterations.  We

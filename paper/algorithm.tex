@@ -15,7 +15,7 @@ We introduce two new relational operators to perform imputation: \textit{Impute}
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
 replace all \nullv{} values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
-In our experiments, we instantiate \textit{Impute} with the CE-CART\cite{burgette2010multiple} algorithm, but we highlight that
+In our experiments, we instantiate \textit{Impute} with the CE-CART~\cite{burgette2010multiple} algorithm, but we highlight that
 our system is agnostic to this choice.
 \textit{Drop} simply removes from $R$ all tuples which have a \nullv{} value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no \nullv{} values for
@@ -118,7 +118,7 @@ by $\mu,\delta$ operators. Our recursive definition of $L$ accumulates these pen
 and averages them at the root of the plan. For example, $\delta$ contributes a loss of 1 (i.e. we lose all information  that dropped tuples
 might have encoded). Meanwhile, imputing \nullv{} fields with $\mu$ incurs a loss penalty $p \in (0, 1]$. In this case, the penalty is
 inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as
-as the product of the number of attributes and the number of tuples. Intuitively, imputation
+the product of the number of attributes and the number of tuples. Intuitively, imputation
 accuracy \textit{increases} when more complete attributes and complete tuples are available;
 correspondingly, the information lost \textit{decreases} with more values to work
 with. The square root captures the intuition that the benefits provided by more training observations has diminishing returns.
@@ -143,7 +143,7 @@ database.
 %\end{align*}
 
 Scan costs are estimated based on the number of tuples, 
-page size, and an unit-less I/O cost per page. Join costs are estimated as a function
+page size, and a unit-less I/O cost per page. Join costs are estimated as a function
 of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
 Filtering, projecting, and aggregating are all done in memory and have low computational overhead
 so we assume negligible time costs for those operations. We extend these heuristics to 
@@ -163,7 +163,7 @@ complicated, as the properties of
 different algorithms can vary significantly, the underlying I/O cost
 is not easily extracted (especially in the case that the entire set of tuples does not
 fit in memory), and the CPU cost dominates (in contrast to the other operators, which may
-not even consider CPU cost explicitly). For example, \cite{martin1995time} find that the
+not even consider CPU cost explicitly). For example,~\cite{martin1995time} find that the
 time complexity of the \textit{build tree} algorithm for one commonly-used class of
 decision trees is a function of the number of classes, several overhead constants, the
 parameterization of the partition and heuristic functions, and the \textit{arity} (the
