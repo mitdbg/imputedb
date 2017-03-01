@@ -1,20 +1,21 @@
 \section{Experiments}\label{sec:experiments}
 For our experiments we plan and execute queries for three separate survey-based data sets, showing that our system is well suited for early dataset exploration.
-We show that \ProjectName{} performs an order of magnitude better than imputation on the full dataset and produces results of comparable quality.
+We show that \ProjectName{} performs an order of magnitude better than traditional
+base-table imputation and produces results of comparable quality.
 
 \subsection{Implementation}
-To evaluate the performance of our approach, we implemented a prototype system in Java, following a traditional iterator model.
+To evaluate the performance of our approach, we implement a prototype system in Java, following a traditional iterator model.
 Our database handles a subset of standard SQL queries, including filters, joins, projection, grouping and aggregation.
-For simplicity, \ProjectName{} only handles tables containing integer data, so we pre-process our experimental datasets before loading them.
+For simplicity, \ProjectName{} only handles tables containing integer data.
 
 \subsection{Data sets}\label{subsec:datasets}
-We collected three data sets for our experiments.
+We collect three data sets for our experiments.
 For all data sets, we selected a subset of the original attributes.
-We also transformed all data values to an integer representation by enumerating strings and transforming floating-point values into an appropriate range.
+We also transform all data values to an integer representation by enumerating strings and transforming floating-point values into an appropriate range.
 
 \subsubsection{CDC NHANES}
 For our first set of experiments, we use survey data collected by the 
-Centers for Disease Control and Prevention (CDC) in the United States. We
+U.S. Centers for Disease Control and Prevention (CDC). We
 experiment on a set of tables collected as part of the 2013--2014 National
 Health and Nutrition Examination Survey (NHANES), a series of studies
 conducted by the CDC on a national sample of several thousand individuals~\cite{cdc-data}.
@@ -24,13 +25,13 @@ results, amongst others.
 There are 6 tables in the NHANES data set. We use three tables for our experiments:
 
 \begin{itemize}
-	\item \emph{Demographics}: demographic information of subjects
-	\item \emph{Examinations}: physical exam results
-	\item \emph{Laboratory}: laboratory exam results
+	\item \texttt{demo}: demographic information of subjects
+	\item \texttt{exams}: physical exam results
+	\item \texttt{labs}: laboratory exam results
 \end{itemize}
 
 The original tables have a large number of attributes, in some cases providing more granular tests results or alternative metrics.
-We focused on a subset of the attributes for each table to simplify the presentation and exploration of queries.
+We focus on a subset of the attributes for each table to simplify the presentation and exploration of queries.
 \Cref{table:nhanes-description} shows the attributes selected, along with the percentage of \nullv{} values for each attribute.
 For readability, we have replaced the NHANES attribute names with self-explanatory attribute names.
 
@@ -92,12 +93,12 @@ The final dataset consists of 671,153 rows and 37 integer columns.
 We collect a set of queries (\Cref{fig:queries}) that we think are interesting to plan.
 We believe that they could reasonably be written by a user in the course of data analysis.
 
-The queries on the CDC NHANES data consist not only of projections and selections, but also
+The queries consist not only of projections and selections, but also
 interesting joins and aggregates. Our aim was to craft meaningful queries that would
 provide performance figures relevant to practitioners using similar datasets.
 
 Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
-\Cref{q1} calculates calculate the average cuff size for individuals based on their income data, with a constraint on height.
+\Cref{q1} calculates the average cuff size for individuals based on their income data, with a constraint on height.
 \Cref{q2} compares creatine levels for individuals with low, medium, and high incomes and above a certain weight.
 \Cref{q3} extracts the average blood lead levels for children under 6 years of age.
 \Cref{q4} calculates the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. 
@@ -107,7 +108,7 @@ Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
 \Cref{q6} calculates the average income for higher-income survey participants, grouped by their bootcamp attendance.
 \Cref{q7} estimates the average commute time of women from the United States who participated.
 \Cref{q8} calculates the average amount of student debt based on school degree for survey participants who have student debt.
-\Cref{q9} joins the freeCodeCamp data with a reference table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
+\Cref{q9} joins the freeCodeCamp data with data provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
 The query calculates the average GDP per-capita of countries with and without bootcamp participants over 18 years of age.
 
 \begin{table*}
@@ -136,22 +137,16 @@ The query calculates the average GDP per-capita of countries with and without bo
 
 \subsection{Results}\label{sec:results}
 
+For each query, we evaluate three different configurations: \ProjectName{} optimizing for
+quality ($\alpha=0$), \ProjectName{} optimizing for performance ($\alpha=1$), and imputing
+at the base tables followed by executing the query traditionally. 
 
-
-
-
-\Cref{fig:runtimes} shows a summary of the performance results. We evaluated three different
-configurations for each query. We compare \ProjectName{} optimizing for quality ($\alpha=0$),
-\ProjectName{} optimizing for performance ($\alpha=1$), and imputing at the base tables followed
-by executing the query traditionally. The quality-optimized queries are an order-of-magnitude
-faster than imputing on the base tables. We can get another order-of-magnitude speedup when
-optimizing for performance. This performance differential means it is feasible
+\Cref{fig:runtimes} shows a summary of the performance results. The quality-optimized
+queries are an order-of-magnitude faster than imputing on the base tables. We can get
+another order-of-magnitude speedup when optimizing for performance. This performance
+differential means it is feasible
 to explore multiple imputations operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
-
-All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
-four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
-Each query with each value of $\alpha$ was run 200 times, after discarding a warm-up period.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
@@ -173,6 +168,10 @@ In the median query across a variety of queries and choices of $\alpha$, plannin
 constituting \planningruntimepercent{} percent of total runtime. In all cases, the optimizer
 returned a query plan within \planningmaxtime{} ms, with times similar across values of $\alpha$.
 
+All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
+four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
+Each query with each value of $\alpha$ was run 200 times, after discarding a warm-up period.
+
 % The one-standard-deviation
 %intervals around the mean planning time often overlap, suggesting the planning component is
 %constant in $\alpha$.
@@ -185,19 +184,21 @@ returned a query plan within \planningmaxtime{} ms, with times similar across va
 \vspace{0.5in}
 \subsubsection{Accuracy vs. Base-table Imputation}
 
-\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)~\cite{Makridakis2000451} for
-\ProjectName{}'s query results when compared to the results of running imputation on the base tables and
-executing the query on this cleaned base data. Given that the main datasets used
-have no ground truth, this measure indicates how much error is introduced by on-the-fly imputation compared
-to imputation on the base tables.
+\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error
+(SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results when compared to
+imputing on the base tables and executing the query on this cleaned base data.
+This measure indicates how much error is introduced by on-the-fly imputation compared to
+imputation on the base tables. In a real use-case, the data do not have ground-truth
+anyways, so the appropriate comparison is to this full-fledged impute on the base table.
 
 For $\alpha=0$ and $\alpha=1$, we pair up tuples and compute SMAPE for all queries. That is,
 we compute tuple-wise absolute percentage deviations within each iteration of a query, and
 we report this value averaged over all iterations.  We
 can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
-to the base-imputation approach is low---between
-\lowsmapealphazero{} and \highsmapealphaoneexacs{} percent---indicating that on-the-fly
-imputation produces similar results to imputation at the base tables.
+to the base-imputation approach is low---between \lowsmapealphazero{} and
+\highsmapealphaoneexacs{} percent---indicating that on-the-fly imputation produces similar
+results to imputation at the base tables. Notably, the results with largest error correspond
+most closely to one existing approach of dropping all \nullv{}s.
 
 We also calculate the number of tuples used to produce each aggregate output.
 The Count columns in \Cref{table:smape} show the percentage difference between the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ and running the query on the imputed base table.
@@ -226,7 +227,7 @@ By using \ProjectName{} this cost can be lowered significantly.
 \subsubsection{Runtime of Base-table Imputation}
 In many real-world cases, applying the imputation step at the base table is prohibitively
 expensive.
-To illustrate the increasing difficulty of such an approach as datasets scale, we ran the following query over the ACS dataset:
+To illustrate the increasing difficulty of such an approach as datasets scale, we run the following query over the ACS dataset:
 \begin{lstlisting}[breaklines]
 SELECT AVG(c0) FROM acs_dirty;
 \end{lstlisting}
