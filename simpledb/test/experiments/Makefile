@@ -49,15 +49,15 @@ run:
 analysis:
 	docker run -it --rm \
 		   -v "$(shell pwd)/output:/data" \
-		   -v "$(shell pwd):/src" \
+		   -v "$(shell pwd):/home/jovyan/work" \
 		   --user root \
 	           jupyter/datascience-notebook \
-		   python /src/analyze_experiments.py /data/$(SIZE)
+		   python analyze_experiments.py /data/$(SIZE)
 
 explore:
 	docker run -it --rm \
 		   -v "$(shell pwd)/output:/data" \
-		   -v "$(shell pwd):/src" \
+		   -v "$(shell pwd):/home/jovyan/work" \
 		   --user root \
 	           jupyter/datascience-notebook python
 
