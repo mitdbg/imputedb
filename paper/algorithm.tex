@@ -15,7 +15,8 @@ We introduce two new relational operators to perform imputation: \textit{Impute}
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
 replace all \nullv{} values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
-In our experiments, we instantiate \textit{Impute} with the CE-CART~\cite{burgette2010multiple} algorithm, but we highlight that
+In our experiments, we implement \textit{Impute} using a chained-equation decision trees
+algorithm, but we highlight that
 our system is agnostic to this choice.
 \textit{Drop} simply removes from $R$ all tuples which have a \nullv{} value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no \nullv{} values for
@@ -277,7 +278,7 @@ based on chained-equation decision trees.  Chained equation
 imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
 regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
 a predictive model of one missing attribute, conditional on all complete attributes
-and all other missing attributes. Chained-equation decision tree algorithms are found to be
+and all other missing attributes. Chained-equation decision trees algorithms are found to be
 effective~\cite{akande2015empirical} and are widely used in epidemiological
 domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REPTree}
 implementation (\cite{witten2016data}).
