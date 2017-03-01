@@ -199,14 +199,14 @@ running it. By using \ProjectName{} this cost can be lowered significantly.
 
 
 \begin{table}
-\todo{extend this table to have counts with new results}
 \centering
 \input{tables/perf_summary_13.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
-    parameterizations relative to results when imputing on base table. Queries optimized for quality ($\alpha=0$) generally achieve
-    lower error than queries optimized for efficiency ($\alpha=1$). Count values reflect the SMAPE over the number of tuples
-    used for each configuration with respect to the number of tuples used when executing the query after base table imputation. A higher
-    count difference reflects more potential for errors.}
+    parameterizations relative to results when imputing on the base table. Queries optimized
+    for quality ($\alpha=0$) generally achieve lower error than queries optimized for
+    efficiency ($\alpha=1$). Count shares show the number of results returned from each
+    query as a percentage of the number of results returned when imputing on the base table.
+    A lower count share reflects more potential for errors.}
 \label{table:smape}
 \end{table}
 
@@ -230,6 +230,7 @@ this is not desirable because the specific rows of data, set of complete attribu
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
 %%% Local Variables:
+
 %%% mode: latex
 %%% TeX-master: "main"
 %%% End:
