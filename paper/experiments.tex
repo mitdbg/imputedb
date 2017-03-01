@@ -147,15 +147,12 @@ to explore multiple imputations operations (including more expensive operators) 
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
-\todo{Relabel 9 somehow, since it is no longer in table of queries but in lined later}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar_13.png}
 \caption{Query runtimes with imputation on base tables, \ProjectName{}
     optimizing for quality ($\alpha=0$), and \ProjectName{} optimizing for
     performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
     magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
-    imputation can provide another order-of-magnitude speedup at the expense of quality. For
-    relatively expensive queries over large datasets (Query 9), runtime of imputation can be reduced
-    from~\acsbaseresulthours~to~\acsimputedbzeroresult.}
+    imputation can provide another order-of-magnitude speedup at the expense of quality.}
     
 \label{fig:runtimes}
 \end{figure}
@@ -222,7 +219,7 @@ To illustrate the increasing difficulty of such an approach as datasets scale, w
 SELECT AVG(c0) FROM acs_dirty;
 \end{lstlisting}
 Applying the imputation operation to the base table is extremely expensive, in our case
-completing in \acsbaseresultminutes{} (\Cref{fig:runtimes}). In contrast, \ProjectName{} executes a quality-optimized version
+completing in \acsbaseresultminutes{}. In contrast, \ProjectName{} executes a quality-optimized version
 in \acsimputedbzeroresult{} and a runtime-optimized version in \acsimputedboneresult{}. This highlights the potential
 benefit of using our system for early data exploration.
 
