@@ -113,16 +113,16 @@ We use these histogram estimates to compute $\text{Loss}(Q)$, a measure averaged
   \textsc{Loss}(q) &= \frac{\Sigma \textsc{L}(q)}{|\textsc{L}(q)|}
 \end{align*}
 
-\srm{I find this table hard to follow -- I think it'd be good to explain one or two of the rows in detail, and to explain what the set L contains.}
-Using the drop operator incurs a loss of information of 1 (i.e. we lose all information that
-the dropped tuples might have encoded). 
-\todobox{fix this explanation, not inverseley proprtional to what is stated here}{Imputing \nullv{} fields incurs a loss penalty $p \in (0, 1]$,
-which is inversely proportional to the number of total cells available to train the imputation algorithm. 
-Total cells are defined as the product of the number of attributes and the number of tuples.
-Intuitively, imputation
+Each imputation operator incurs a heuristic loss penalty. We define \textsc{Loss} as the average over the individual penalties incurred
+by $\mu,\delta$ operators. Our recursive definition of $L$ accumulates these penalties in a multi-set, as the order of the penalties is irrelevant,
+and averages them at the root of the plan. For example, $\delta$ contributes a loss of 1 (i.e. we lose all information  that dropped tuples
+might have encoded). Meanwhile, imputing \nullv{} fields with $\mu$ incurs a loss penalty $p \in (0, 1]$. In this case, the penalty is
+inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as
+as the product of the number of attributes and the number of tuples. Intuitively, imputation
 accuracy \textit{increases} when more complete attributes and complete tuples are available;
 correspondingly, the information lost \textit{decreases} with more values to work
-with.}
+with. The square root captures the intuition that the benefits provided by more training observations has diminishing returns.
+
 Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
