@@ -7,18 +7,18 @@ There is related work in three primary areas: statistics, database research, and
 Imputation of missing values is widely studied in the statistics and machine
 learning communities. As highlighted in~\cite{gelman2006data}, missing data
 can appear for a variety of reasons.
-It can be missing uniformly at random and or conditioned on
+It can be missing uniformly at random or conditioned on
 existing values (observed and missing). Methods in the statistical community
 focus on correctly modeling relationships between attributes to account for different forms of missingness. For example, Burgette and Reiter~\cite{burgette2010multiple} discuss the usage of sequential regression trees
 for imputing missing data.
 
-In~\cite{akande2015empirical}, Akande et al analyze the performance of various
+~\cite{akande2015empirical} analyzes the performance of various
 multiple imputation techniques on the American Community Survey dataset. 
 The computational difficulties of imputing on large base
-tables are well known and can limit approaches. For example, Akande finds that
+tables are well-known and can limit approaches. For example, Akande finds that
 one approach (MI-GLM) is prohibitively expensive when attempting to impute on data that
 includes variables with potentially large domains (ten categories in their case).
-In contrast, \ProjectName{} allows users to specify a tradeoff between
+In contrast, \ProjectName{} allows users to specify a trade-off between
 imputation quality and runtime performance, allowing users to perform queries
 directly on the entire dataset. Furthermore,
 the query planner's imputation is guided by the requirements of each specific
@@ -37,12 +37,11 @@ the need to handle \nullv{} value semantics, while guaranteeing query evaluation
 
 Database system developers and others have worked on techniques to automatically
 detect dirty values, whether missing or otherwise, and rectify the errors if
-possible. A survey of methods and systems is provided in
-\cite{hellerstein2008quantitative}.
+possible. A survey of methods and systems is provided in~\cite{hellerstein2008quantitative}.
 
-In \cite{wolf2007query}, queries over databases with missing values are
-processed in a statistical approach, taking advantage of correlations between
-variables. Both tuples that match the original query as well as a ranking of
+In~\cite{wolf2007query}, queries over databases with missing values are
+processed using a statistical approach, taking advantage of correlations between
+variables. The tuples that match the original query as well as a ranking of
 tuples with incomplete data that may match are returned. Our work differs in
 that we allow any well-formed statistical technique to be used for imputation
 and focus on returning results to the analyst as if the database had been
@@ -50,8 +49,7 @@ complete.
 
 Designers of data stream processing systems frequently confront missing values
 and consider them carefully in query processing. Often, if sensor error is the
-cause of missing values, values can be imputed with high confidence. In
-\cite{fernandez2009inter}, feedback punctuation is used to dynamically
+cause of missing values, values can be imputed with high confidence. In~\cite{fernandez2009inter}, feedback punctuation is used to dynamically
 reconfigure the query plan for state-dependent
 optimizations as data continue to arrive. One of the applications of this framework is to avoid
 expensive imputations as real-time conditions change. 
@@ -63,7 +61,7 @@ to trade imputation quality for runtime performance.
 %algorithm and cost model produces an optimal set of plans to choose from,
 %given the constraints of the search space.
 
-BayesDB \cite{mansinghka2015bayesdb} provides users with a simple interface to 
+BayesDB~\cite{mansinghka2015bayesdb} provides users with a simple interface to 
 leverage statistical inference techniques in a database. Non-experts
 can use a simple declarative language (an extension of SQL), to specify models
 which allow missing value imputation, amongst other broader functionality.
@@ -80,16 +78,17 @@ contrast, aims to remain squarely in the database realm, while allowing
 users to directly express queries on a potentially larger subset of their data.
 
 \ProjectName's cost-based query planner 
-is partially based on the seminal work developed for System R's query planning\cite{blasgen1981system}.
+is partially based on the seminal work developed for System R's query planning~\cite{blasgen1981system}.
 However, in contrast to System R, \ProjectName{} performs additional optimizations for imputing missing data and
-uses histogram transformations to account for the changing nature of missing values.
+uses histogram transformations to account for the way relational and imputation operators affect the underlying
+tuple distributions.
 
 \subsection{Forecasting and Databases}
-Parisi et al\cite{parisi2011embedding} introduce the idea of incorporating time-series forecast operators into
+Parisi et al.~\cite{parisi2011embedding} introduce the idea of incorporating time-series forecast operators into
 databases, along with the necessary relational algebra extensions. Their work explores the theoretical
 properties of forecast operators and generalizes them into a family of operators, distinguished by
 the type of predictions returned. They highlight the use of forecasting for replacing missing values.
-In their follow on work\cite{parisi2013temporal}, they identify various equivalence and containment
+In their follow on work~\cite{parisi2013temporal}, they identify various equivalence and containment
 relationships when using forecast operators, which could be used to perform query plan transformations that guarantee the same result. They
 explore forecast-first and forecast-last plans, which perform forecasting operations before and after executing all traditional
 relational operators, respectively. 
@@ -99,7 +98,7 @@ the abstractions necessary to do so.
 
 In contrast to this work, \ProjectName{} is targeted at generic value imputation, not necessarily tailored to 
 time-series. The optimizer is not based on equivalence transformations, nor are there guarantees of equal
-results under different conditions. Instead, the optimizer allows users to pick their tradeoff between
+results under different conditions. Instead, the optimizer allows users to pick their trade-off between
 runtime cost and imputation quality. The search space considered by our optimizer is broader, not just
 forecast-first/forecast-last plans, but rather imputation operators can be placed anywhere in the query plan
 (with some restrictions). The novelty of our contribution lies in the successful incorporation of
@@ -111,9 +110,9 @@ to produce forecasts within a given accuracy threshold. Accuracy estimates are d
 standard techniques, such as k-fold cross-validation. 
 
 Similarly to Fa, \ProjectName{} provides a declarative language, as
-a subset of standard SQL. \ProjectName{}, however, is not searching the space of possible
+a subset of standard SQL.\@ \ProjectName{}, however, is not searching the space of possible
 imputation models, but rather the space of query plans that incorporate imputation operators. Another major point
-of distinction between \ProjectName{} and Fa is that the latter doesn't consider tradeoffs between accuracy and computation time, but rather returns the most accurate forecast (with some stopping criterion).
+of distinction between \ProjectName{} and Fa is that the latter doesn't consider trade-offs between accuracy and computation time, but rather returns the most accurate forecast (with some stopping criterion).
 
 
 

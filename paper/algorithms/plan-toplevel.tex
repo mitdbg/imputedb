@@ -5,7 +5,7 @@
   
   \Function{Plan}{$T, F, J, P, G, A$}
   \State $C_g \gets \bigcup_{\phi \in F} \Call{Attr}{\phi}$ \Comment{Collect relevant attributes.}~\label{lst:line:attr-start}
-  \State $C_g \gets \bigcup_{\psi \in J} \Call{Attr}{\psi} \cup P \cup G \cup \Call{Attr}{A} \cup C_g$ \label{lst:line:attr-end}
+  \State $C_g \gets (\bigcup_{\psi \in J} \Call{Attr}{\psi}) \cup P \cup G \cup \Call{Attr}{A} \cup C_g$ \label{lst:line:attr-end}
   \State Let $Q$ be an empty plan cache.
   \For{$t \in T$} \Comment{Add selections to the plan cache.}
   \If {$\exists \phi: (t, \phi) \in F$}

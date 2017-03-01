@@ -67,7 +67,7 @@ GROUP BY demo.income
 \subsection{Planning with \ProjectName{}}
 The search space contains plans of varying performance and quality of results, as a product of the multiple possible locations for imputation.
 The user can influence the final plan selected by \ProjectName{}
-through a tradeoff parameter $\alpha \in [0, 1]$, where low $\alpha$ 
+through a trade-off parameter $\alpha \in [0, 1]$, where low $\alpha$ 
 prioritizes the quality of the query results and high $\alpha$ prioritizes performance.
 
 For the query in~\Cref{fig:example-query}, \ProjectName{} generates
@@ -78,7 +78,7 @@ optimizing for quality and performance, respectively.
 It waits to impute \verb|demo.income| until after the final join has taken place, but other imputations take place earlier on in the plan, some before filtering and join operations.
 Imputations are placed to maximize ImputeDB's estimate of the quality of the overall results.
 Meanwhile, \Cref{fig:fast-plan}'s performance-optimized plan uses the drop operation $\delta$ instead of filling in missing values.
-However, it is a significant improvement over dropping all tuples with missing data, as it only drops tuples with missing values in attributes which are referenced by the rest of the plan. In both cases, only performing
+However, it is a significant improvement over dropping all tuples with missing data in any field, as it only drops tuples with missing values in attributes which are referenced by the rest of the plan. In both cases, only performing
 imputation on the necessary data yields a query that is much faster
 than performing imputation on the whole dataset and then executing
 the query.

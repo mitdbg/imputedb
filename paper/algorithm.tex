@@ -15,7 +15,7 @@ We introduce two new relational operators to perform imputation: \textit{Impute}
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
 replace all \nullv{} values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
-In our experiments, we instantiate \textit{Impute} with the CE-CART\cite{burgette2010multiple} algorithm, but we highlight that
+In our experiments, we instantiate \textit{Impute} with the CE-CART~\cite{burgette2010multiple} algorithm, but we highlight that
 our system is agnostic to this choice.
 \textit{Drop} simply removes from $R$ all tuples which have a \nullv{} value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no \nullv{} values for
@@ -26,7 +26,7 @@ attributes in $C$.
 To keep the query plan search space tractable, only plans that fit the following template are considered.
 
 \begin{itemize}
-\item All filters are pushed to the leaves of the query tree, immediately after scanning a table. We use a pre-processing step which conjoins together filters which operate on the same table, so we can assume that each table has at most one relevant filter.
+\item All selections are pushed to the leaves of the query tree, immediately after scanning a table. We use a pre-processing step which conjoins together filters which operate on the same table, so we can assume that each table has at most one relevant filter.
 
 \item Joins are performed after filtering, and only left-deep plans are considered.
 
@@ -46,7 +46,7 @@ The space of query plans is similar to that considered by System R~\cite{blasgen
 
 \subsection{Imputation placement}
 \label{sec:placement}
-Imputation operators must be placed so that no relational operator encounters a tuple containing \nullv{} in an attribute that the operator examines, regardless of the state of the data in the base tables.
+We place imputation operators so that no relational operator encounters a tuple containing \nullv{} in an attribute that the operator examines, regardless of the state of the data in the base tables.
 
 Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a \nullv{} value, there are cases where an imputation operator is required. To track these cases, each query plan $q$ is associated with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain \nullv{}. We compute a dirty set for each table using the table histograms, which track the number of \nullv{} values in each column. The dirty set for a query plan can be computed recursively as follows:
 
@@ -70,22 +70,23 @@ $\textsc{Loss}(q) \in [0,1]$ is an estimate of the amount of information lost by
 $\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
 
 \begin{definition}
-We say that a plan $p$ with cost $\langle l, t \rangle$ dominates a plan $p'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(p) = \textsc{Dirty}(p') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{p}{p'}$. 
+We say that a plan $p$ with cost $\langle l, t \rangle$ \emph{dominates} a plan $p'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(p) = \textsc{Dirty}(p') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{p}{p'}$. 
 \end{definition}
 
 Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[P= \{ p ~|~ \not\exists p' \in S.\ p \neq p' \land \doms{p'}{p} \}.\]
  
 This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of $\textsc{Time}$ and $\textsc{Loss}$ for the current query.
 
-In order to pick a final plan from the frontier, our model introduces a tradeoff parameter $\alpha$ which encodes an upper bound on the $\textsc{Loss}$ value that the user is willing
+In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Loss}$ value that the user is willing
 to tolerate relative to the minimum possible amongst frontier plans.
 
 \begin{definition}
 Let $P$ be a set of plans. For $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Loss}(p) - \min_{p' \in P}(\textsc{Loss}(p')) \leq \alpha$. We denote this as $p^\alpha$.
-We say $p$ is $\alpha$-bound optimal if $\forall p'^\alpha \in P: \textsc{Time}(p) \leq \textsc{Time}(p'^\alpha)$. 
+We define the set of $\alpha$-bound plans in $P$ as $P^\alpha$.
+We say a plan $p^\alpha$ is $\alpha$-bound optimal if $\forall p' \in P^\alpha. \textsc{Time}(p) \leq \textsc{Time}(p')$. 
 \end{definition}
 
-Given $\alpha$ and $P$, \ProjectName{} returns the $\alpha$-bound optimal plan in $P$. Note that the $\alpha$-bound optimal plan is unique in $P$, since $P$ contains only non-dominated plans.
+Given $\alpha$ and $P$, \ProjectName{} returns an $\alpha$-bound optimal plan in $P$.
 
 So in essence, $\alpha$ is a tunable parameter that determines whether the optimizer focuses on quality or on performance, as plans that
 lose a lot of information through dropping are also the fastest. 
@@ -97,31 +98,40 @@ The computation of $\textsc{Time}(q)$ and $\textsc{Loss}(q)$ relies on having an
 These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational calculus, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 For simplicity, each of the logical nodes in a query plan points to a set of histograms.
-When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for the new operation in the plan.
+When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for the new operation in the plan, for example
+redistributing the count of tuples with \nullv{} in an imputed field.
 \Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
 We use these histogram estimates to compute $\text{Loss}(Q)$, a measure averaged over imputation operations, as follows.
 
 \begin{align*}
   \textsc{L}(q) &= \begin{cases}
-     \{1\} \cup \textsc{L}(q') & q = \delta_C(q') \\
-    \left\{\frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q')}}\right\} \cup \textsc{L}(q')  & q = \mu_C(q') \\
-    \textsc{L}(q_1') \cup \textsc{L}(q_2') & q = q_1' \bowtie_\psi q_2' \\
-    \textsc{L}(q') & q = \sigma_\phi(q'), \\ & q = \pi_C(q') \\
-    \emptyset\ multiset & q = t\\
+     1 + \textsc{L}(q') & q = \delta_C(q') \\
+    \frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q')}} + \textsc{L}(q')  & q = \mu_C(q') \\
+    \textsc{L}(q_1') + \textsc{L}(q_2') & q = q_1' \bowtie_\psi q_2' \\
+    \textsc{L}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
+    0 & q = t\\
   \end{cases}\\
-  \textsc{Loss}(q) &= \frac{\Sigma \textsc{L}(q)}{|\textsc{L}(q)|}
+    \textsc{N}(q) &= \begin{cases}
+     1 + \textsc{N}(q') & q = \delta_C(q') \\
+     1 + \textsc{L}(q')  & q = \mu_C(q') \\
+    \textsc{N}(q_1') + \textsc{N}(q_2') & q = q_1' \bowtie_\psi q_2' \\
+    \textsc{N}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
+    0 & q = t\\
+  \end{cases}\\
+  \textsc{Loss}(q) &= \frac{\textsc{L}(q)}{\textsc{N}(q)}
 \end{align*}
 
 Each imputation operator incurs a heuristic loss penalty. We define \textsc{Loss} as the average over the individual penalties incurred
-by $\mu,\delta$ operators. Our recursive definition of $L$ accumulates these penalties in a multi-set, as the order of the penalties is irrelevant,
-and averages them at the root of the plan. For example, $\delta$ contributes a loss of 1 (i.e. we lose all information  that dropped tuples
+by $\mu,\delta$ operators. Our recursive definition of $L$ accumulates these penalties, and $N$ counts the number of imputation operations.
+For example, $\delta$ contributes a loss of 1 (i.e. we lose all information  that dropped tuples
 might have encoded). Meanwhile, imputing \nullv{} fields with $\mu$ incurs a loss penalty $p \in (0, 1]$. In this case, the penalty is
 inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as
-as the product of the number of attributes and the number of tuples. Intuitively, imputation
+the product of the number of attributes and the number of tuples. Intuitively, imputation
 accuracy \textit{increases} when more complete attributes and complete tuples are available;
 correspondingly, the information lost \textit{decreases} with more values to work
-with. The square root captures the intuition that the benefits provided by more training observations has diminishing returns.
+with. We wanted to encode the fact that the number of training observations has diminishing returns for imputation quality,
+and found that scaling the cell count by applying square root worked well in practice.
 
 Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
@@ -143,15 +153,15 @@ database.
 %\end{align*}
 
 Scan costs are estimated based on the number of tuples, 
-page size, and an unit-less I/O cost per page. Join costs are estimated as a function
+page size, and a unit-less I/O cost per page. Join costs are estimated as a function
 of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
 Filtering, projecting, and aggregating are all done in memory and have low computational overhead
-so we assume negligible time costs for those operations. We extend these heuristics to 
+so we assume negligible time costs for those operations. 
+
+We extend these heuristics to 
 account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and its time
 complexity can be expressed as a function of the number of heap pages read and the I/O cost
-per page.
-
-The time computation for \textit{Impute} depends on the properties of the underlying
+per page. The time computation for \textit{Impute} depends on the properties of the underlying
 algorithm. \ProjectName{} treats the actual machine learning algorithm as a black box
 and simply queries it for a time estimate. In the base implementation of our system,
 we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
@@ -163,11 +173,11 @@ complicated, as the properties of
 different algorithms can vary significantly, the underlying I/O cost
 is not easily extracted (especially in the case that the entire set of tuples does not
 fit in memory), and the CPU cost dominates (in contrast to the other operators, which may
-not even consider CPU cost explicitly). For example, \cite{martin1995time} find that the
+not even consider CPU cost explicitly). For example,~\cite{martin1995time} find that the
 time complexity of the \textit{build tree} algorithm for one commonly-used class of
 decision trees is a function of the number of classes, several overhead constants, the
 parameterization of the partition and heuristic functions, and the \textit{arity} (the
-number of subsets considered for each split). Indeed, the \textit{build tree} phase often
+number of subsets considered for each split). The \textit{build tree} phase often
 does not even dominate computation, as post-processing steps like pruning, which are vital
 in achieving good performance, can have cost exponential in the height of the tree. In
 practice, we find that a simple parameterization can be acceptable (i.e. yield intelligent query
@@ -189,7 +199,7 @@ The query planner must select a join ordering in addition to placing imputation 
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
 At a high level, a plan cache is a mapping from a set of tables to a set of dirty-set specific dominating plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single plan per dirty set, because maintaining a Pareto frontier as a plan progresses through the optimizer's pipeline
-allows us to obtain the final set of plans that best tradeoff computation
+allows us to obtain the final set of plans that best traded computation
 cost and imputation quality. Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
 
 
@@ -208,7 +218,7 @@ cost and imputation quality. Details of the plan-cache semantics are shown in~\C
                                                                    \end{aligned}
                                            \right\}
   \end{align*}
-  \caption{Semantics of a plan cache $Q$}
+  \caption{Semantics of a plan cache $Q$, where $T$ is a set of tables and $p$ is a query plan}
   \label{fig:semantics-plan-cache}
 \end{figure}
 
@@ -272,7 +282,7 @@ effective~\cite{akande2015empirical} and are widely used in epidemiological
 domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REPTree}
 implementation (\cite{witten2016data}).
 
-Our imputation algorithm proceeds by iteratively fitting regression trees to a subset of the
+The algorithm used by the \textit{Impute} operator proceeds by iteratively fitting regression trees to a subset of the
 data and the target imputation columns. In each iteration, the missing values of a column are
 replaced with newly imputed values. With each {\it epoch}, the quality of the imputation
 improves as values progressively reflect more accurate relationships amongst attributes. The

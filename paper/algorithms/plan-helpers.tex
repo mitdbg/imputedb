@@ -13,7 +13,7 @@
     \EndIf
 
     \If{$D_{may} \neq \emptyset$}
-    \State $Q \gets Q \cup \{\mu_{D_{may}}(q)\}$
+    \State $Q \gets Q \cup \{\mu_{D_{may}}(q), \delta_{D_{may}}(q) \}$
     \EndIf
     
     \State \Return $Q$
@@ -48,7 +48,7 @@
     \State
     
     \Require{A set of tables $T$, a plan cache $Q$ containing at least one query plan for each table in $T$, and a relation $J : T \times \Psi \times T$ between tables and join predicates, $C_g$ is the set of attributes which are used in the final plan.}
-    \Ensure{An updated plan cache $Q'$ which contains at least one plan that combines all of the tables in $T$.}
+    \Ensure{An updated plan cache $Q'$ which contains at least one plan that combines all the tables in $T$.}
     \Function{OptJoin}{$Q, T, J, C_g$}
     \For{$size \in 2...|T|$}
     \For{$S \in \{\text{all length}\ size\ \text{subsets of}\ T\}$}

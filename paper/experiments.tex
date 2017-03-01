@@ -8,7 +8,7 @@ is well suited for early dataset exploration.
 \subsection{Data sets}\label{subsec:datasets}
 We collected three data sets for our experiments.
 For all data sets, we selected a subset of the original attributes.
-We also transformed all data values to an integer representation by enumerating strings and transforming floating point values into an appropriate range.
+We also transformed all data values to an integer representation by enumerating strings and transforming floating-point values into an appropriate range.
 
 \subsubsection{CDC NHANES}
 For our first set of experiments, we use survey data collected by the 
@@ -140,8 +140,8 @@ four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on 
 \subsection{Results}\label{sec:results}
 
 \Cref{fig:runtimes} shows a summary of the performance results. We evaluated three different
-configurations for each query. We compare \ProjectName{} optimizing for quality ($\alpha=0$),
-\ProjectName{} optimizing for performance ($\alpha=1$), and imputing at the base tables followed
+configurations for each query. We compare \ProjectName{} optimizing for quality ($\alpha=0.0$),
+\ProjectName{} optimizing for performance ($\alpha=1.0$), and imputing at the base tables followed
 by executing the query traditionally. The quality-optimized queries are an order-of-magnitude
 faster than imputing on the base tables. We can get another order-of-magnitude speedup when
 optimizing for performance. This performance differential means it is feasible
@@ -180,13 +180,16 @@ returned a query plan within \planningmaxtime{} ms, with times roughly constant 
 \subsubsection{Accuracy vs. Base-table Imputation}
 
 \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)~\cite{Makridakis2000451} for
-\ProjectName{}'s query results when compared to running imputation on the base tables and
-executing the query on this cleaned base data \cite{tofallis2015better}.  Each query was
-separately run 200 times in both settings and then results from the two approaches were
+\ProjectName{}'s query results when compared to the results of running imputation on the base tables and
+executing the query on this cleaned base data \cite{tofallis2015better}. Given that the main datasets used
+have no ground truth, this measure indicates how much error is introduced by on-the-fly imputation compared
+to imputation on the base tables.
+
+Each query was separately run 200 times in both settings and then results from the two approaches were
 paired up and compared tuple-wise.  We average tuple-wise absolute percentage deviations
 within each iteration of a query, and we report this value averaged over all iterations.  We
 can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
-to the base-imputation approach are low in all cases --- between
+to the base-imputation approach is low in all cases --- between
 \lowsmapealphazero{} and \highsmapealphaoneexacs{} percent ---, indicating that on-the-fly
 imputation produces similar results to imputation at the base tables.
 
@@ -204,7 +207,8 @@ running it. By using \ProjectName{} this cost can be lowered significantly.
 \centering
 \input{tables/perf_summary.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
-    parameterizations relative to results when imputing on the base table. Queries optimized
+    parameterizations. To calculate SMAPE, \ProjectName{} results are compared to query results returned
+    from executions with base table imputation. Queries optimized
     for quality ($\alpha=0$) generally achieve lower error than queries optimized for
     efficiency ($\alpha=1$). Count shares show the number of results returned from each
     query as a percentage of the number of results returned when imputing on the base table.
@@ -220,10 +224,11 @@ To illustrate the increasing difficulty of such an approach as datasets scale, w
 \begin{lstlisting}[breaklines]
 SELECT AVG(c0) FROM acs_dirty;
 \end{lstlisting}
-Applying the imputation operation to the base table is extremely expensive, in our case
+Applying the imputation operation to the base table is extremely expensive, as it imputes over all attributes in all rows, in our case
 completing in \acsbaseresultminutes{}. In contrast, \ProjectName{} executes a quality-optimized version
 in \acsimputedbzeroresult{} and a runtime-optimized version in \acsimputedboneresult{}. This highlights the potential
-benefit of using our system for early data exploration.
+benefit of using our system for early data exploration. Note that the performance differential relative to base table imputation
+would likely widen further if selection predicates were added to the query.
 
 For every imputation inserted into the query plan, a new statistical model is instantiated and trained before being used for imputation.
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
