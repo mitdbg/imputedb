@@ -1,14 +1,14 @@
 \section{Introduction}
 
-Many databases have large numbers of missing or NULL values;  these can arise for a variety of reasons, including missing source data (e.g., unknown facts),
-missing columns during data integration, de-normalized databases, or as a result of outlier detection and cleaning where NULL values are substituted for
-bad values~\cite{kim2003}.  Such NULL values can lead to incorrect or ill-defined query results~\cite{rubin1976}, and as such removing these values from data
+Many databases have large numbers of missing or \nullv{} values;  these can arise for a variety of reasons, including missing source data (e.g., unknown facts),
+missing columns during data integration, de-normalized databases, or as a result of outlier detection and cleaning where \nullv{} values are substituted for
+bad values~\cite{kim2003}.  Such \nullv{} values can lead to incorrect or ill-defined query results~\cite{rubin1976}, and as such removing these values from data
 before processing is often desirable.
 
 % Solution
 One common approach is to manually replace missing values using some sort of statistical or predictive model based on other values in the table and record.
 This process is called \emph{imputation}.
-In this paper, we present a new system, called \ProjectName{}, which is the designed to selectively apply imputation to a subset of records, on-the-fly, during query execution.  \emph{The key insight behind \ProjectName{} is that imputation
+In this paper, we present a new system, called \ProjectName{}, which is designed to selectively apply imputation to a subset of records, on-the-fly, during query execution.  \emph{The key insight behind \ProjectName{} is that imputation
 only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.}  
 % Background
@@ -52,7 +52,7 @@ increasing productivity for users who frequently encounter missing values in the
 \item \textbf{Relational algebra extended with imputation:}
   We extend the standard relational algebra with two new operators to represent imputation operations: impute ($\mu$) and drop ($\delta$).
   Impute operation fills in missing data values using an iterative regression model (CE-CART)~\cite{burgette2010multiple}.
-  Drop operation simply drops tuples which contain null values.
+  Drop operation simply drops tuples which contain \nullv{} values.
 \item \textbf{Model of imputation quality and cost:}
   We extend the traditional cost model for query plans to incorporate a measure of the quality of the imputations performed.
   We use the cost model to abstract over the imputation algorithm used.

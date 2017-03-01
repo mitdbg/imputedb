@@ -29,7 +29,7 @@ There are 6 tables in the NHANES data set. We use three tables for our experimen
 
 The original tables have a large number of attributes, in some cases providing more granular tests results or alternative metrics.
 We focused on a subset of the attributes for each table to simplify the presentation and exploration of queries.
-\Cref{table:nhanes-description} shows the attributes selected, along with the percentage of null values for each attribute.
+\Cref{table:nhanes-description} shows the attributes selected, along with the percentage of \nullv{} values for each attribute.
 For readability, we have replaced the NHANES variable names with self-explanatory attribute names.
 
 \begin{table}
@@ -66,7 +66,7 @@ We use a version of the data that has been pre-processed, but where missing valu
 For example, 46.6\% of \textit{commutetime} responses are missing. However, it is worth
 noting that some of the missing values are also expected, given the way the data has been
 de-normalized. For example, \textit{bootcamploanyesno}, a binary attribute encoding whether
-a respondent had a loan for a bootcamp, is expected to be null for participants who did not
+a respondent had a loan for a bootcamp, is expected to be \nullv{} for participants who did not
 attend a bootcamp.
 
 We choose a subset of 17 attributes, which are shown in~\Cref{table:fcc-description} along

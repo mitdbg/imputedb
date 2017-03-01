@@ -112,6 +112,7 @@
 \newcommand{\highxalphaoneexacs}{1000}
 \newcommand{\highsmapealphaoneexacs}{24}
 \newcommand{\highxalphaone}{16000}
+\newcommand{\nullv}{NULL}
 
 \begin{document}
 
@@ -120,8 +121,8 @@
 \begin{abstract}
 Missing values abound in data analysis and often present a serious challenge for usability of data. Users
 are forced to pick between removing tuples with missing values or creating a clean duplicate of their data
-by  applying a potentially-expensive imputation strategy. Our system, \ProjectName{}, incorporates imputation into a cost-based query optimizer, 
-performing imputation on the fly
+by applying a potentially-expensive imputation strategy. Our system, \ProjectName{}, incorporates imputation into a cost-based query optimizer, 
+performing any operations needed on the fly
 for each query. This allows users to immediately explore
 their data, while the system picks the optimal placement of imputation operations. This placement is based
 on the specific query issued and a user-provided parameter that trades off data

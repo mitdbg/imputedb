@@ -14,11 +14,11 @@ that while our algorithm is exponential in the number of joins(\Cref{sec:complex
 We introduce two new relational operators to perform imputation: \textit{Impute} ($\mu$) and
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
-replace all null values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
+replace all \nullv{} values with non-null values for attributes in $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
 In our experiments, we instantiate \textit{Impute} with the CE-CART\cite{burgette2010multiple} algorithm, but we highlight that
 our system is agnostic to this choice.
-\textit{Drop} simply removes from $R$ all tuples which have a null value for some attribute in $C$.
-Both operators guarantee that the resulting relation will contain no null values for
+\textit{Drop} simply removes from $R$ all tuples which have a \nullv{} value for some attribute in $C$.
+Both operators guarantee that the resulting relation will contain no \nullv{} values for
 attributes in $C$.  
 
 \subsection{Search space}
@@ -46,9 +46,9 @@ The space of query plans is similar to that considered by System R~\cite{blasgen
 
 \subsection{Imputation placement}
 \label{sec:placement}
-Imputation operators must be placed so that no relational operator receives a tuple containing null in an attribute that the operator examines, regardless of the state of the data in the base tables.
+Imputation operators must be placed so that no relational operator receives a tuple containing \nullv{} in an attribute that the operator examines, regardless of the state of the data in the base tables.
 
-Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a null value, there are cases where an imputation operator is required. To track these cases, each query plan $q$ is associated with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain null. We compute a dirty set for each table using the table histograms, which track the number of null values in each column. The dirty set for a query plan can be computed recursively as follows:
+Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a \nullv{} value, there are cases where an imputation operator is required. To track these cases, each query plan $q$ is associated with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain \nullv{}. We compute a dirty set for each table using the table histograms, which track the number of \nullv{} values in each column. The dirty set for a query plan can be computed recursively as follows:
 
 \begin{align*}
   \textsc{Dirty}(q) = \begin{cases}
@@ -60,7 +60,7 @@ Imputation operators can be placed at any point in the query plan, but to meet t
   \end{cases}
 \end{align*}
 
-Note that \textsc{Dirty} over-approximates the set of attributes that contain null. For example, a filter might remove all tuples which contain null, but the dirty set would be unchanged. We choose to over-approximate to ensure that all null values are explicitly imputed or dropped.
+Note that \textsc{Dirty} over-approximates the set of attributes that contain \nullv{}. For example, a filter might remove all tuples which contain \nullv{}, but the dirty set would be unchanged. We choose to over-approximate to ensure that all \nullv{} values are explicitly imputed or dropped.
 
 \subsection{Cost model}
 \label{sec:cost-model}
@@ -115,7 +115,7 @@ that plan. We use this estimate to compute $\text{Loss}(Q)$, a measure averaged 
 
 \srm{I find this table hard to follow -- I think it'd be good to explain one or two of the rows in detail, and to explain what the set L contains.}
 Using the drop operator incurs a loss of information of 1 (i.e. we lose all information that
-the dropped tuples might have encoded). Imputing null fields incurs a loss penalty $p \in (0, 1]$,
+the dropped tuples might have encoded). Imputing \nullv{} fields incurs a loss penalty $p \in (0, 1]$,
 which is inversely proportional to the number of total cells available to train the imputation algorithm. 
 Total cells are defined as the product of the number of attributes and the number of tuples.
 Intuitively, imputation
