@@ -238,7 +238,7 @@ would likely widen further if selection predicates were added to the query.
 
 For every imputation inserted into the query plan, a new statistical model is instantiated and trained before being used for imputation.
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
-this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are not known until runtime.
+this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
 
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
