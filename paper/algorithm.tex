@@ -97,7 +97,7 @@ $\alpha = 1.0$ means that the optimal query should have the fastest runtime (at 
 as little information as possible (at the expense of performance).
 
 \subsubsection{Cardinality estimation}
-The computation of $\textsc{Time}(q)$ and $\textsc{Loss}(q)$ relies on having an accurate cardinality estimate of a query plan $q$ and its sub-plans.
+The computation of $\textsc{Time}(q)$ and $\textsc{Loss}(q)$ rely on having an accurate cardinality estimate of a query plan $q$ and its sub-plans.
 These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational calculus, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 
@@ -114,16 +114,16 @@ We use these histogram estimates to compute $\text{Loss}(Q)$, a measure averaged
   \textsc{L}(q) &= \begin{cases}
      1 + \textsc{L}(q') & q = \delta_C(q') \\
     \frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q')}} + \textsc{L}(q')  & q = \mu_C(q') \\
-    \textsc{L}(q_1') + \textsc{L}(q_2') & q = q_1' \bowtie_\psi q_2' \\
+    \textsc{L}(q_l') + \textsc{L}(q_r') & q = q_l' \bowtie_\psi q_r' \\
     \textsc{L}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
-    0 & q = t\\
+    0 & q = \text{some table } t\\
   \end{cases}\\
     \textsc{N}(q) &= \begin{cases}
      1 + \textsc{N}(q') & q = \delta_C(q') \\
-     1 + \textsc{L}(q')  & q = \mu_C(q') \\
-    \textsc{N}(q_1') + \textsc{N}(q_2') & q = q_1' \bowtie_\psi q_2' \\
+     1 + \textsc{N}(q')  & q = \mu_C(q') \\
+    \textsc{N}(q_l') + \textsc{N}(q_r') & q = q_l' \bowtie_\psi q_r' \\
     \textsc{N}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
-    0 & q = t\\
+    0 & q = \text{some table } t\\
   \end{cases}\\
   \textsc{Loss}(q) &= \frac{\textsc{L}(q)}{\textsc{N}(q)}
 \end{align*}
@@ -139,7 +139,7 @@ correspondingly, the information lost \textit{decreases} with more values to wor
 with. We wanted to encode the fact that the number of training observations has diminishing returns for imputation quality,
 and found that scaling the cell count by applying square root worked well in practice.
 
-To add an alternate imputation strategy to \ProjectName{} could be used, the analyst must provide a corresponding loss with a reasonable parameterization.
+To add an alternate imputation strategy to \ProjectName{}, the analyst must provide a corresponding loss with a reasonable parameterization.
 
 \subsubsection{Query runtime}
 To compute $\textsc{Time}(Q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard 
@@ -205,7 +205,7 @@ The query planner must select a join ordering in addition to placing imputation 
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
 At a high level, a plan cache is a mapping from a set of tables to a set of dirty-set specific dominating plans that perform the required joins and filters over these tables.
 We store multiple plans rather than a single plan per dirty set, because maintaining a Pareto frontier as a plan progresses through the optimizer's pipeline
-allows us to obtain the final set of plans that best traded computation
+allows us to obtain the final set of plans that best trade computation
 cost and imputation quality. Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
 
 
@@ -245,7 +245,7 @@ operations (\Cref{lst:line:group}). After a similar step has been taken for proj
 best possible set from which to pick our final plan). The final step in the planner is to find all plans that are
 $\alpha$-bound and return the one that has the lowest runtime: the $\alpha$-bound optimal plan.
 
-The join optimization is based on the algorithm used in System R~\cite{blasgen1981system},
+The join order and imputation optimization is based on the algorithm used in System R~\cite{blasgen1981system},
 but rather than select the best plan at every point, we use our plan cache, which keeps track of the tables joined and the Pareto frontiers.
 The output of the join optimizer is the set of plans which satisfy all join predicates and lie along their respective frontier.
 
@@ -276,7 +276,7 @@ An imputation strategy is a function $I(T, C) \rightarrow T'$ which fills in the
 attributes $C$ in a set of tuples $T$, returning a new set of tuples $T'$.
 In principle, new imputation algorithms
 can be added, possibly targeted to a specific domain. The flexibility of this approach
-aligns well with the spirit of query optimization, which aims to reconcile performance with
+aligns with the spirit of query optimization, which aims to reconcile performance with
 a declarative interface to data manipulation. 
 
 As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
@@ -299,7 +299,7 @@ reflect more accurate relationships between attributes. The algorithm terminates
 convergence is achieved (i.e.\ the imputed values do not change across epochs) or a fixed
 number of epochs is reached. 
 
-These imputation algorithms are used as part of a larger \textit{multiple imputation}
+These imputation algorithms are commonly used as part of a larger \textit{multiple imputation}
 process, in which multiple distinct copies of the complete data are generated and estimators
 are computed by averaging over the multiple datasets to form a single completed dataset~
 \cite{gelman2006data}. In \ProjectName{}, we consider only single imputation, though in
@@ -376,7 +376,7 @@ imputation confidence.
 
 \subsection{Complexity}\label{sec:complexity}
 Our optimization algorithm builds off the approach taken by 
-a canonical cost-base optimizer~\cite{blasgen1981system}.
+a canonical cost-based optimizer~\cite{blasgen1981system}.
 If imputation operators are ignored, we search the same plan space.
 Therefore, our algorithm has a complexity of at least $O(2^J)$, where $J$ is the number of joins.
 
