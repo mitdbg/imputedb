@@ -137,10 +137,8 @@ The query calculates the average GDP per-capita of countries with and without bo
 \subsection{Results}\label{sec:results}
 
 
-All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
-four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
 
-Each query was separately run 200 times in both settings and then 
+
 
 \Cref{fig:runtimes} shows a summary of the performance results. We evaluated three different
 configurations for each query. We compare \ProjectName{} optimizing for quality ($\alpha=0$),
@@ -150,6 +148,10 @@ faster than imputing on the base tables. We can get another order-of-magnitude s
 optimizing for performance. This performance differential means it is feasible
 to explore multiple imputations operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
+
+All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
+four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
+Each query with each value of $\alpha$ was run 200 times, after discarding a warm-up period.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
