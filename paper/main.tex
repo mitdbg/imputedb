@@ -139,8 +139,10 @@ queries, making exploratory data analysis using our system feasible.  Furthermor
 that the query results from on-the-fly imputation have
 error between \lowsmapealphazero{} and
 \highsmapealphaoneexacs{} percent when compared to standard full-table imputation
-approach.
-
+approach. 
+We calculate the number of tuples used to produce each aggregate
+in our experiments, and find that when optimizing for quality between 0 to 10\% fewer tuples satisfy query constraints relative to the full-table imputation. When all tuples with missing values are dropped, the aggregate
+is computed with 3 to 88\% fewer tuples.
 \end{abstract}
 
 \input{introduction}
