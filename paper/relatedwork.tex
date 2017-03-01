@@ -7,12 +7,12 @@ There is related work in three primary areas: statistics, database research, and
 Imputation of missing values is widely studied in the statistics and machine
 learning communities. As highlighted in~\cite{gelman2006data}, missing data
 can appear for a variety of reasons.
-It can be missing uniformly at random and or conditioned on
+It can be missing uniformly at random or conditioned on
 existing values (observed and missing). Methods in the statistical community
 focus on correctly modeling relationships between attributes to account for different forms of missingness. For example, Burgette and Reiter~\cite{burgette2010multiple} discuss the usage of sequential regression trees
 for imputing missing data.
 
-In~\cite{akande2015empirical}, Akande et al analyze the performance of various
+~\cite{akande2015empirical} analyzes the performance of various
 multiple imputation techniques on the American Community Survey dataset. 
 The computational difficulties of imputing on large base
 tables are well known and can limit approaches. For example, Akande finds that
@@ -82,14 +82,15 @@ users to directly express queries on a potentially larger subset of their data.
 \ProjectName's cost-based query planner 
 is partially based on the seminal work developed for System R's query planning\cite{blasgen1981system}.
 However, in contrast to System R, \ProjectName{} performs additional optimizations for imputing missing data and
-uses histogram transformations to account for the changing nature of missing values.
+uses histogram transformations to account for the way relational and imputation operators affect the underlying
+tuple distributions.
 
 \subsection{Forecasting and Databases}
 Parisi et al\cite{parisi2011embedding} introduce the idea of incorporating time-series forecast operators into
 databases, along with the necessary relational algebra extensions. Their work explores the theoretical
 properties of forecast operators and generalizes them into a family of operators, distinguished by
 the type of predictions returned. They highlight the use of forecasting for replacing missing values.
-In their follow on work\cite{parisi2013temporal}, they identify various equivalence and containment
+In their follow on work~\cite{parisi2013temporal}, they identify various equivalence and containment
 relationships when using forecast operators, which could be used to perform query plan transformations that guarantee the same result. They
 explore forecast-first and forecast-last plans, which perform forecasting operations before and after executing all traditional
 relational operators, respectively. 

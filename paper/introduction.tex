@@ -15,11 +15,11 @@ that this subset is generally much smaller than the entire database.}
 While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive---our experiments show that even a relatively simple regression tree algorithm takes \acsbaseresulthours{} to train and run
 on a 600K row database.
 
-A simpler approach might drop all rows with missing values, but not only can this introduce bias into the results, but this may result in discarding all of the data.
+A simpler approach might drop all rows with missing values, which can not only introduce bias into the results, but also result in discarding all of the data.
 In contrast to existing systems~\cite{burgette2010multiple,akande2015empirical}, \ProjectName{} avoids imputing over the entire data set, as done with traditional methods. Specifically, \ProjectName{}
-carefully plans the placement  imputation / row drop operations inside the query plan, resulting in a 
-significant speedup in query execution while minimizing the number of dropped rows.  Also unlike previous work, the focus on of our work is not on the imputation algorithms themselves (we can employ almost any such algorithm), but rather on the  query planning involved in placement of imputation operations
-in an optimal way into query plans.   Specifically, our optimization algorithms generate the Pareto-optimal frontier of plans that trade imputation cost for result quality.
+carefully plans the placement of imputation / row drop operations inside the query plan, resulting in a 
+significant speedup in query execution while minimizing the number of dropped rows.  Also unlike previous work, the focus on of our work is not on the imputation algorithms themselves (we can employ almost any such algorithm), but rather on the  query planning involved in optimal placement of imputation operations
+in query plans.   Specifically, our optimization algorithms generate the Pareto-optimal frontier of plans that trade imputation cost for result quality.
 
 % \todobox{find appropriate location for this}
 % {In a previous project, she
@@ -41,7 +41,7 @@ are similar in quality to those obtained with the complete imputation approach, 
 over real-world data sets (see~\Cref{sec:experiments} for details).
 
 % Scope
-\ProjectName{} is designed to enable early data exploration, by allowing analysts to run their queries without explicitly decide with when to perform imputation.
+\ProjectName{} is designed to enable early data exploration, by allowing analysts to run their queries without explicitly deciding when to perform imputation.
 % SAM -- cut the following -- could consider moving later but feels out of place here
 %However, we optimize query plans with respect to a heuristic measure of imputation quality, and provide no hard guarantees about the accuracy of the results.
 
@@ -51,8 +51,8 @@ increasing productivity for users who frequently encounter missing values in the
 \begin{itemize}
 \item \textbf{Relational algebra extended with imputation:}
   We extend the standard relational algebra with two new operators to represent imputation operations: impute ($\mu$) and drop ($\delta$).
-  Impute operation fills in missing data values using an iterative regression model (CE-CART)~\cite{burgette2010multiple}.
-  Drop operation simply drops tuples which contain \nullv{} values.
+  The impute operation fills in missing data values using an iterative regression model (CE-CART)~\cite{burgette2010multiple}.
+  The drop operation simply drops tuples which contain \nullv{} values.
 \item \textbf{Model of imputation quality and cost:}
   We extend the traditional cost model for query plans to incorporate a measure of the quality of the imputations performed.
   We use the cost model to abstract over the imputation algorithm used.
