@@ -12,7 +12,9 @@ In this paper, we present a new system, called \ProjectName{}, which is designed
 only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.}  
 % Background
-While traditional imputation methods work over the entire data set and replace all missing values, running a sophisticated imputation algorithm over a large data set can be very expensive---our experiments show that even a relatively simple regression tree algorithm takes \acsbaseresulthours{} to train and run
+While traditional imputation methods work over the entire data set and replace all missing
+values, running a sophisticated imputation algorithm over a large data set can be very
+expensive---our experiments show that even a relatively simple decision tree algorithm takes \acsbaseresulthours{} to train and run
 on a 600K row database.
 
 A simpler approach might drop all rows with missing values, which can not only introduce bias into the results, but also result in discarding all of the data.
