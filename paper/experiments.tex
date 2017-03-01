@@ -1,9 +1,11 @@
 \section{Experiments}\label{sec:experiments}
-To evaluate the performance of our approach,  we implemented
-a prototype system in Java, following a traditional iterator model.
-For our experiments we plan and execute queries
-for three separate survey-based data sets, showing that our system
-is well suited for early dataset exploration.
+For our experiments we plan and execute queries for three separate survey-based data sets, showing that our system is well suited for early dataset exploration.
+We show that \ProjectName{} performs an order of magnitude better than imputation on the full dataset and produces results of comparable quality.
+
+\subsection{Implementation}
+To evaluate the performance of our approach, we implemented a prototype system in Java, following a traditional iterator model.
+Our database handles a subset of standard SQL queries, including filters, joins, projection, grouping and aggregation.
+For simplicity, \ProjectName{} only handles tables containing integer data, so we pre-process our experimental datasets before loading them.
 
 \subsection{Data sets}\label{subsec:datasets}
 We collected three data sets for our experiments.
