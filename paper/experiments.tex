@@ -134,19 +134,24 @@ The query calculates the average GDP per-capita of countries with and without bo
 %  \label{fig:experiments}
 %\end{table*}
 
-All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
-four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
-
 \subsection{Results}\label{sec:results}
 
+
+
+
+
 \Cref{fig:runtimes} shows a summary of the performance results. We evaluated three different
-configurations for each query. We compare \ProjectName{} optimizing for quality ($\alpha=0.0$),
-\ProjectName{} optimizing for performance ($\alpha=1.0$), and imputing at the base tables followed
+configurations for each query. We compare \ProjectName{} optimizing for quality ($\alpha=0$),
+\ProjectName{} optimizing for performance ($\alpha=1$), and imputing at the base tables followed
 by executing the query traditionally. The quality-optimized queries are an order-of-magnitude
 faster than imputing on the base tables. We can get another order-of-magnitude speedup when
 optimizing for performance. This performance differential means it is feasible
 to explore multiple imputations operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
+
+All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
+four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
+Each query with each value of $\alpha$ was run 200 times, after discarding a warm-up period.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
@@ -185,16 +190,16 @@ executing the query on this cleaned base data \cite{tofallis2015better}. Given t
 have no ground truth, this measure indicates how much error is introduced by on-the-fly imputation compared
 to imputation on the base tables.
 
-Each query was separately run 200 times in both settings and then results from the two approaches were
-paired up and compared tuple-wise.  We average tuple-wise absolute percentage deviations
-within each iteration of a query, and we report this value averaged over all iterations.  We
+For $\alpha=0$ and $\alpha=1$, we pair up tuples and compute SMAPE for all queries. That is,
+we compute tuple-wise absolute percentage deviations within each iteration of a query, and
+we report this value averaged over all iterations.  We
 can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
-to the base-imputation approach is low in all cases---between
+to the base-imputation approach is low---between
 \lowsmapealphazero{} and \highsmapealphaoneexacs{} percent---indicating that on-the-fly
 imputation produces similar results to imputation at the base tables.
 
 We also calculate the number of tuples used to produce each aggregate output.
-The Count columns in \Cref{table:smape} show the percentage difference between the number of tuples in the aggregate for $\alpha = 1$ and $\alpha = 0$ and running the query on the imputed base table.
+The Count columns in \Cref{table:smape} show the percentage difference between the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ and running the query on the imputed base table.
 This shows that when optimizing for performance, not quality, many tuples are dropped.
 Even in cases where the SMAPE reduction between $\alpha = 1$ and $\alpha = 0$ is small (\Cref{q2}, \Cref{q6}) the tuple count is significantly different.
 In these cases, the aggregate value is not significantly impacted by the missing data. In particular, if values are missing uniformly at random,

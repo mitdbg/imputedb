@@ -278,7 +278,7 @@ aligns well with the spirit of query optimization, which aims to reconcile perfo
 a declarative interface to data manipulation. 
 
 As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
-based on chained-equation decision trees.  Chained equation
+based on chained-equation decision trees.  Chained-equation
 imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
 regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
 a predictive model of one missing attribute, conditional on all complete attributes
@@ -298,7 +298,7 @@ These imputation algorithms are used as part of a larger \textit{multiple imputa
 process, in which multiple distinct copies of the complete data are generated and estimators
 are computed by averaging over the multiple datasets to form a single completed dataset
 (\cite{gelman2006data}). In \ProjectName{}, we consider only single imputation, though in
-further work, multiple imputation could be considered as another avenue of assessing
+further work, multiple imputation could be another avenue of assessing
 imputation confidence.
 
 Given the nature of the imputation strategy used here, {\it Impute} operators are blocking
