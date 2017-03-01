@@ -37,8 +37,10 @@ optimally in query plans.   Specifically, our optimization algorithms generate t
 % Implications
 Our approach enables an exploratory analysis workflow in which the analyst can issue standard SQL queries over a data set, even if that data has missing values, and get
 queries that execute between \lowxalphazero{} and \highxalphazeroexacs{} times as fast as it takes to impute all missing values and then run queries (the traditional approach). Furthermore, the results obtained with this approach
-are similar in quality to those obtained with the complete imputation approach, as indicated by low Symmetric-Mean-Absolute-Percentage-Errors --- between \lowsmapealphazero{} and \highsmapealphaoneexacs{} percent --- in our empirical results
-over real-world data sets (see~\Cref{sec:experiments} for details).
+are similar in quality to those obtained with the complete imputation approach, as indicated
+by one measure of error --- between \lowsmapealphazero{} and \highsmapealphaoneexacs{}
+percent --- in our empirical results over real-world data sets (see~\Cref{sec:experiments}
+for details).
 
 % Scope
 \ProjectName{} is designed to enable early data exploration, by allowing analysts to run their queries without explicitly deciding when to perform imputation.
