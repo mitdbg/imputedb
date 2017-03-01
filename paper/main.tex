@@ -127,26 +127,17 @@
 \maketitle
 
 \begin{abstract}
-Missing values abound in data analysis and often present a serious challenge for the usability of data. Users
-are forced to pick between removing tuples with missing values or creating a clean duplicate of their data
-by applying a potentially-expensive imputation strategy. Our system, \ProjectName{}, incorporates imputation into a cost-based query optimizer, 
-performing any operations needed on the fly
-for each query. This allows users to immediately explore
-their data, while the system picks the optimal placement of imputation operations. This placement is based
-on the specific query issued and a user-provided parameter that trades off data
-quality and runtime performance. We incorporate the imputation operators into the relational algebra, allowing
-for traditional optimizations to take place. Our experiments evaluate this approach on two real-world survey-based datasets
-from the \textit{Center for Disease Control and Prevention} and \textit{freeCodeCamp}. Our
-results show that the optimizer generates query plans that execute between \lowxalphazero{}
-and \highxalphazeroexacs{} times as fast as imputing at the base tables and then executing
-queries, making exploratory data analysis using our system feasible.  Furthermore, we show
-that the query results from on-the-fly imputation have
-error between \lowsmapealphazero{} and
-\highsmapealphaoneexacs{} percent when compared to standard full-table imputation
-approach. 
-We calculate the number of tuples used to produce each aggregate
-in our experiments, and find that when optimizing for quality between 0 to 10\% fewer tuples satisfy query constraints relative to the full-table imputation. When all tuples with missing values are dropped, the aggregate
-is computed with 3 to 88\% fewer tuples.
+  Missing values abound in data analysis and present a usability challenge.
+  Users are forced to pick between removing tuples with missing values or creating a clean duplicate of their data by applying a relatively expensive imputation strategy.
+  Our system, \ProjectName{}, incorporates imputation into a cost-based query optimizer, performing necessary imputations on the fly for each query.
+  This allows users to immediately explore their data, while the system picks the optimal placement of imputation operations.
+  % This placement is based on the specific query issued and a user-provided parameter that trades off data quality and runtime performance.
+  % We incorporate the imputation operators into the relational algebra, allowing for traditional optimizations to take place.
+  We  evaluate this approach on two real-world survey-based datasets and 
+  % from the \textit{Center for Disease Control and Prevention} and \textit{freeCodeCamp}.
+  our experiments show that our query plans are between \lowxalphazero{} and \highxalphazeroexacs{} times faster than first imputing the base tables.
+  Furthermore, we show that the query results from on-the-fly imputation differ in one error measure from the standard full-table imputation approach by \lowsmapealphazero{}--\highsmapealphaoneexacs{}\%.
+  Finally, we show that while dropping tuples with missing values that fail query constraints discards 3--88\% of the data, on-the-fly imputation loses only 0--10\%.
 \end{abstract}
 
 \input{introduction}
