@@ -46,7 +46,7 @@ The space of query plans is similar to that considered by System R~\cite{blasgen
 
 \subsection{Imputation placement}
 \label{sec:placement}
-Imputation operators must be placed so that no relational operator receives a tuple containing \nullv{} in an attribute that the operator examines, regardless of the state of the data in the base tables.
+Imputation operators must be placed so that no relational operator encounters a tuple containing \nullv{} in an attribute that the operator examines, regardless of the state of the data in the base tables.
 
 Imputation operators can be placed at any point in the query plan, but to meet the guarantee that no non-imputation operator sees a \nullv{} value, there are cases where an imputation operator is required. To track these cases, each query plan $q$ is associated with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain \nullv{}. We compute a dirty set for each table using the table histograms, which track the number of \nullv{} values in each column. The dirty set for a query plan can be computed recursively as follows:
 
@@ -61,6 +61,7 @@ Imputation operators can be placed at any point in the query plan, but to meet t
 \end{align*}
 
 Note that \textsc{Dirty} over-approximates the set of attributes that contain \nullv{}. For example, a filter might remove all tuples which contain \nullv{}, but the dirty set would be unchanged. We choose to over-approximate to ensure that all \nullv{} values are explicitly imputed or dropped.
+
 
 \subsection{Cost model}
 \label{sec:cost-model}
@@ -81,7 +82,7 @@ to tolerate relative to the minimum possible amongst frontier plans.
 
 \begin{definition}
 Let $P$ be a set of plans. For $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Loss}(p) - \min_{p' \in P}(\textsc{Loss}(p')) \leq \alpha$. We denote this as $p^\alpha$.
-We say $p$ is $\alpha$-bound optimal if $\forall p'^\alpha \in P: \textsc{Time}(p) \leq \textsc{Time}(p')$. 
+We say $p$ is $\alpha$-bound optimal if $\forall p'^\alpha \in P: \textsc{Time}(p) \leq \textsc{Time}(p'^\alpha)$. 
 \end{definition}
 
 Given $\alpha$ and $P$, \ProjectName{} returns the $\alpha$-bound optimal plan in $P$. Note that the $\alpha$-bound optimal plan is unique in $P$, since $P$ contains only non-dominated plans.
@@ -99,8 +100,7 @@ For simplicity, each of the logical nodes in a query plan points to a set of his
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for the new operation in the plan.
 \Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
-For each sub-plan, we keep track of the estimated cardinality by using the histograms associated with
-that plan. We use this estimate to compute $\text{Loss}(Q)$, a measure averaged over imputation operations, as follows.
+We use these histogram estimates to compute $\text{Loss}(Q)$, a measure averaged over imputation operations, as follows.
 
 \begin{align*}
   \textsc{L}(q) &= \begin{cases}
@@ -115,13 +115,15 @@ that plan. We use this estimate to compute $\text{Loss}(Q)$, a measure averaged 
 
 \srm{I find this table hard to follow -- I think it'd be good to explain one or two of the rows in detail, and to explain what the set L contains.}
 Using the drop operator incurs a loss of information of 1 (i.e. we lose all information that
-the dropped tuples might have encoded). Imputing \nullv{} fields incurs a loss penalty $p \in (0, 1]$,
+the dropped tuples might have encoded). 
+\todobox{fix this explanation, not inverseley proprtional to what is stated here}{Imputing \nullv{} fields incurs a loss penalty $p \in (0, 1]$,
 which is inversely proportional to the number of total cells available to train the imputation algorithm. 
 Total cells are defined as the product of the number of attributes and the number of tuples.
 Intuitively, imputation
 accuracy \textit{increases} when more complete attributes and complete tuples are available;
 correspondingly, the information lost \textit{decreases} with more values to work
-with. Since we conceive that
+with.}
+Since we conceive that
 alternate imputation strategies could be used, the analyst may provide a corresponding
 loss with a reasonable parameterization.
 
@@ -186,8 +188,9 @@ The query planner must select a join ordering in addition to placing imputation 
 
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
 At a high level, a plan cache is a mapping from a set of tables to a set of dirty-set specific dominating plans that perform the required joins and filters over these tables.
-We store multiple plans rather than a single plan because each plan has a distinct set of dirty attributes, each of which maintains its own Pareto frontier. 
-Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
+We store multiple plans rather than a single plan per dirty set, because maintaining a Pareto frontier as a plan progresses through the optimizer's pipeline
+allows us to obtain the final set of plans that best tradeoff computation
+cost and imputation quality. Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
 
 
 \begin{figure}
@@ -212,9 +215,7 @@ Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}
 The plan cache uses the partial order of plans defined by  $\langle \textsc{Dirty}, \textsc{Loss}, \textsc{Time} \rangle$ to
 collect sound and complete Pareto frontiers. For plans with the same dirty set, we can treat $\langle \textsc{Loss}, \textsc{Time} \rangle$
 as a total order, allowing us to appropriately select the frontier. Meanwhile, plans with different $\textsc{Dirty}$ sets cannot be compared. The final
-Pareto frontier corresponds to the collection of plans associate with the empty dirty set.
-
-To reduce the search space, we only consider the minimal imputation, the maximal imputation, and the minimal drop. The minimal imputation (resp.\ drop) only imputes (resp.\ drops) the columns required by the relational operator immediately following the imputation. The maximal imputation imputes all of the attributes in the relation which are used by other operators in the query plan or are visible in the query output.
+Pareto frontier produced by the optimizer corresponds to the collection of plans associated with the empty dirty set.
 
 \Cref{algo:plan-helpers} presents a series of helper functions used by the top-level planner, shown in~\Cref{algo:top-level-planner}.
 
@@ -230,7 +231,7 @@ best possible set from which to pick our final plan). The final step in the plan
 $\alpha$-bound and return the one that has the lowest runtime: the $\alpha$-bound optimal plan.
 
 The join optimization is based on the algorithm used in System R~\cite{blasgen1981system},
-but rather than select the best plan at every point, we use our plan cache, which keeps track of the tables joined and the dirty-set specific Pareto frontiers.
+but rather than select the best plan at every point, we use our plan cache, which keeps track of the tables joined and the Pareto frontiers.
 The output of the join optimizer is the set of plans which satisfy all join predicates and lie along their respective frontier.
 
 \begin{algorithm}
@@ -256,7 +257,7 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 
 \ProjectName{} is designed so that any imputation strategy can be plugged in with minimal
 effort and without changes to the optimizer, simply by adding time and loss functions
-(\Cref{sec:cost}) which describe the new algorithm. In principle, new imputation algorithms
+(\Cref{sec:cost-model}) which describe the new algorithm. In principle, new imputation algorithms
 can be added, possibly targeted to a specific domain. The flexibility of this approach
 aligns well with the spirit of query optimization, which aims to reconcile performance with
 a declarative interface to data manipulation. 
@@ -373,8 +374,8 @@ If we allow any arbitrary subset of attributes to be imputed, then we would need
 This would increase the overall complexity of the algorithm drastically.
 
 Finally, we note that for the queries we have examined, this exponential blowup does not affect the practical performance of our optimizer.
-Recall that the planner maintains different plans for different dirty sets, keeping only those that are not dominated by other plans with the same dirty set.
-So in many cases we can drop some of these intermediate plans generated at each operator.
+Recall that the planner maintains different plans for different dirty sets, keeping only those plans that are not dominated by others.
+So in many cases we can drop some of the intermediate plans generated at each operator.
 The worst case complexity only occurs if the dirty sets tracked are distinct through the entire planning phase.
 Planning times are discussed in \Cref{sec:results}.
 

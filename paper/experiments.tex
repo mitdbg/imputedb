@@ -6,7 +6,7 @@ for three separate survey-based data sets, showing that our system
 is well suited for early dataset exploration.
 
 \subsection{Data sets}\label{subsec:datasets}
-We collected three data sets our experiments.
+We collected three data sets for our experiments.
 For all data sets, we selected a subset of the original attributes.
 We also transformed all data values to an integer representation by enumerating strings and transforming floating point values into an appropriate range.
 
@@ -83,7 +83,7 @@ For our final experiment, we run a simple aggregate query over data from the Ame
 Community Survey (ACS), a comprehensive survey conducted by the U.S.
 Census Bureau. We use a cleaned version of the 2012 Public Use Microdata Sample (PUMS)
 data kindly provided by the authors of~\cite{akande2015empirical}. Given that the data had
-been cleaned, we artificially dirtied it by removing 40\% of the values uniformly at random.
+been cleaned, we artificially dirtied it by replacing 40\% of the values uniformly at random with \nullv{} values.
 The final dataset consists of 671,153 rows and 37 integer columns.
 
 \subsection{Queries}
@@ -138,7 +138,7 @@ four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on 
 
 \Cref{fig:runtimes} shows a summary of the performance results. We evaluated three different
 configurations for each query. We compare \ProjectName{} optimizing for quality ($\alpha=0$),
-\ProjectName{} optimizing for performance($\alpha=1$), and imputing at the base tables followed
+\ProjectName{} optimizing for performance ($\alpha=1$), and imputing at the base tables followed
 by executing the query traditionally. The quality-optimized queries are an order-of-magnitude
 faster than imputing on the base tables. We can get another order-of-magnitude speedup when
 optimizing for performance. This performance differential means it is feasible
@@ -178,7 +178,7 @@ returned a query plan within 40ms, with times roughly constant between levels of
 
 \subsubsection{Accuracy vs. Base-table Imputation}
 
-\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) for
+\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)\todo{cite SMAPE} for
 \ProjectName{}'s query results when compared to running imputation on the base tables and
 executing the query on this cleaned base data \cite{tofallis2015better}.  Each query was
 separately run 200 times in both settings and then results from the two approaches were
@@ -190,6 +190,7 @@ the SMAPE relative to the base-imputation approach are low in all cases --- betw
 imputation produces similar results to imputation at the base tables.
 
 \begin{table}
+\todo{extend this table to have counts with new results}
 \centering
 \input{tables/perf_summary.tex}
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
@@ -213,7 +214,8 @@ benefit of using our system for early data exploration.
 For every imputation inserted into the query plan, a new statistical model is instantiated and trained before being used for imputation.
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are not known until runtime.
-Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead. 
+
+\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
 %%% Local Variables:
 %%% mode: latex

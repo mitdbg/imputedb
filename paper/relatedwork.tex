@@ -26,13 +26,12 @@ workloads.
 \subsection{Missing Values and Databases}
 There is a long history in the database community surrounding the
 treatment of \nullv{}. As early as 1973,~\cite{codd1973understanding}
-provides a treatment of the semantics of \nullv{}. Multiple
+provided a treatment of the semantics of \nullv{}. Multiple
 papers have described various (at times conflicting) treatments
 of nulls~\cite{grant1977null}. \ProjectName's main design invariant - no relational operator
 sees missing values for attributes it must operate on and users should never see
 missing data - eliminates
-the need to handle \nullv{} value semantics, while guaranteeing soundness (modulo
-imputation strategy) of the query evaluation.
+the need to handle \nullv{} value semantics, while guaranteeing query evaluation soundness.
 
 Database system developers and others have worked on techniques to automatically
 detect dirty values, whether missing or otherwise, and rectify the errors if
@@ -80,8 +79,8 @@ users to directly express queries on a potentially larger subset of their data.
 
 \ProjectName's cost-based query planner 
 is partially based on the seminal work developed for System R's query planning\cite{blasgen1981system}.
-However, in contrast to System R, \ProjectName{} performs additional histogram transformations to account
-for the changing nature of missing values.
+However, in contrast to System R, \ProjectName{} performs additional optimizations for imputing missing data and
+uses histogram transformations to account for the changing nature of missing values.
 
 \subsection{Forecasting and Databases}
 Parisi et al\cite{parisi2011embedding} introduce the idea of incorporating time-series forecast operators into
