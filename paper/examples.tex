@@ -13,12 +13,12 @@ relevant attributes.
 
 Before she can perform her queries, the epidemiologist must develop a strategy
 for handling missing values. She currently has two options:
-(1) she could drop records with missing values in relevant fields,
-(2) she could use a standard data imputation package on all of her data. Both of these
+(1) she could drop records that have missing values in relevant fields,
+(2) she could use a traditional imputation package on her entire dataset. Both of these
 approaches have significant drawbacks. For the query pictured in~\Cref{fig:example-query}, 
 (1) drops 1492 potentially relevant tuples,
-while her previous experiences with (2) have proven to be expensive. The epidemiologist needs a more complete picture
-of the data, so (1) is insufficient, and she is under time pressure, so (2)
+while from her experience, (2) has proven to take too long. The epidemiologist needs a more complete picture
+of the data, so (1) is insufficient, and for this quick exploratory analysis, (2)
 is infeasible.
 
 She can run her queries immediately and finish her report if
@@ -74,8 +74,9 @@ For the query in~\Cref{fig:example-query}, \ProjectName{} generates
 the plans in~\Cref{fig:quality-plan} and~\Cref{fig:fast-plan}, when 
 optimizing for quality and performance, respectively.
 
-\Cref{fig:quality-plan} shows a quality-optimized plan that uses the impute operation $\mu$, which employs an iterative regression model to fill in missing values rather than dropping tuples.
-It waits to impute \verb|demo.income| until after the final join has taken place, but other imputations take place earlier on in the plan, some before filtering and join operations.
+\Cref{fig:quality-plan} shows a quality-optimized plan that uses the impute operation $\mu$,
+which employs a reference imputation strategy to fill in missing values rather than dropping tuples.
+It waits to impute \verb|demo.income| until after the final join has taken place, though other imputations take place earlier on in the plan, some before filtering and join operations.
 Imputations are placed to maximize ImputeDB's estimate of the quality of the overall results.
 Meanwhile, \Cref{fig:fast-plan}'s performance-optimized plan uses the drop operation $\delta$ instead of filling in missing values.
 However, it is a significant improvement over dropping all tuples with missing data in any field, as it only drops tuples with missing values in attributes which are referenced by the rest of the plan. In both cases, only performing
@@ -100,10 +101,8 @@ the query.
 
 \subsection{\ProjectName{} Workflow}
 Now that the epidemiologist has \ProjectName{}, she can explore
-the dataset using SQL. For each query, she repeatedly chooses a value
-for $\alpha$ and runs the query until she is unsatisfied with the runtime.
-Rather than commit \emph{a priori} to a runtime bound for her query,
-which may be unsatisfiable, this iterative approach gives her 
+the dataset using SQL. She begins by choosing a value for $\alpha$ and can adjust it up or
+down until she is satisfied with her query runtime. This iterative approach gives her 
 immediate feedback.
 
 Tens of queries later, our epidemiologist has a holistic view of the data and she has the information that she needs to construct a tailored imputation model for her queries of interest.
