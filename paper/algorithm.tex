@@ -1,5 +1,5 @@
 \section{Algorithm}
-In order to correctly plan around missing values, we first extend the relational algebra operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) 
+In order to correctly plan around missing values, we first extend the set of relational algebra operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) 
 with two new operators (\Cref{sec:operators}). We then define the search space (\Cref{sec:search-space}) of plans to encompass non-trivial operations, such as joins and 
 aggregations. Soundness of query execution is provided by our main design invariant, which guarantees traditional relational
 algebra operators must never observe a missing value in any attribute that they operate on directly (\Cref{sec:placement}). 
@@ -71,12 +71,12 @@ $\textsc{Loss}(q) \in [0,1]$ is an estimate of the amount of information lost by
 $\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
 
 \subsubsection{Pareto-optimal plans}
+Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[P= \{ p ~|~ \not\exists p' \in S.\ p \neq p' \land \doms{p'}{p} \}.\]
+
 \begin{definition}
 We say that a plan $p$ with cost $\langle l, t \rangle$ \emph{dominates} a plan $p'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(p) = \textsc{Dirty}(p') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{p}{p'}$. 
 \end{definition}
 
-Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[P= \{ p ~|~ \not\exists p' \in S.\ p \neq p' \land \doms{p'}{p} \}.\]
- 
 This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of $\textsc{Time}$ and $\textsc{Loss}$ for the current query.
 
 In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Loss}$ value that the user is willing
@@ -167,7 +167,7 @@ account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} 
 complexity can be expressed as a function of the number of heap pages read and the I/O cost
 per page. The time computation for \textit{Impute} depends on the properties of the underlying
 algorithm. \ProjectName{} treats the actual machine learning algorithm as a black box
-and simply queries it for a time estimate. In our reference implementation,
+and simply queries it for a time estimate. In the implementation of our system,
 we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
 is a function of the number of attributes with no missing data, number of attributes with
 missing data being imputed, number of tuples, and the number of iterations for the algorithm.
@@ -185,7 +185,7 @@ number of subsets considered for each split). The \textit{build tree} phase ofte
 does not even dominate computation, as post-processing steps like pruning, which are vital
 in achieving good performance, can have cost exponential in the height of the tree.
 Nonetheless, in practice, we find that a simple parameterization can be acceptable (i.e.
-yield intelligent query plans).
+yields intelligent query plans).
 
 \subsection{Query planning}
 \label{sec:planning}
@@ -229,7 +229,7 @@ cost and imputation quality. Details of the plan-cache semantics are shown in~\C
 
 The plan cache uses the partial order of plans defined by  $\langle \textsc{Dirty}, \textsc{Loss}, \textsc{Time} \rangle$ to
 collect sound and complete Pareto frontiers. For plans with the same dirty set, we can treat $\langle \textsc{Loss}, \textsc{Time} \rangle$
-as a total order, allowing us to appropriately select the frontier. Meanwhile, plans with different $\textsc{Dirty}$ sets cannot be compared. The final
+as a total order, allowing us to appropriately select the frontier. Plans with different $\textsc{Dirty}$ sets cannot be compared. The final
 Pareto frontier produced by the optimizer corresponds to the collection of plans associated with the empty dirty set.
 
 \subsubsection{Planning algorithm}
@@ -271,7 +271,7 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 can be plugged in with minimal effort and without changes to the optimizer, simply by adding
 time and loss functions (\Cref{sec:cost-model}) which describe the new algorithm.
 For our purposes, an imputation strategy is a function $I(R, C) \rightarrow R'$ which fills in the missing
-attributes $C$ in a relation $R$, returning a new set of tuples $R'$.
+attributes $C$ in a relation $R$, returning a new relation $R'$.
 The flexibility of this approach aligns with the spirit of query optimization, which aims to
 reconcile performance with a declarative interface to data manipulation.
 
