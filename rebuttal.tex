@@ -1,0 +1,99 @@
+\documentclass[draft,12pt]{article}
+\usepackage[margin=1in]{geometry}
+
+\begin{document}
+\section{Reviewer 1}
+\begin{itemize}
+\item W1. A number of the algorithms/figures are a bit redundant (e.g., Histogram estimation for classical join operators in Alg. 3) Overall, the paper in its current form feels padded -- it could be trimmed down by 1-2 pages. See below for a few ideas of things to use this space for. I will note that I'd be perfectly happy accepting this as a shorter, unpadded paper.
+
+\item W2. The paper completely obscures the ML technique being used: (1) It would be nice to have some discussion of the complete API for implementing an ML technique, as well as how one might implement a cost-estimator for one or two examples. (2) It would be helpful to see the impact of a few different approaches (e.g., Tree-based, Interpolation, Regression, FD-based) on performance and accuracy. (3) Given that the ML time estimator is being treated as a black box, it would be useful to see how sensitive the plan selector is to inaccurate estimates.
+
+\item W3. Reducing runtime to ~10s is excellent, but comes at a very serious accuracy cost (3-5x worse SMAPE). Worse still, there's no way for the user to differentiate between the cases of Q4 and Q8 at runtime. 24\% error relative to direct imputation is huge.
+
+\item - Although it doesn't consider cost or the drop operator, a similar technique appears in Yang et. al. "Lenses: An On-Demand Approach to ETL." A comparison would be nice.
+
+\item - S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach — between 0 and 24 percent" 24 percent error is pretty bad. 
+
+\item - S2: The drop operator appears to be a weaker form of SQL's null-value / 3-valued Boolean semantics. The latter might actually be more useful. For example, consider the case of a predicate (A $>$ 5 OR B $<$ 10). If A $>$ 5, then the condition is independent of B, and the tuple can still be salvaged. If A $\leq$ 5, then the expression evaluates to UNKNOWN and the tuple is dropped anyway. For aggregates there is a greater need, as one might have different aggregates computed over different subsets of the data, but even here it's not clear that this is any less informative than just throwing data away. 
+
+\item - S2: Why no unions?
+
+\item - S3.4.1, Definition 2: On my first read-through, I was puzzled about why there was no plan with zero-loss. It would help to clarify that Loss is not about tuple loss, but rather a heuristic penalty function. 
+
+\item - S3.4.3: An extremely nice emergent property from the L-value function for the imputation operator seems to be that the operator will be moved to a position in the plan where it has access to the maximum training data. I am slightly concerned that by focusing entirely on size, this might lead to skew in the training set. For example, consider a one-to-many join \verb/µ(R) |X| S/. Your optimization algorithm would likely wish to move imputation up: \verb/µ(R |X| S)/. Yes, there is more training data, but if the fanout for each tuple is skewed, some tuples in R will become over-represented in the join result. A similar observation holds for selection. For example take your Q8, where the conditions "studentdebtowe $>$ 0 AND schooldegree >= 0" presumably indicate invalid data that should not be used for training. (is this perhaps why you have so much error for full imputation on Q8?)
+
+\item - S3.4.4: It appears that Time() assumes that plans are IO-bound. This is a perfectly reasonable assumption, but should be stated explicitly, as datasets that fit in memory will require a different cost model.
+
+\item - S3.4.4: "Drop is a special case of a sequential scan, and its time complexity can be expressed as a function of the number of heap pages read and the I/O cost per page." seems to suggest that drop is implemented as a blocking operator. Why not just take the same approach as selection and treat it as having negligible cost?
+
+\item - S4: All of the workload queries are (data-size-independent) AVG queries. What about other types of aggregates (e.g., SUM, COUNT)?
+
+\item - S4.4.1: Imputation over the raw data is being used as ground truth. Is there any reason to suspect that this is the correct thing to do? Perhaps joining multiple tables together exposes new attributes that makes imputation *more* reliable? At the very least, it would be useful to understand why there is so much error in $\alpha=0$ on Q2 and Q8. 
+
+\item - There are a number of opportunities for trimming in the figures, tables, and algorithms: Algorithms 1-3 could be compacted a bunch, Table 1 is full of whitespace (e.g., make it a 3-column {figure*}), Tables 1-2 could also be summarized as CDFs, Figure 6 is full of whitespace, Table 3 could be put queries on a single row (e.g., Q1 would easily fit on 1 line), and the references have a lot of redundant information (URLs, for example). 
+
+\item - Additional space recovered from these sections could be used to discuss the choice of techniques for imputation, and the confidence estimation idea suggested in the future work section. 
+
+\item - Another interesting use of the space, or at least an idea for future work might be the role of aggregation on inference accuracy. In my experience aggregate queries tend to be *much* more forgiving of approximations (e.g., Online Aggregation) and data errors.
+\end{itemize}
+
+\section{Reviewer 2}
+\begin{itemize}
+\item 1) No new imputation method is presented. The model relies on external imputation techniques, and given it's done on-the-fly, presumably imputed values depend on qualifying query records. 
+2) No comparative evaluation against existing imputation/data cleaning techniques.
+
+\item D1) The model relies on external imputation techniques, and given it's done on-the-fly, the imputed values will differ based on the qualifying query records? 
+
+\item D2) The paper does not propose new imputation techniques but rely on existing statistical imputation algorithms. There is no comparative evaluation, nor samples of imputed values to show the goodness of the imputed values. It would be nice to see a comparative evaluation of different statistical imputation methods, and suggestions for extensions that can fit within the proposed imputation model. 
+
+\item D3) Table 3 uses a lot of space, and contains simple queries that are already described in the text. The table can be removed to include additional experiments as suggested above. 
+\end{itemize}
+
+\section{Reviewer 3}
+\begin{itemize}
+\item W1. The paper feels like an early submission that is not ready for publication at its current state.
+
+\item W2. More work is required in the presentation: important parts are not explained in depth, while there are many details in other sections that can be omitted.
+
+\item W3. More experiments needed.
+
+\item D1. Section 3, which is the meat of the paper, is very overloaded, without getting in depth in various parts of the system. It definitely should be split in more sections, and more details should be given. In particular:
+-- Give some more information about cardinality estimation. Also, Algorithm 3 is too far from the text, and needs some explanation too.
+-- Some more details are also required in the Imputation quality section. Why are you choosing these specific formulas for Loss, especially for the impute operator. Some examples would help.
+-- Algorithms 1 and 2 could probably be presented in an easier to grasp way.
+
+\item D2. It would be nice to show how exactly your approach can be implemented in an existing optimizer. This comes up in various places in the paper:
+-- When defining the search space, why not first define the transformation operators that inject the imputation operators. Then any optimizer can pick these rules up and add them in its plan enumeration. Of course, the used approach that follows System-R's plan enumeration is useful, but why lose generality when presenting the search space. Moreover, showing the transformation rules can help you show the size of the search space that will better justify the restrictions you apply.
+-- Why use simplified cost formulas for the traditional relational operators and not existing systems' formulas?
+-- It would be great (but not necessary of course) to add your techniques in an existing DBMS, such as Postgres to see the impact on a real system in your experiments.
+
+\item D3. Is there any way for the user to know what error to expect based on the $\alpha$ value? Moreover, is its value somehow proportional to the error (e.g., $\alpha=0.5$ would give roughly double the error of $\alpha=0.25$)? Or should the user simply try multiple execution with different values of $\alpha$ until the desired results are given?
+
+\item D4. How would a two-step approach that first finds the optimal plan (w/o imputation) and then adds the imputation operators perform?
+
+\item D5. Can you have plans with a mix of drop and impute operators?
+
+\item D6. During plan enumeration, can you safely prune plans at some point, similar to what a traditional optimizer would do?
+
+\item D7. When defining the cost of impute operator, how do you know a priori the number of iterations for the algorithm (given it has to converge)?
+
+\item D8. Are there impute implementation that are non-blocking? Or do they always have to perform multiple passes over the data?
+
+\item D9. Additional experiments I suggest to include:
+-- Consider a scenario where the user submits multiple similar queries. Show after how many such queries your approach has no longer a competitive advantage compared to performing imputation on the data.
+-- Try different values for $\alpha$ (not just 0 and 1).
+-- Show runtime of enumeration algorithm as queries get more complex.
+
+\item D10. The scenario you are considering, with multiple queries during exploration, begs for reuse of previous query results, as you also mention in the future work section.
+
+\item D11. Less important points:
+-- Sections 4.2 and 4.3 in the experiments are too verbose.
+-- In Section 3.2, you mention that joins are performed after filtering. When filters are on results of joins, this is not possible.
+-- Given you optimize for both performance and quality, Tummer's and Koch's work on multi-objective QO is related.
+-- Could be interesting for the optimizer to pick imputation strategy based on the type of the query.
+\end{itemize}
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
