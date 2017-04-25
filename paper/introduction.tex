@@ -14,10 +14,11 @@ that this subset is generally much smaller than the entire database.}
 % Background
 While traditional imputation methods work over the entire data set and replace all missing
 values, running a sophisticated imputation algorithm over a large data set can be very
-expensive---our experiments show that even a relatively simple decision tree algorithm takes \acsbaseresulthours{} to train and run
+expensive: our experiments show that even a relatively simple decision tree algorithm takes \acsbaseresulthours{} to train and run
 on a 600K row database.
 
-A simpler approach might drop all rows with missing values, which can not only introduce bias into the results, but also result in discarding all of the data.
+A simpler approach might drop all rows with missing values, which can not only introduce
+bias into the results, but also result in discarding much of the data.
 In contrast to existing systems~\cite{burgette2010multiple,akande2015empirical}, \ProjectName{} avoids imputing over the entire data set. Specifically, \ProjectName{}
 carefully plans the placement of imputation/row-drop operations inside the query plan, resulting in a 
 significant speedup in query execution while reducing the number of dropped rows. Unlike previous work, the focus of our work is not on the imputation algorithms themselves (we can employ almost any such algorithm), but rather on placing imputation operations

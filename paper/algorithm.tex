@@ -202,7 +202,7 @@ The query planner must select a join ordering in addition to placing imputation 
 
 \subsubsection{Plan cache}
 Before describing the operation of the query planner, we describe the semantics of a specialized data structure for holding sub-plans, called a \emph{plan cache}.
-At a high level, a plan cache is a mapping from a set of tables to a set of dirty set-specific dominating plans that perform the required joins and filters over these tables.
+At a high level, a plan cache is a mapping from a set of tables to a set of dirty set-specific dominating plans over these tables.
 We store multiple plans rather than a single plan per dirty set, because maintaining a Pareto frontier as a plan progresses through the optimizer's pipeline
 allows us to obtain the final set of plans that best trade-off computation
 cost and imputation quality. Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
@@ -275,15 +275,10 @@ attributes $C$ in a relation $R$, returning a new relation $R'$.
 The flexibility of this approach aligns with the spirit of query optimization, which aims to
 reconcile performance with a declarative interface to data manipulation.
 
-In principle, new imputation algorithms can be added, possibly targeted to a specific
-domain. However, \ProjectName{}'s planner will consider an arbitrary subset of the
-attributes in any imputation, thus it is feasible to customize the \textit{type} of
-algorithm but not necessarily a specific modelling relationships between attributes.
-
-As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
+New imputation algorithms can also be added. As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
 based on chained-equation decision trees.  Chained-equation
 imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
-regression}~\cite{gelman2006data}) impute multiple missing attributes being imputed by iteratively fitting
+regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
 a predictive model of one missing attribute, conditional on all complete attributes
 and all other missing attributes. Chained-equation decision trees algorithms are found to be
 effective~\cite{akande2015empirical} and are widely used in epidemiological

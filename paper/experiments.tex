@@ -5,7 +5,7 @@ base-table imputation and produces results of comparable quality.
 
 \subsection{Implementation}
 To evaluate the performance of our approach, we implemented a prototype system in Java, following a traditional iterator model.
-Our database handles a subset of standard SQL queries, including filters, joins, projection, grouping and aggregation.
+Our database handles a subset of standard SQL, including filters, joins, projection, grouping and aggregation.
 For simplicity, \ProjectName{} only handles tables containing integer data.
 
 \subsection{Data sets}\label{subsec:datasets}
@@ -108,7 +108,7 @@ Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
 \Cref{q6} calculates the average income for higher-income survey participants, grouped by their bootcamp attendance.
 \Cref{q7} estimates the average commute time of women from the United States who participated.
 \Cref{q8} calculates the average amount of student debt based on school degree for survey participants who have student debt.
-\Cref{q9} joins the freeCodeCamp data with data provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
+\Cref{q9} joins the freeCodeCamp data with a table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
 The query calculates the average GDP per-capita by grouping 18+ year old participants who attended bootcamp versus those who did not.
 
 \begin{table*}
@@ -163,14 +163,14 @@ to explore multiple imputations operations (including more expensive operators) 
 %We exclude the planning time for queries that impute at base table, as that requires no
 %planning. 
 
-In the median query across a variety of queries and choices of $\alpha$, planning took
+In the median across a variety of queries and choices of $\alpha$, planning took
 \planningmediantime{} ms, 
 constituting \planningruntimepercent{} percent of total runtime. In all cases, the optimizer
 returned a query plan within \planningmaxtime{} ms, with times similar across values of $\alpha$.
 
 All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
 four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
-Each query with each value of $\alpha$ was run 200 times, after discarding a warm-up period.
+Each query and each value of $\alpha$ was run 200 times, after discarding a warm-up period.
 
 % The one-standard-deviation
 %intervals around the mean planning time often overlap, suggesting the planning component is
@@ -187,8 +187,8 @@ Each query with each value of $\alpha$ was run 200 times, after discarding a war
 (SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results when compared to
 imputing on the base tables and executing the query on this cleaned base data.
 This measure indicates how much error is introduced by on-the-fly imputation compared to
-imputation on the base tables. In a real use-case, the data do not have ground-truth
-anyways, so the appropriate comparison is to this full-fledged impute on the base table.
+imputation on the base tables. In our case, the relevant comparison is against traditional
+imputation on the base table, given the unavailability of ground truth.
 
 For $\alpha=0$ and $\alpha=1$, we pair up tuples and compute SMAPE for all queries. That is,
 we compute tuple-wise absolute percentage deviations within each iteration of a query, and
