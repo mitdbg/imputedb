@@ -3,6 +3,7 @@
 \usepackage{xcolor}
 \newcommand{\resp}[1]{{\color{blue}{#1}}}
 \newcommand{\todo}[1]{\color{red}{\textit{#1}}}
+\newcommand{\ProjectName}[0]{ImputeDB}
 
 \begin{document}
 \section{Reviewer 1}
@@ -93,7 +94,11 @@ in the results presented. This is a simple heuristic but we find that it would h
 -- Why use simplified cost formulas for the traditional relational operators and not existing systems' formulas?
 -- It would be great (but not necessary of course) to add your techniques in an existing DBMS, such as Postgres to see the impact on a real system in your experiments.
 
-\resp{Existing systems have very complex formulas for estimating query costs. We felt that the overhead of reimplementing an existing cost model would not be worth the benefit.}
+\resp{
+Existing systems have very complex formulas for estimating query costs. We felt that the overhead of reimplementing an existing cost model would not be worth the benefit.
+However, we added a new section that discusses in detail the main components for \ProjectName{}, so that developers of existing systems can use this as a roadmap
+for implementation.
+}
 
 \item D3. Is there any way for the user to know what error to expect based on the $\alpha$ value? Moreover, is its value somehow proportional to the error (e.g., $\alpha=0.5$ would give roughly double the error of $\alpha=0.25$)? Or should the user simply try multiple execution with different values of $\alpha$ until the desired results are given?
 
