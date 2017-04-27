@@ -2,6 +2,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{xcolor}
 \newcommand{\resp}[1]{{\color{blue}{#1}}}
+\newcommand{\todo}[1]{\color{red}{\textit{#1}}}
 
 \begin{document}
 \section{Reviewer 1}
@@ -11,6 +12,14 @@
 \item W2. The paper completely obscures the ML technique being used: (1) It would be nice to have some discussion of the complete API for implementing an ML technique, as well as how one might implement a cost-estimator for one or two examples. (2) It would be helpful to see the impact of a few different approaches (e.g., Tree-based, Interpolation, Regression, FD-based) on performance and accuracy. (3) Given that the ML time estimator is being treated as a black box, it would be useful to see how sensitive the plan selector is to inaccurate estimates.
 
 \item W3. Reducing runtime to ~10s is excellent, but comes at a very serious accuracy cost (3-5x worse SMAPE). Worse still, there's no way for the user to differentiate between the cases of Q4 and Q8 at runtime. 24\% error relative to direct imputation is huge.
+\resp{
+The outsized error in Q8 is a result of a drop operator placed very early on in the plan (a result of optimizing for performance). This produced significantly smaller sample sizes for various
+groups, which skewed the average calculation for each group significantly. For example, the average student debt for subjects with no high school degree was almost 83\% off from the estimate
+using the base table imputation, but if we look at the underlying population the former was calculated with 6 people, while the latter was with 258 people.
+\todo{We have extended ImputeDB to provide users with a estimate of the number of tuples dropped in a calculation due to nulls, which may be indicative of the underlying error or skew
+in the results presented. This is a simple heuristic but we find that it would have provided appropriate warning in cases such as Q8.}
+}
+
 
 \item - Although it doesn't consider cost or the drop operator, a similar technique appears in Yang et. al. "Lenses: An On-Demand Approach to ETL." A comparison would be nice.
 
