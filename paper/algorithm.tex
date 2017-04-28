@@ -163,9 +163,9 @@ Filtering, projecting, and aggregating are all done in memory and have low compu
 so we assume negligible time costs for those operations. 
 
 We extend these heuristics to 
-account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and its time
-complexity can be expressed as a function of the number of heap pages read and the I/O cost
-per page. The time computation for \textit{Impute} depends on the properties of the underlying
+account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special
+case of a selection, and as a non-blocking operator its effective time cost is negligible.  
+The time computation for \textit{Impute} depends on the properties of the underlying
 algorithm. \ProjectName{} treats the actual machine learning algorithm as a black box
 and simply queries it for a time estimate. In the implementation of our system,
 we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost

@@ -177,7 +177,11 @@ Each query and each value of $\alpha$ was run 200 times, after discarding a warm
 (SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results when compared to
 imputing on the base tables and executing the query on this cleaned base data.
 This measure indicates how much error is introduced by on-the-fly imputation compared to
-imputation on the base tables. In our case, the relevant comparison is against traditional
+imputation on the base tables. This comparison is the relevant one in practice --- an
+analyst would only be considering the trade-offs in imputation quality and time in the first
+place for dirty input data, for which ground truth is unavailable.
+
+In our case, the relevant comparison is against traditional
 imputation on the base table, given the unavailability of ground truth.
 
 For $\alpha=0$ and $\alpha=1$, we pair up tuples and compute SMAPE for all queries. That is,
