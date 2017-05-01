@@ -607,7 +607,7 @@ public class Parser {
             "insert", "delete", "values", "into" };
 
     public static void main(String argv[]) throws IOException {
-        if (argv.length < 1 || argv.length > 4) {
+        if (argv.length < 1 || argv.length > 7) {
             System.out.println("Invalid number of arguments.\n" + usage);
             System.exit(0);
         }
