@@ -18,8 +18,9 @@ public class Parser {
     	this.planFactory = planFactory;
     }
     
-    public Parser() {
-    	this(x -> new ImputedLogicalPlan(0.0));
+    public Parser(double alpha, boolean imputeAtBase) {
+        this(x -> new ImputedLogicalPlan(alpha, imputeAtBase));
+        System.out.println("==> Using parser with alpha=" + alpha + " impute at base=" + imputeAtBase);
     }
 
     public static Predicate.Op getOp(String s) throws simpledb.ParsingException {
@@ -611,12 +612,29 @@ public class Parser {
             System.exit(0);
         }
 
-        Parser p = new Parser();
 
-        p.start(argv);
+        List<String> cleanArgs = new ArrayList<>();
+        double alpha = 0.0;
+        boolean imputeAtBase = false;
+
+        for(int i = 0; i < argv.length; i++) {
+            String arg = argv[i];
+            if (arg.equals("--base")) {
+                imputeAtBase = true;
+            } else if (arg.equals("--alpha")) {
+                i++;
+                String alphaStr = argv[i];
+                alpha = Double.parseDouble(alphaStr);
+            } else {
+                cleanArgs.add(arg);
+            }
+        }
+
+        Parser p = new Parser(alpha, imputeAtBase);
+        p.start(cleanArgs.toArray(new String[0]));
     }
 
-    static final String usage = "Usage: parser catalogFile [-explain] [-f queryFile]";
+    static final String usage = "Usage: parser catalogFile [-explain] [-f queryFile] [--alpha <double>] [--base]";
 
     protected void shutdown() {
         System.out.println("Bye");
