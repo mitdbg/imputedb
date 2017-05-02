@@ -70,8 +70,8 @@ Note that \textsc{Dirty} over-approximates the set of attributes that contain \n
 
 \subsection{Cost model}
 \label{sec:cost-model}
-The cost of a plan $q$ is expressed as a tuple $\langle \textsc{Loss}(q), \textsc{Time}(q) \rangle$.
-$\textsc{Loss}(q) \in [0,1]$ is an estimate of the amount of information lost by the imputation procedures used.
+The cost of a plan $q$ is expressed as a tuple $\langle \textsc{Penalty}(q), \textsc{Time}(q) \rangle$.
+$\textsc{Penalty}(q) \in [0,1]$ is an estimate of the amount of information lost by the imputation procedures used.
 $\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
 
 \subsubsection{Pareto-optimal plans}
@@ -81,13 +81,13 @@ Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping 
 We say that a plan $p$ with cost $\langle l, t \rangle$ \emph{dominates} a plan $p'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(p) = \textsc{Dirty}(p') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{p}{p'}$. 
 \end{definition}
 
-This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of $\textsc{Time}$ and $\textsc{Loss}$ for the current query.
+This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of $\textsc{Time}$ and $\textsc{Penalty}$ for the current query.
 
-In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Loss}$ value that the user is willing
+In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Penalty}$ value that the user is willing
 to tolerate relative to the minimum possible amongst frontier plans.
 
 \begin{definition}
-Let $P$ be a set of plans. For $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Loss}(p) - \min_{p' \in P}(\textsc{Loss}(p')) \leq \alpha$. We denote this as $p^\alpha$.
+Let $P$ be a set of plans. For $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Penalty}(p) - \min_{p' \in P}(\textsc{Penalty}(p')) \leq \alpha$. We denote this as $p^\alpha$.
 We define the set of $\alpha$-bound plans in $P$ as $P^\alpha$.
 We say a plan $p^\alpha$ is $\alpha$-bound optimal if $\forall p' \in P^\alpha. \textsc{Time}(p) \leq \textsc{Time}(p')$. 
 \end{definition}
@@ -102,7 +102,7 @@ the expense of performance). If $\alpha = 1.0$, then the optimal query should ha
 fastest runtime (at the expense of quality).
 
 \subsubsection{Cardinality estimation}
-The computation of $\textsc{Time}(q)$ and $\textsc{Loss}(q)$ rely on having an accurate cardinality estimate of a query plan $q$ and its sub-plans.
+The computation of $\textsc{Time}(q)$ and $\textsc{Penalty}(q)$ rely on having an accurate cardinality estimate of a query plan $q$ and its sub-plans.
 These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational calculus, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 
@@ -113,7 +113,7 @@ For example it will redistribute the count of tuples with \nullv{} in an imputed
 \Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
 \subsubsection{Imputation quality}
-We use these histogram estimates to compute $\text{Loss}(Q)$, a measure averaged over imputation operations, as follows.
+We estimate the quality of the imputations in a plan $Q$ using a heuristic measure $\text{Penalty}(Q)$, which is computed as follows.
 
 \begin{align*}
   \textsc{L}(q) &= \begin{cases}
@@ -130,19 +130,16 @@ We use these histogram estimates to compute $\text{Loss}(Q)$, a measure averaged
     \textsc{N}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
     0 & q = \text{some table } t\\
   \end{cases}\\
-  \textsc{Loss}(q) &= \frac{\textsc{L}(q)}{\textsc{N}(q)}
+  \textsc{Penalty}(q) &= \frac{\textsc{L}(q)}{\textsc{N}(q)}
 \end{align*}
 
-Each imputation operator incurs a heuristic loss penalty. We define \textsc{Loss} as the average over the individual penalties incurred
-by $\mu,\delta$ operators. Our recursive definition of $L$ accumulates these penalties, and $N$ counts the number of imputation operations.
-For example, $\delta$ contributes a loss of 1 (i.e. we lose all information  that dropped tuples
-might have encoded). Meanwhile, imputing \nullv{} fields with $\mu$ incurs a loss penalty $p \in (0, 1]$. In this case, the penalty is
-inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as
-the product of the number of attributes and the number of tuples. Intuitively, imputation
-accuracy \textit{increases} when more complete attributes and complete tuples are available;
-correspondingly, the information lost \textit{decreases} with more values to work
-with. We encode the fact that the number of training observations has diminishing returns for imputation quality,
-and find that scaling the cell count by applying square root works well in practice.
+Each imputation operator incurs an individual penalty.
+We define \textsc{Penalty} as the average over the penalties incurred by the imputation operators. Our recursive definition of $L$ accumulates these penalties and $N$ counts the number of imputation operations.
+For example, $\delta$ contributes a penalty of 1 (i.e. we lose all information  that dropped tuples might have encoded).
+Imputing \nullv{} fields with $\mu$ incurs a penalty $p \in (0, 1]$.
+In this case, the penalty is inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as the product of the number of attributes and the number of tuples.
+Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the penalty \textit{decreases} with more values to work with.
+Scaling the cell count by applying square root incorporates the intuition that the number of training observations has diminishing returns for imputation quality and we find that it works well in practice.
 
 \subsubsection{Query runtime}
 To compute $\textsc{Time}(Q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard 
@@ -161,15 +158,16 @@ database.
 %\end{align*}
 
 Scan costs are estimated based on the number of tuples, 
-page size, and a unit-less I/O cost per page. Join costs are estimated as a function
+page size, and a unit-less I/O cost per page. 
+We assume that I/O costs dominate CPU costs for relational operators. 
+A database implementation for which this assumption is not true, i.e. an in memory database, will need a different cost model.
+Join costs are estimated as a function
 of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
 Filtering, projecting, and aggregating are all done in memory and have low computational overhead
 so we assume negligible time costs for those operations. 
 
 We extend these heuristics to 
-account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special case of a sequential scan, and its time
-complexity can be expressed as a function of the number of heap pages read and the I/O cost
-per page. The time computation for \textit{Impute} depends on the properties of the underlying
+account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special case of a filter, so its time complexity is correspondingly negligible. The time computation for \textit{Impute} depends on the properties of the underlying
 algorithm. \ProjectName{} treats the actual machine learning algorithm as a black box
 and simply queries it for a time estimate. In the implementation of our system,
 we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
@@ -231,8 +229,8 @@ cost and imputation quality. Details of the plan-cache semantics are shown in~\C
   \label{fig:semantics-plan-cache}
 \end{figure}
 
-The plan cache uses the partial order of plans defined by  $\langle \textsc{Dirty}, \textsc{Loss}, \textsc{Time} \rangle$ to
-collect sound and complete Pareto frontiers. For plans with the same dirty set, we can treat $\langle \textsc{Loss}, \textsc{Time} \rangle$
+The plan cache uses the partial order of plans defined by  $\langle \textsc{Dirty}, \textsc{Penalty}, \textsc{Time} \rangle$ to
+collect sound and complete Pareto frontiers. For plans with the same dirty set, we can treat $\langle \textsc{Penalty}, \textsc{Time} \rangle$
 as a total order, allowing us to appropriately select the frontier. Plans with different $\textsc{Dirty}$ sets cannot be compared. The final
 Pareto frontier produced by the optimizer corresponds to the collection of plans associated with the empty dirty set.
 
@@ -253,10 +251,6 @@ but rather than select the best plan at every point, we use our plan cache, whic
 The output of the join optimizer is the set of plans which satisfy all join predicates and lie along their respective frontier.
 
 \begin{algorithm}
-\input{algorithms/plan-helpers.tex}
-\end{algorithm}
-
-\begin{algorithm}
 \input{algorithms/plan-toplevel.tex}
 \end{algorithm}
 
@@ -273,7 +267,7 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 
 \ProjectName{} is designed so that any imputation strategy
 can be plugged in with minimal effort and without changes to the optimizer, simply by adding
-time and loss functions (\Cref{sec:cost-model}) which describe the new algorithm.
+time and penalty functions (\Cref{sec:cost-model}) which describe the new algorithm.
 For our purposes, an imputation strategy is a function $I(R, C) \rightarrow R'$ which fills in the missing
 attributes $C$ in a relation $R$, returning a new relation $R'$.
 The flexibility of this approach aligns with the spirit of query optimization, which aims to

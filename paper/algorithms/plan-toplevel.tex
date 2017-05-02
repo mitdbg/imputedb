@@ -1,34 +1,71 @@
-% \begin{algorithm}
+\newcommand{\InlineIte}[3]{#2\ \textbf{if}\ #1\ \textbf{else}\ #3}
+\renewcommand{\algorithmicindent}{1em}
+
 \begin{algorithmic}[1]
-  \Require{A set of tables $T$, a relation $F: T \times \Phi$ between tables and filter predicates, a relation $J : T \times \Psi \times T$ between tables and join predicates, a set of projection attributes $P$,  an optional set of grouping attributes $G$ and aggregator function $A$, and a parameter $\alpha \in [0, 1]$ that expresses the trade-off between performance and imputation quality.}
-  \Ensure{An optimized query plan.}
-  
-  \Function{Plan}{$T, F, J, P, G, A$}
-  \State $C_g \gets \bigcup_{\phi \in F} \Call{Attr}{\phi}$ \Comment{Collect relevant attributes.}~\label{lst:line:attr-start}
-  \State $C_g \gets (\bigcup_{\psi \in J} \Call{Attr}{\psi}) \cup P \cup G \cup \Call{Attr}{A} \cup C_g$ \label{lst:line:attr-end}
+    \Require{
+    \Statex
+    \begin{itemize}[leftmargin=*,noitemsep]
+    \item $q$: A query plan.
+    \item $C_l$: A set of attributes that must be imputed in the output of this query plan.
+    \item $C_g$: The set of attributes which are used in the final plan.
+    \end{itemize}}
+  \Function{Impute}{$q,\ C_l,\ C_g$}
+  \State $D_{must} \gets \Call{Dirty}{q} \cap C_l$
+  \State $D_{may} \gets D_{must} \cup (\Call{Dirty}{q} \cap C_g)$
+  \State $Q \gets (\InlineIte{D_{must} = \emptyset}{\{q\}}{\{\mu_{D_{must}}(q),\ \delta_{D_{must}}(q)\}})$
+  \State \Return $(\InlineIte{D_{may} = \emptyset}{Q}{Q \cup \{\mu_{D_{may}}(q), \delta_{D_{may}}(q) \}})$
+  \EndFunction
+
+  \Statex
+
+  \Require{
+    \Statex
+    \begin{itemize}[leftmargin=*,noitemsep]
+    \item $T$: A set of tables.
+    \item $F$: A $T \times \Phi$ relation between tables and filter predicates.
+    \item $J$: A $T \times \Psi \times T$ relation between tables and join predicates.
+    \item $P$: A set of projection attributes.
+    \item $G$: A set of grouping attributes.
+    \item $A$: An aggregation function.
+    \item $\alpha$: A parameter in $[0, 1]$ that expresses the trade-off between performance and imputation quality.
+    \end{itemize}}
+  \Function{Plan}{$T,\ F,\ J,\ P,\ G,\ A,\ \alpha$}
+  \State $C_g \gets \bigcup_{\psi \in J} \Call{Attr}{\psi}$ \Comment{Collect relevant attributes.}~\label{lst:line:attr-start} 
+  \State $C_g \gets C_g\ \cup\ \bigcup_{\phi \in F} \Call{Attr}{\phi}\ \cup\ P \cup\ G\ \cup\ \Call{Attr}{A}$~\label{lst:line:attr-end}
+  \Statex
   \State Let $Q$ be an empty plan cache.
   \For{$t \in T$} \Comment{Add selections to the plan cache.}
   \If {$\exists \phi: (t, \phi) \in F$}
-  \State $Q[\{t\}] \lhd \Call{OptFilter}{Q, t, \phi, C_g}$~\label{lst:line:sel}
-  \Else
-  \State $Q[\{t\}] \lhd \{t\}$~\label{lst:line:scan}
+  \State $Q[\{t\}] \lhd \{\sigma_{\phi}(q)\ |\ q \in \Call{Impute}{t, \Call{Attrs}{\phi}, C_g}\}$~\label{lst:line:sel}
+  \Else\ $Q[\{t\}] \lhd \{t\}$~\label{lst:line:scan}
   \EndIf
   \EndFor
-  
-  \State $\Call{OptJoin}{Q, T, J, C_g}$	\Comment{Optimize joins.}~\label{lst:line:join}
+  \Statex
+  \For{$size \in 2\dots|T|$} \Comment{Optimize joins.}~\label{lst:line:join}
+  \For{$S \in \{\text{all length}\ size\ \text{subsets of}\ T\}$}
+  \For{$t \in S$}
+  \For{$(t,\ \psi,\ t') \in J$ where $t' \in S \setminus t$}
+  \State $L \gets \{\Call{Impute}{q,\ \Call{Attrs}{\psi},\ C_g} ~|~ q \in Q[S \setminus t] \}$
+  \State $R \gets \{\Call{Impute}{q,\ \Call{Attrs}{\psi},\ C_g} ~|~ q \in Q[\{t\}] \}$
+  \State $Q[S] \lhd \{l \bowtie_\psi r ~|~ l \in L,\ r \in R\}$
+  \EndFor
+  \EndFor
+  \EndFor
+  \EndFor
+  \Statex
   \State $B \gets Q[T]$ \Comment{Get the best plans for all tables.}
   \If{$G \neq \emptyset$} \Comment{Add optional group \& aggregate.}~\label{lst:line:group}
-  \State $B \gets \bigcup_{q \in B} \Call{OptGroupBy}{q, G, A, C_g}$
+  \State $C_l \gets G \cup \Call{Attrs}{A}$
+  \State $B \gets \bigcup_{q \in B} \{g(q', G, A) ~|~ q' \in \Call{Impute}{q, C_l,\ C_g}\}$
   \EndIf
   
-  \State $B \gets \bigcup_{q \in B} \Call{OptProject}{q, P}$ \Comment{Add projections.}
+  \State $B \gets \bigcup_{q \in B} \{\pi_P(q') ~|~ q' \in \Call{Impute}{q,\ P,\ P}\}$ \Comment{Add projections.}
   \State \Return $p \in B$ s.t. $p$ is $\alpha$-bound optimal.
   \EndFunction
   
 \end{algorithmic}
-\caption{Top-level query planner with imputations.}
+\caption{A query planner with imputations.}
 \label{algo:top-level-planner}
-% \end{algorithm}
 
 %%% Local Variables:
 %%% mode: latex

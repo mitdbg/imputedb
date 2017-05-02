@@ -1,5 +1,4 @@
-\documentclass[draft,12pt]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass{vldb}
 \usepackage{xcolor}
 \newcommand{\resp}[1]{{\color{blue}{#1}}}
 
@@ -22,7 +21,9 @@
   
 \resp{We skipped unions for brevity. There is nothing fundamental about our algorithm which makes unions difficult to implement.}
 
-\item - S3.4.1, Definition 2: On my first read-through, I was puzzled about why there was no plan with zero-loss. It would help to clarify that Loss is not about tuple loss, but rather a heuristic penalty function. 
+\item - S3.4.1, Definition 2: On my first read-through, I was puzzled about why there was no plan with zero-loss. It would help to clarify that Loss is not about tuple loss, but rather a heuristic penalty function.
+
+  \resp{We have clarified this in the paper.}
 
 \item - S3.4.3: An extremely nice emergent property from the L-value function for the imputation operator seems to be that the operator will be moved to a position in the plan where it has access to the maximum training data. I am slightly concerned that by focusing entirely on size, this might lead to skew in the training set. For example, consider a one-to-many join \verb/µ(R) |X| S/. Your optimization algorithm would likely wish to move imputation up: \verb/µ(R |X| S)/. Yes, there is more training data, but if the fanout for each tuple is skewed, some tuples in R will become over-represented in the join result. A similar observation holds for selection. For example take your Q8, where the conditions "studentdebtowe $>$ 0 AND schooldegree $\geq$ 0" presumably indicate invalid data that should not be used for training. (is this perhaps why you have so much error for full imputation on Q8?)
 
@@ -30,9 +31,11 @@
 
 \item - S3.4.4: It appears that Time() assumes that plans are IO-bound. This is a perfectly reasonable assumption, but should be stated explicitly, as datasets that fit in memory will require a different cost model.
 
-  \resp{Agreed. Our database stores tables in files, so our plans are I/O bound, but a database which uses an in-memory representation will need a different Time() function.}
+  \resp{Agreed. Our database stores tables in files, so our plans are I/O bound, but a database which uses an in-memory representation will need a different Time() function. We have clarified this in the paper.}
 
 \item - S3.4.4: "Drop is a special case of a sequential scan, and its time complexity can be expressed as a function of the number of heap pages read and the I/O cost per page." seems to suggest that drop is implemented as a blocking operator. Why not just take the same approach as selection and treat it as having negligible cost?
+
+  \resp{This was an error in the paper. In the implementation, we do treat Drop as taking negligible time.}
 
 \item - S4: All of the workload queries are (data-size-independent) AVG queries. What about other types of aggregates (e.g., SUM, COUNT)?
 
