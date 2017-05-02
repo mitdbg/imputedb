@@ -1,6 +1,8 @@
 \documentclass{vldb}
 \usepackage{xcolor}
 \newcommand{\resp}[1]{{\color{blue}{#1}}}
+\newcommand{\todo}[1]{{\color{red}{\textit{#1}}}}
+\newcommand{\ProjectName}[0]{ImputeDB}
 
 \begin{document}
 \section{Reviewer 1}
@@ -10,6 +12,14 @@
 \item W2. The paper completely obscures the ML technique being used: (1) It would be nice to have some discussion of the complete API for implementing an ML technique, as well as how one might implement a cost-estimator for one or two examples. (2) It would be helpful to see the impact of a few different approaches (e.g., Tree-based, Interpolation, Regression, FD-based) on performance and accuracy. (3) Given that the ML time estimator is being treated as a black box, it would be useful to see how sensitive the plan selector is to inaccurate estimates.
 
 \item W3. Reducing runtime to ~10s is excellent, but comes at a very serious accuracy cost (3-5x worse SMAPE). Worse still, there's no way for the user to differentiate between the cases of Q4 and Q8 at runtime. 24\% error relative to direct imputation is huge.
+\resp{
+The outsized error in Q8 is a result of a drop operator placed very early on in the plan (a result of optimizing for performance). This produced significantly smaller sample sizes for various
+groups, which skewed the average calculation for each group significantly. For example, the average student debt for subjects with no high school degree was almost 83\% off from the estimate
+using the base table imputation, but if we look at the underlying population the former was calculated with 6 people, while the latter was with 258 people.
+\todo{We have extended ImputeDB to provide users with a estimate of the number of tuples dropped in a calculation due to nulls, which may be indicative of the underlying error or skew
+in the results presented. This is a simple heuristic but we find that it would have provided appropriate warning in cases such as Q8.}
+}
+
 
 \item - Although it doesn't consider cost or the drop operator, a similar technique appears in Yang et. al. "Lenses: An On-Demand Approach to ETL." A comparison would be nice.
 
@@ -25,21 +35,45 @@
 
   \resp{We have clarified this in the paper.}
 
+\resp{We emphasize that \textit{Loss} is not a loss in the statistical sense or in the tuple loss sense by renaming it to \textit{Penalty}.}
+
 \item - S3.4.3: An extremely nice emergent property from the L-value function for the imputation operator seems to be that the operator will be moved to a position in the plan where it has access to the maximum training data. I am slightly concerned that by focusing entirely on size, this might lead to skew in the training set. For example, consider a one-to-many join \verb/µ(R) |X| S/. Your optimization algorithm would likely wish to move imputation up: \verb/µ(R |X| S)/. Yes, there is more training data, but if the fanout for each tuple is skewed, some tuples in R will become over-represented in the join result. A similar observation holds for selection. For example take your Q8, where the conditions "studentdebtowe $>$ 0 AND schooldegree $\geq$ 0" presumably indicate invalid data that should not be used for training. (is this perhaps why you have so much error for full imputation on Q8?)
 
-  % \resp{This is a reasonable concern. Optimizing for the maximum training set is flawed when the training data is skewed. We think that this problem is avoidable with a minor tweak to the loss function. Instead of optimizing for a large training set, we can optimize for a \emph{diverse} training set by tracking the 
+  % \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the training data is skewed. We think that this problem is avoidable with a minor tweak to the loss function. Instead of optimizing for a large training set, we can optimize for a \emph{diverse} training set by tracking the 
+% TODO also add an explanation of the coding of schooldegree -- and why it is filter >= 0,
+    % which seems unreasonable to an observer.
 
 \item - S3.4.4: It appears that Time() assumes that plans are IO-bound. This is a perfectly reasonable assumption, but should be stated explicitly, as datasets that fit in memory will require a different cost model.
 
   \resp{Agreed. Our database stores tables in files, so our plans are I/O bound, but a database which uses an in-memory representation will need a different Time() function. We have clarified this in the paper.}
 
 \item - S3.4.4: "Drop is a special case of a sequential scan, and its time complexity can be expressed as a function of the number of heap pages read and the I/O cost per page." seems to suggest that drop is implemented as a blocking operator. Why not just take the same approach as selection and treat it as having negligible cost?
+    \resp{We mistakenly suggest in S3 that we treat \textit{Drop} as a blocking operator. In
+        our implementation, we do endow it with $0$ cost, and we have updated the text to
+        reflect that.}
 
   \resp{This was an error in the paper. In the implementation, we do treat Drop as taking negligible time.}
 
 \item - S4: All of the workload queries are (data-size-independent) AVG queries. What about other types of aggregates (e.g., SUM, COUNT)?
 
+    \resp{Though we do not show this explicitly, we repeat all of the queries using COUNT
+        aggregates in order to compute the ``Count Fraction''. The timing results are
+        clearly identical in this case and the number of tuples returned can be seen
+        directly in Table 4.}
+    \todo{For SUM queries, that may depend more directly on the number of rows returned than the
+        quality of imputations for any individual row, the effect of different COUNT results
+        dominates the computation AVG*COUNT. How do we handle this?}
+
 \item - S4.4.1: Imputation over the raw data is being used as ground truth. Is there any reason to suspect that this is the correct thing to do? Perhaps joining multiple tables together exposes new attributes that makes imputation *more* reliable? At the very least, it would be useful to understand why there is so much error in $\alpha=0$ on Q2 and Q8.
+
+    \resp{For our purposes, imputation over the raw data is a reasonable ground truth. This
+        is because the analyst, in practice, should be considering the tradeoffs on quality
+        and performance of using ImputeDB versus a production imputation system on the raw
+        data. Unfortunately, they would never have access to a real ground truth in such a
+        scenario, and moreover, finding ground truth for use even in an empirical evaluation
+        of imputation methods can be challenging because artificially dirtying the data
+        often does not capture the complex reasons for missingness in real world datasets.
+        We update the discussion in S4.4.1 to emphasize this point.}
 
 \item - There are a number of opportunities for trimming in the figures, tables, and algorithms: Algorithms 1-3 could be compacted a bunch, Table 1 is full of whitespace (e.g., make it a 3-column {figure*}), Tables 1-2 could also be summarized as CDFs, Figure 6 is full of whitespace, Table 3 could be put queries on a single row (e.g., Q1 would easily fit on 1 line), and the references have a lot of redundant information (URLs, for example). 
 
@@ -87,7 +121,11 @@
 -- Why use simplified cost formulas for the traditional relational operators and not existing systems' formulas?
 -- It would be great (but not necessary of course) to add your techniques in an existing DBMS, such as Postgres to see the impact on a real system in your experiments.
 
-\resp{Existing systems have very complex formulas for estimating query costs. We felt that the overhead of reimplementing an existing cost model would not be worth the benefit.}
+\resp{
+Existing systems have very complex formulas for estimating query costs. We felt that the overhead of reimplementing an existing cost model would not be worth the benefit.
+However, we added a new section that discusses in detail the main components for \ProjectName{}, so that developers of existing systems can use this as a roadmap
+for implementation.
+}
 
 \item D3. Is there any way for the user to know what error to expect based on the $\alpha$ value? Moreover, is its value somehow proportional to the error (e.g., $\alpha=0.5$ would give roughly double the error of $\alpha=0.25$)? Or should the user simply try multiple execution with different values of $\alpha$ until the desired results are given?
 

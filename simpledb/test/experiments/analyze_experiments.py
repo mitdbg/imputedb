@@ -125,13 +125,22 @@ def get_smape(refs, results):
     metrics = np.array(metrics)
     return np.nanmean(metrics), np.nanstd(metrics)
 
-def get_timing_results(experiments_dir, restrict_alpha=False, base=False):
-    df = pd.DataFrame(columns=["query","alpha","iter","plan_time","run_time","plan_hash"])
+def get_timing_results(experiments_dir, restrict_alpha=False, base=False, joins=False):
+    assert(not (joins and base))
+    columns=["query","alpha","iter","plan_time","run_time","plan_hash"]
+    if joins:
+      columns.append("njoins")
+
+    df = pd.DataFrame(columns=columns)
 
     # Impute on base stored in base/ subdirectory, buth with same subdirectory
     # structure.
     if base:
         experiments_dir = os.path.join(experiments_dir, "base")
+
+    if joins:
+        # wildcard for number of tables used in join
+        experiments_dir = os.path.join(experiments_dir, "*")
 
     if restrict_alpha:
         globs = glob.glob(experiments_dir + os.path.sep + "q*/alpha000/timing.csv") + \
@@ -143,6 +152,10 @@ def get_timing_results(experiments_dir, restrict_alpha=False, base=False):
     for f in globs:
         print('Processing {}...'.format(f))
         df0 = pd.read_csv(f)
+        if joins:
+          # get number of joins
+          njoins = int(f.split(os.path.sep)[-4])
+          df0['njoins'] = njoins
         df = df.append(df0)
 
     return df
@@ -298,13 +311,33 @@ def write_perf_summary(experiments_dir, output_dir):
     perf_summary_latex.to_latex(os.path.join(output_dir, 'perf_summary.tex'),
             float_format='%.2f', index=False)
 
+
+def analyze_join_planning(experiment_dir, output_dir):
+  if not os.path.isdir(output_dir):
+      os.makedirs(output_dir)
+  # time data
+  data = get_timing_results(experiment_dir, joins=True)
+  # drop warmup iterations
+  data = drop_warmup(data, ['njoins', 'query', 'alpha'], drop=10)
+  # average planning time and se by number of joins and alpha
+  planning_summary = data.groupby(['njoins', 'alpha'])['plan_time'].agg({'mean': np.mean, 'std': np.std}).reset_index()
+  planning_summary_latex = planning_summary.copy()
+  planning_summary_latex = planning_summary_latex[['njoins', 'alpha', 'mean', 'std']]
+  planning_summary_latex = planning_summary_latex.rename(columns={'njoins': '# of Joins', 'alpha': r'\alpha', 'mean': 'Avg (ms)', 'std': 'SE'})
+  planning_summary_latex.to_latex(os.path.join(output_dir, 'plan_summary.tex'), index=False, float_format='%.2f')
+
+
+
 if __name__ == "__main__":
     def print_usage_and_exit():
-        print("usage: python analyze_experiments.py <experiment-output-dir>")
+        print("usage: python analyze_experiments.py <experiment-output-dir> [--joins]")
         sys.exit(1)
 
     if len(sys.argv) == 2:
         experiment_dir = sys.argv[1]
         main(experiment_dir, os.path.join(experiment_dir, "analysis"))
+    elif len(sys.argv) == 3 and sys.argv[2] == '--joins':
+        experiment_dir = sys.argv[1]
+        analyze_join_planning(experiment_dir, os.path.join(experiment_dir, "analysis"))
     else:
         print_usage_and_exit()

@@ -29,13 +29,14 @@ public class ExperimentRunner {
     private final Path catalogPath;
     private final Path queriesPath;
     private final Path outputBaseDir;
+    private final boolean planOnly;
     private FileWriter timesFileWriter;
     private FileWriter resultsFileWriter;
     private FileWriter plansFileWriter;
     private String[] queries;
 
     private ExperimentRunner(boolean imputeAtBase, double minAlpha, double maxAlpha, double step, int iters,
-        String catalog, String queries, String outputBaseDir)
+        String catalog, String queries, String outputBaseDir, boolean planOnly)
             throws IOException {
         this.imputeAtBase = imputeAtBase;
         this.minAlpha = minAlpha;
@@ -49,17 +50,18 @@ public class ExperimentRunner {
         } else {
             this.outputBaseDir = Paths.get(outputBaseDir);
         }
+        this.planOnly = planOnly;
     }
 
     public ExperimentRunner(int iters, String catalog, String queries, String outputDir)
             throws IOException {
-        this(true, 0.0, 0.0, 1.0, iters, catalog, queries, outputDir);
+        this(true, 0.0, 0.0, 1.0, iters, catalog, queries, outputDir, false);
     }
 
     public ExperimentRunner(double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries,
-        String outputDir)
+        String outputDir, boolean planOnly)
             throws IOException {
-        this(false, minAlpha, maxAlpha, step, iters, catalog, queries, outputDir);
+        this(false, minAlpha, maxAlpha, step, iters, catalog, queries, outputDir, planOnly);
     }
 
     private void init() throws IOException {
@@ -130,13 +132,16 @@ public class ExperimentRunner {
         // time running
         StringBuilder results = new StringBuilder();
         Instant runStart = Instant.now();
-        imputed.open();
-        while (imputed.hasNext()) {
-            try {
-                results.append(imputed.next().toString());
-                results.append("\n");
-            } catch(NoSuchElementException e) {
-                e.printStackTrace();
+        // some queries we only want to time the planning phase
+        if (!planOnly) {
+            imputed.open();
+            while (imputed.hasNext()) {
+                try {
+                    results.append(imputed.next().toString());
+                    results.append("\n");
+                } catch (NoSuchElementException e) {
+                    e.printStackTrace();
+                }
             }
         }
         Instant runEnd = Instant.now();
