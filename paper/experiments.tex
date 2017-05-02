@@ -35,28 +35,23 @@ We focus on a subset of the attributes for each table to simplify the presentati
 \Cref{table:nhanes-description} shows the attributes selected, along with the percentage of \nullv{} values for each attribute.
 For readability, we have replaced the NHANES attribute names with self-explanatory attribute names.
 
-\begin{table}
+\begin{table*}
   \centering
-  \begin{subtable}{0.5\textwidth}
+  \begin{subtable}{0.3\textwidth}
     \centering
     \input{tables/cdc_demo}
     \caption{Demographics (\texttt{demo}). \demorows{} rows.}
-  \end{subtable}
-  \par\medskip
-  \begin{subtable}{0.5\textwidth}
+  \end{subtable}\quad\begin{subtable}{0.3\textwidth}
     \centering
     \input{tables/cdc_labs}
     \caption{Laboratory Results (\texttt{labs}). \labexrows{} rows.}
-  \end{subtable}
-  \par\medskip  
-  \begin{subtable}{0.5\textwidth}
+  \end{subtable}\quad\begin{subtable}{0.3\textwidth}
     \centering
     \input{tables/cdc_exams}
     \caption{Physical Results (\texttt{exams}). \labexrows{} rows.}
   \end{subtable}
-  \par\medskip  
-  \caption{Missing value distribution for each table/attribute in CDC NHANES 2013--2014 data.}\label{table:nhanes-description} 
-\end{table}
+  \caption{Percentage of values missing in the CDC NHANES 2013--2014 data.}\label{table:nhanes-description} 
+\end{table*}
 
 \subsubsection{freeCodeCamp 2016 New Coder Survey}
 For our second set of experiments, we use data collected by freeCodeCamp, an open-source
@@ -78,7 +73,7 @@ with the percentage of missing values.
 \begin{table}
   \centering
   \input{tables/fcc}
-  \caption{Missing value distribution for each attribute in freeCodeCamp Survey Data (\texttt{fcc})}\label{table:fcc-description} 
+  \caption{Percentage of values missing in the freeCodeCamp Survey data (\texttt{fcc}).}\label{table:fcc-description} 
 \end{table}
 
 \subsubsection{American Community Survey}
