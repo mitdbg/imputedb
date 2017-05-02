@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from generate_big_joins import create_join_workload
 import os
 import subprocess
 import tempfile
@@ -89,6 +90,37 @@ def run_acs_experiment():
 
     os.close(f)
 
+def run_join_experiments():
+    join_output_dir = os.path.join(output_dir, "joins")
+
+    iters     = 20
+    min_alpha = 0.00
+    max_alpha = 1.00
+    step      = 1.00
+    # parameters specific to join workload
+    # number of queries to generate and evaluate per size of join
+    nqueries   = 5
+    # minimum number of joins
+    min_njoins = 2
+    # maximum number of joins
+    max_njoins = 8
+
+    # evaluate each size of join separately
+    for njoins in range(min_njoins, max_njoins + 1):
+      print("Running join experiments. N-joins %d" % njoins)
+      # create sub directory for each size of joins
+      this_output_dir = os.path.join(join_output_dir, str(njoins))
+      # create workload, written out to base directory
+      workload = create_join_workload(njoins, nqueries)
+      # local file with queries
+      queries = "joins_n%d_queries.txt" % njoins
+      with open(queries, 'w') as f:
+        f.write(workload)
+
+      # execute this size of n joins
+      run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries = queries)
+
+
 def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
         queries=None, executable=None):
     if not os.path.isdir(this_output_dir):
@@ -130,6 +162,8 @@ if __name__ == "__main__":
         run_alt_experiment()
     elif experiment_size == "acs":
         run_acs_experiment()
+    elif experiment_size == "joins":
+        run_join_experiments()
     else:
         raise Error
 
