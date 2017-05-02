@@ -118,7 +118,7 @@ public class SimpleDb {
 
 		} else if (args[0].equals("experiment")) {
 			if (args.length < 6) {
-				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> <minAlpha> <maxAlpha> <step>");
+				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> <minAlpha> <maxAlpha> <step> [--planOnly]");
 				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> --base");
 				System.exit(1);
 			}
@@ -135,7 +135,11 @@ public class SimpleDb {
 				double minAlpha = Double.parseDouble(args[5]);
 				double maxAlpha = Double.parseDouble(args[6]);
 				double step = Double.parseDouble(args[7]);
-				runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters, catalog, queries, outputDir);
+				boolean planOnly = false;
+				if (args.length == 9) {
+					planOnly = args[8].equalsIgnoreCase("--planOnly");
+				}
+				runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters, catalog, queries, outputDir, planOnly);
 			}
 			try {
 				runner.runExperiments();

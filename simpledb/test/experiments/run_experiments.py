@@ -118,11 +118,11 @@ def run_join_experiments():
         f.write(workload)
 
       # execute this size of n joins
-      run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries = queries)
+      run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries = queries, plan_only = True)
 
 
 def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
-        queries=None, executable=None):
+        queries=None, executable=None, plan_only=False):
     if not os.path.isdir(this_output_dir):
         os.makedirs(this_output_dir)
 
@@ -138,12 +138,11 @@ def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
     # Timing using ImputeDB
     subprocess.call(executable +
         ["experiment", catalog, queries, this_output_dir,
-         str(iters), str(min_alpha), str(max_alpha), str(step)])
+         str(iters), str(min_alpha), str(max_alpha), str(step)] + (['--planOnly'] if plan_only else []))
 
     # Timing using impute on base table
-    subprocess.call(executable +
-        ["experiment", catalog, queries, this_output_dir,
-         str(iters), "--base"])
+    if not plan_only:
+      subprocess.call(executable + ["experiment", catalog, queries, this_output_dir, str(iters), "--base"])
 
 if __name__ == "__main__":
     import sys
