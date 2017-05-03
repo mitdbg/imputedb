@@ -381,6 +381,25 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		ImputedPlanCache cache = makeCache();
 		
 		optimizeFilters(tid, cache, globalRequired);
+
+		// if the number of tables used in attributes is large
+		// planning times can blow up, so check set of tables and switch to approximate caches
+		// if it is above 6 (empirically decided)
+		// this set could be refined further to only consider dirty attributes in the base tables
+		// but this requires getting base table states from qualified names that use table alias
+		// rather than table name, which is what is found in the table stats map...
+		Set<String> tablesImputed = new HashSet<String>();
+		for(QualifiedName col : globalRequired) {
+			tablesImputed.add(col.tableAlias);
+		}
+
+		if (tablesImputed.size() >= 7) {
+			// use approximate pareto set for large number of joins
+			// with imputation scatter across the tables
+			System.out.println("Using approximate pareto sets");
+			cache.setApproximate();
+		}
+
 		optimizeJoins(tid, cache, globalRequired);
 
 		final Set<String> allTables = new HashSet<>();

@@ -50,6 +50,7 @@ public abstract class AImputedPlanCache implements ImputedPlanCache {
 		public final ImputedPlan plan;
 		public final Set<LogicalJoinNode> joins;
 
+
 		public Value(ImputedPlan plan, Set<LogicalJoinNode> joins) {
 			this.plan = plan;
 			this.joins = joins;
@@ -63,6 +64,12 @@ public abstract class AImputedPlanCache implements ImputedPlanCache {
 			return plan.loss().get() <= o.plan.loss().get() && plan.time() <= o.plan.time();
 		}
 
+		public boolean isApproximate(Value o) {
+			double lossRatio = o.plan.loss().get() / plan.loss().get();
+			double timeRatio = o.plan.time() / plan.time();
+			return lossRatio >= 0.95 && lossRatio <= 1.05 && timeRatio >= 0.5 && timeRatio <= 1.5;
+		}
+
 		@Override
 		public int compareTo(Value o) {
 			int lcmp = Double.compare(plan.loss().get(), o.plan.loss().get());
@@ -72,9 +79,16 @@ public abstract class AImputedPlanCache implements ImputedPlanCache {
 	}
 
 	protected final HashMap<Key, TreeSet<Value>> bestPlans;
+	// true if plan cache maintains only an approximation of set of plans
+	protected boolean approximate = false;
+
 
 	public AImputedPlanCache() {
 		bestPlans = new HashMap<>();
+	}
+
+	public void setApproximate() {
+		this.approximate = true;
 	}
 
 	/* (non-Javadoc)
