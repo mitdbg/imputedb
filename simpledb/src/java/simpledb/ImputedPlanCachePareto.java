@@ -5,7 +5,7 @@ import java.util.*;
  * Keeps information on the best plan that includes a given set of tables and has a given set of dirty attributes
  * Insertions into the cache are handled directly to only overwrite if of lower cost.
  */
-public class ImputedPlanCachePareto extends AImputedPlanCache {	
+public class ImputedPlanCachePareto extends AImputedPlanCache {
     public ImputedPlanCachePareto() {
         super();
     }
@@ -30,17 +30,23 @@ public class ImputedPlanCachePareto extends AImputedPlanCache {
         Value newPlan = new Value(newPlanIP, joins);
         if (bestPlans.containsKey(key)) {
         	SortedSet<Value> plans = bestPlans.get(key);
-        	
+            boolean canBeApproximated = false;
+
         	// Find dominating plans.
         	for (Value plan : plans) {
         		// Found a dominating plan.
         		if (plan.dominates(newPlan)) { return; }
+                canBeApproximated = canBeApproximated || plan.isApproximate(newPlan);
         	}
         	
         	// Remove dominated plans.
         	plans.removeIf(plan -> newPlan.dominates(plan));
 
-        	plans.add(newPlan);
+            if (!this.approximate || !canBeApproximated) {
+                // add any non-dominated plans if this is not an approximate cache
+                // or only add plans that can not be approximated, if we are an approximate cache
+                plans.add(newPlan);
+            }
         } else {
         	// always insert if we don't have any info on this key combo
         	TreeSet<Value> plans = new TreeSet<>();
