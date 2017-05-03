@@ -235,7 +235,7 @@ as a total order, allowing us to appropriately select the frontier. Plans with d
 Pareto frontier produced by the optimizer corresponds to the collection of plans associated with the empty dirty set.
 
 \subsubsection{Planning algorithm}
-The planner (\Cref{algo:top-level-planner}, with helper functions in \Cref{algo:plan-helpers}) operates as follows.
+The planner (\Cref{algo:top-level-planner}) operates as follows.
 First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}--\Cref{lst:line:attr-end}).
 This set will be used to determine which attributes are imputed.
 Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
