@@ -319,11 +319,12 @@ def analyze_join_planning(experiment_dir, output_dir):
   data = get_timing_results(experiment_dir, joins=True)
   # drop warmup iterations
   data = drop_warmup(data, ['njoins', 'query', 'alpha'], drop=10)
-  # average planning time and se by number of joins and alpha
-  planning_summary = data.groupby(['njoins', 'alpha'])['plan_time'].agg({'mean': np.mean, 'std': np.std}).reset_index()
+  # average planning time and se by number of joins
+  # alpha doesn't have a real impact on the planning time (as we would expect), so don't aggregate with it
+  planning_summary = data.groupby('njoins')['plan_time'].agg({'mean': np.mean, 'std': np.std}).reset_index()
   planning_summary_latex = planning_summary.copy()
-  planning_summary_latex = planning_summary_latex[['njoins', 'alpha', 'mean', 'std']]
-  planning_summary_latex = planning_summary_latex.rename(columns={'njoins': '# of Joins', 'alpha': r'\alpha', 'mean': 'Avg (ms)', 'std': 'SE'})
+  planning_summary_latex = planning_summary_latex[['njoins', 'mean', 'std']]
+  planning_summary_latex = planning_summary_latex.rename(columns={'njoins': '# of Joins', 'mean': 'Avg (ms)', 'std': 'SE'})
   planning_summary_latex.to_latex(os.path.join(output_dir, 'plan_summary.tex'), index=False, float_format='%.2f')
 
 
