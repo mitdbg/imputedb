@@ -41,7 +41,8 @@ GROUP BY demo.income
 \end{figure}
 
 \begin{figure}
-  \Tree
+  \begin{subfigure}{\columnwidth}
+    \Tree
   [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
     [.$g_{\text{income, AVG(white\_blood\_cell\_ct)}}$
       [.\colorbox{pink}{$\mu_{\text{demo.income}}$}
@@ -59,9 +60,25 @@ GROUP BY demo.income
     ] 
   ] 
   ]
-\vspace{0.5\baselineskip}
-\caption{A quality-optimized plan for the query in~\Cref{fig:example-query}. The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate, $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
+  \caption{A quality-optimized plan for the query in~\Cref{fig:example-query}.}
 \label{fig:quality-plan}
+\end{subfigure}
+  \begin{subfigure}{\columnwidth}
+\vspace{1em}
+\Tree
+  [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
+    [.$g_{\text{income, AVG(white\_blood\_cell\_ct)}}$
+      [.\colorbox{pink}{$\delta_{\text{demo.income, labs.white\_blood\_cell\_ct}}$}
+        [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
+          [.$\bowtie_{\text{demo.id} = \text{exams.id}}$
+            [.$\sigma_{\text{demo.gender} = 2}$ demo ]
+            [.$\sigma_{\text{exams.weight} \geq 120}$ [.\colorbox{pink}{$\delta_{\text{exams.weight}}$} exams ] ] ] labs ] ] ] ]
+\caption{A performance-optimized plan for the query in~\Cref{fig:example-query}.}
+\label{fig:fast-plan}
+\end{subfigure}
+\vspace{1em}
+
+\caption{The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate, $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}). The imputation operators are highlighted.}
 \end{figure}
 
 \subsection{Planning with \ProjectName{}}
@@ -83,21 +100,6 @@ However, it is a significant improvement over dropping all tuples with missing d
 imputation on the necessary data yields a query that is much faster
 than performing imputation on the whole dataset and then executing
 the query.
-
-
-
-\begin{figure}
-\Tree
-  [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
-    [.$g_{\text{income, AVG(white\_blood\_cell\_ct)}}$
-      [.\colorbox{pink}{$\delta_{\text{demo.income, labs.white\_blood\_cell\_ct}}$}
-        [.$\bowtie_{\text{exams.id} = \text{labs.id}}$
-          [.$\bowtie_{\text{demo.id} = \text{exams.id}}$
-            [.$\sigma_{\text{demo.gender} = 2}$ demo ]
-            [.$\sigma_{\text{exams.weight} \geq 120}$ [.\colorbox{pink}{$\delta_{\text{exams.weight}}$} exams ] ] ] labs ] ] ] ]
-\caption{A performance-optimized plan for the query in~\Cref{fig:example-query}.The operators $\sigma$, $\pi$, $\bowtie$, and $g$ are the standard relational selection, projection, join, and group-by/aggregate, $\mu$ and $\delta$ are specialized imputation operators (\Cref{sec:operators}).}
-\label{fig:fast-plan}
-\end{figure}
 
 \subsection{\ProjectName{} Workflow}
 Now that the epidemiologist has \ProjectName{}, she can explore
