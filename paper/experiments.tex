@@ -230,6 +230,25 @@ For every imputation inserted into the query plan, a new statistical model is in
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
 
+\subsubsection{Planning times}
+\begin{table}
+\centering
+\input{tables/planning_summary_exact_pareto.tex}
+\caption{Planning times are sub-second for up to 4 joins. For 5+  joins planning times rise. Many practical queries
+can be formulated with a smaller number of joins, but to support more complex queries \ProjectName{} provides an
+optimization that maintains approximate Pareto sets for queries with many joins. This reduces planning time
+for queries with 7 joins by approximately 45\%, on average.}
+\label{table:planning-times}
+\end{table}
+
+We explored the practical implications of our planning algorithm by constructing a series of queries with increasing number of joins.
+We used the CDC tables and evaluated a combination of self-joins and joins across reference tables. Planning times for queries
+involving 1 to 5 joins, which although limited is a practical value for real world exploratory queries, take less than a second.
+For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
+the plan space by maintaining only approximations of the Pareto set for queries involving a large number of joins.
+With this optimization, the same set of queries have an average planning time of 16 seconds (2 seconds SE).
+
+
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
 %%% Local Variables:

@@ -386,7 +386,11 @@ Finally, we note that for the queries we have examined, this exponential blowup 
 Recall that the planner maintains different plans for different dirty sets, keeping only those plans that are not dominated by others.
 So in many cases we can drop some of the intermediate plans generated at each operator.
 The worst case complexity only occurs if the dirty sets tracked are distinct through the entire planning phase.
-Planning times are discussed in \Cref{sec:results}.
+
+In order to support a large number of joins, with reasonable planning times, \ProjectName{} can maintain approximations of the Pareto sets,
+rather than exact sets. To do so, dominated plans are still removed based on new non-dominated plans, but new plans are only added
+if they are significantly different from any existing plan in the set. The distance between plans is determined based on the cost penalty and time
+values associated with a plan.  Planning times are discussed further in \Cref{sec:results}.
 
 %%% Local Variables:
 %%% mode: latex

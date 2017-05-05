@@ -156,6 +156,12 @@ for implementation.
 -- Try different values for $\alpha$ (not just 0 and 1).
 -- Show runtime of enumeration algorithm as queries get more complex.
 
+\resp{We explored the planning times for queries with increasing number of joins. The standard algorithm presented in the original version submitted handles
+up to 5 joins, with columns requiring imputation in all tables, with planning time of approximately one second. We added a small optimization to help reduce
+planning times for a larger number of joins. We maintain an approximation of the Pareto sets, rather than the exact set, by only adding non-dominated plans that
+are sufficiently different. This helps reduce some of the increases in planning time for a larger number of joins.}
+
+
 \item D10. The scenario you are considering, with multiple queries during exploration, begs for reuse of previous query results, as you also mention in the future work section.
 
 \item D11. Less important points:
