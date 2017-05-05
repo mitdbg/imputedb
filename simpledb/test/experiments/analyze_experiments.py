@@ -154,8 +154,8 @@ def get_timing_results(experiments_dir, restrict_alpha=False, base=False, joins=
         df0 = pd.read_csv(f)
         if joins:
           # get number of joins
-          njoins = int(f.split(os.path.sep)[-4])
-          df0['njoins'] = njoins
+          ntables = int(f.split(os.path.sep)[-4])
+          df0['njoins'] = ntables - 1
         df = df.append(df0)
 
     return df

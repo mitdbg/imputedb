@@ -20,12 +20,12 @@ def join_query(tables):
 def self_join(tbl, n):
   return join_query([tbl] * n)
 
-def create_join_workload(n_joins, n_queries):
+def create_join_workload(n_tables, n_queries):
   random.seed(1)
   workload = []
   # self joins of the given size
   for table in tables:
-    workload.append(self_join(table, n_joins))
+    workload.append(self_join(table, n_tables))
 
   # random joins of given size
   n_queries -= len(workload)
