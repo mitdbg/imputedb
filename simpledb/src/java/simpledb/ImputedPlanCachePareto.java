@@ -72,7 +72,8 @@ public class ImputedPlanCachePareto extends AImputedPlanCache {
         double minLoss = getMinLoss(tables);
         double minTime = Double.MAX_VALUE;
         ImputedPlan chosen = null;
-        for (ImputedPlanCachePareto.Value val : bestPlans(tables)) {
+        // be explicit about fetching plan for all tables with empty dirty set
+        for (ImputedPlanCachePareto.Value val : bestPlans(tables, new HashSet<>())) {
             double time = val.plan.getTime();
             double loss = val.plan.getLoss();
             if ((loss - minLoss) <= lossBound && time < minTime) {
