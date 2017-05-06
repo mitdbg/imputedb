@@ -199,6 +199,10 @@ However, if the missing data is biased then the aggregate will have a significan
 This highlights a challenge for a user handling data imputation traditionally: it is unclear if the missing data will have a large or small negative impact on their analysis until they have paid the cost of running it.
 By using \ProjectName{} this cost can be lowered significantly.
 
+\Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm.
+The diversity of plans highlights the possible tradeoffs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
+can be exposed to the user to help in guiding their workflow for exploring values of $\alpha$.
+
 \begin{table}
 \centering
 \input{tables/perf_summary.tex}
@@ -212,6 +216,13 @@ By using \ProjectName{} this cost can be lowered significantly.
 \label{table:smape}
 \end{table}
 
+\begin{figure}
+\includegraphics[width=\columnwidth]{figures/pareto_frontiers_plot.png}
+\caption{\ProjectName{}'s final Pareto frontier for \Cref{q1} and \Cref{q6}. The user can tradeoff between the plans by adjusting values of $\alpha$. Depending on the query
+there may be small clusters of plans centered around a similar penalty or time value. The frontier is produced before executing a plan and can be exposed
+to the user.}
+\label{fig:pareto-frontiers}
+\end{figure}
 
 \subsubsection{Runtime of Base-table Imputation}
 In many real-world cases, applying the imputation step at the base table is prohibitively
@@ -230,6 +241,7 @@ For every imputation inserted into the query plan, a new statistical model is in
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
 
+
 \subsubsection{Planning times}
 \begin{table}
 \centering
@@ -247,7 +259,6 @@ involving 1 to 5 joins, which although limited is a practical value for real wor
 For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
 the plan space by maintaining only approximations of the Pareto set for queries involving a large number of joins.
 With this optimization, the same set of queries have an average planning time of 16 seconds (2 seconds SE).
-
 
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 

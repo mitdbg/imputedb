@@ -156,7 +156,12 @@ for implementation.
 -- Try different values for $\alpha$ (not just 0 and 1).
 -- Show runtime of enumeration algorithm as queries get more complex.
 
-\resp{We explored the planning times for queries with increasing number of joins. The standard algorithm presented in the original version submitted handles
+\resp{
+The sensitivity of different values of $\alpha$ depends on the query itself. Performing a scan of values of $\alpha$ with small step sizes can return
+a lot of the same plans for execution. In lieu of this, we extended the results section to include a subsection that presents the final frontiers for
+two queries, one from each dataset used during evaluation. This frontier can be exposed to the user to help in their workflow.
+\\
+We explored the planning times for queries with increasing number of joins. The standard algorithm presented in the original version submitted handles
 up to 5 joins, with columns requiring imputation in all tables, with planning time of approximately one second. We added a small optimization to help reduce
 planning times for a larger number of joins. We maintain an approximation of the Pareto sets, rather than the exact set, by only adding non-dominated plans that
 are sufficiently different. This helps reduce some of the increases in planning time for a larger number of joins.}
