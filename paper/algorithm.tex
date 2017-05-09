@@ -191,15 +191,6 @@ yields intelligent query plans).
 
 \subsection{Query planning}
 \label{sec:planning}
-The input to our query planner is a tuple $(T, F, J, P, G, A)$:
-\begin{itemize}
-\item A set of tables $T$.
-\item A relation $F: T \times \Phi$ between tables and filter predicates.
-\item A relation $J : T \times \Psi \times T$ between tables and join predicates.
-\item A set of projection attributes $P$.
-\item An optional set of grouping attributes $G$ and aggregator function $A$.
-\end{itemize}
-
 The query planner must select a join ordering in addition to placing imputation operators as described in~\Cref{sec:placement}.
 
 \subsubsection{Plan cache}
