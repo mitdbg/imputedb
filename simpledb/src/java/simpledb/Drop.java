@@ -10,10 +10,10 @@ public class Drop extends Impute {
      * Deal with missing data on a set of column by simply dropping the rows
      * with missing data.
      * @param dropFields set of columns to consider
-     * @param child
+     * @param subplan
      */
-    public Drop(Collection<String> dropFields, DbIterator child) {
-        super(dropFields, child);
+    public Drop(Collection<String> dropFields, ImputedPlan subplan) {
+        super(dropFields, subplan);
     }
 
     @Override
@@ -40,7 +40,12 @@ public class Drop extends Impute {
     }
 
 	@Override
-	public double getEstimatedCost(int numDirty, int numComplete, int numTuples) {
-		return 0;
+	public double getEstimatedTime() {
+		return 0.01 * subplan.cardinality();
 	}
+
+	@Override
+    public double getEstimatedPenalty() {
+        return 1.0;
+    }
 }

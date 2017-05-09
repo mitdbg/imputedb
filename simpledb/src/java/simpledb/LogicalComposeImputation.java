@@ -50,28 +50,25 @@ public class LogicalComposeImputation extends ImputedPlan {
 		dirtySet.removeAll(impute);
 
 		final TupleDesc schema = subplan.getPlan().getTupleDesc();
-		final double totalData = subplan.cardinality() * schema.numFields();
 		final Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
 
 		TableStats subplanTableStats = subplan.getTableStats(); // table stats for subplan
 
 		switch (imp) {
 		case DROP: {
-			final DbIterator physicalPlan = new Drop(toNames(impute), subplan.getPlan());
-			final double loss = 1.0;
-			final double time = 0.01 * subplan.cardinality();
+			Impute dropOp = new Drop(toNames(impute), subplan);
+			final double loss = dropOp.getEstimatedPenalty();
+			final double time = dropOp.getEstimatedTime();
 			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
-			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
+			return new LogicalComposeImputation(adjustedTableStats, dropOp, subplan, dirtySet, loss, time);
 		}
 		case MAXIMAL:
 		case MINIMAL: 
-			Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
-			final DbIterator physicalPlan = imputeOp;
-			final double loss = (1 / Math.sqrt(totalData));
-			final int numComplete = schema.numFields() - dirtySet.size();
-			final double time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
+			Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan);
+			final double loss = imputeOp.getEstimatedPenalty();
+			final double time = imputeOp.getEstimatedTime();
 			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
-			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
+			return new LogicalComposeImputation(adjustedTableStats, imputeOp, subplan, dirtySet, loss, time);
 		case NONE:
 			throw new RuntimeException("NONE is no longer a valid ImputationType.");
 		default:
