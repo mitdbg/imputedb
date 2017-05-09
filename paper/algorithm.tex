@@ -112,6 +112,11 @@ When the optimizer creates a new query plan, it copies the histograms of the sub
 For example it will redistribute the count of tuples with \nullv{} in an imputed field.
 \Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
+\begin{algorithm}
+\input{algorithms/histogram-transform.tex}
+\end{algorithm}
+
+
 \subsubsection{Imputation quality}
 We estimate the quality of the imputations in a plan $Q$ using a heuristic measure $\text{Penalty}(Q)$, which is computed as follows.
 
@@ -248,10 +253,6 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 %\begin{algorithm}
 %\input{algorithms/histogram-helpers.tex}
 %\end{algorithm}
-
-\begin{algorithm}
-\input{algorithms/histogram-transform.tex}
-\end{algorithm}
 
 \subsection{Imputation Strategies}
 \label{sec:imputation}
