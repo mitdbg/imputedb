@@ -204,7 +204,7 @@ public class ImputeRegressionTree extends Impute {
 			}
 		}
 
-		// Initialize all missing values using random-in-column.
+		// Initialize all missing values using hot deck (random-in-column).
 		for (int i : dropFieldsIndices2){
 			Iterator<Integer> dropFieldsMissingRowIt = dropFieldsMissing.get(i).iterator();
 			while (dropFieldsMissingRowIt.hasNext()){
@@ -270,7 +270,7 @@ public class ImputeRegressionTree extends Impute {
      * - fitting m_i decision trees, k times (where k is the number of
      *   imputation epochs) is O(k * m_i * n * (m_c + m_i - 1) log (n))
      * Note that these computations ignore
-     * - the cost of initializing the dirty attributes with an "impute random" strategy
+     * - the cost of initializing the dirty attributes with an "impute hot deck" strategy
      * - the cost of pruning
      * - a more sophisticated cost complexity calculation
      * @see simpledb.Impute#getEstimatedCost(int, int, int)
