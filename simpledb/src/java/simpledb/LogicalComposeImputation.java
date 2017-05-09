@@ -76,10 +76,6 @@ public class LogicalComposeImputation extends ImputedPlan {
 		}
 	}
 
-	public static double estimateNumNulls(ImputedPlan subplan, Collection<Integer> indices) {
-		return subplan.getTableStats().estimateTotalNull(indices);
-	}
-
 	public DbIterator getPlan() {
 		return physicalPlan;
 	}
