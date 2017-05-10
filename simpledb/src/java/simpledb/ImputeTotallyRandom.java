@@ -99,8 +99,13 @@ public class ImputeTotallyRandom extends Impute {
     }
 
 	@Override
-	public double getEstimatedCost(int numDirty, int numComplete, int numTuples) {
+	public double getEstimatedTime(ImputedPlan subplan) {
 		return 0;
 	}
+
+	@Override
+    public double getEstimatedPenalty(ImputedPlan subplan) {
+        return 0.5;
+    }
 
 }

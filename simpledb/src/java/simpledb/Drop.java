@@ -40,7 +40,12 @@ public class Drop extends Impute {
     }
 
 	@Override
-	public double getEstimatedCost(int numDirty, int numComplete, int numTuples) {
-		return 0;
+	public double getEstimatedTime(ImputedPlan subplan) {
+		return 0.01 * subplan.cardinality();
 	}
+
+	@Override
+    public double getEstimatedPenalty(ImputedPlan subplan) {
+        return 1.0;
+    }
 }

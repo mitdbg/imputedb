@@ -36,8 +36,8 @@ public class LogicalAggregateNode extends ImputedPlan {
 	}
 
 	@Override
-	protected AvgAgg loss() {
-		return plan.loss();
+	protected AvgAgg penalty() {
+		return plan.penalty();
 	}
 	
 	@Override
