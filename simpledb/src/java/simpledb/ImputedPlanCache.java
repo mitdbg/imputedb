@@ -13,7 +13,7 @@ public interface ImputedPlanCache {
 
 	void addJoinPlan(Set<String> ts, Set<LogicalJoinNode> joins, ImputedPlan newPlanIP);
 
-	ImputedPlan getFinalPlan(double lossWeight, Set<String> tables);
+	ImputedPlan getFinalPlan(double alpha, Set<String> tables);
 
 	void setApproximate();
 }

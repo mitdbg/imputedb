@@ -156,8 +156,8 @@ public class LogicalImputedJoinNode extends ImputedPlan {
     }
     
     @Override
-    protected AvgAgg loss() {
-    	return table1.loss().add(table2.loss());
+    protected AvgAgg penalty() {
+    	return table1.penalty().add(table2.penalty());
     }
     
     @Override

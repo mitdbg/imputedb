@@ -16,7 +16,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 	private final DbIterator physicalPlan;
 	private final ImputedPlan subplan;
 	private final Set<QualifiedName> dirtySet;
-	private final double loss;
+	private final double penalty;
 	private final double time;
 	private TableStats tableStats;
 
@@ -25,15 +25,15 @@ public class LogicalComposeImputation extends ImputedPlan {
 	 * @param tableStats
 	 * @param physicalPlan
 	 * @param dirtySet
-	 * @param loss
+	 * @param penalty
 	 * @param time
 	 */
 	private LogicalComposeImputation(TableStats tableStats, DbIterator physicalPlan, ImputedPlan subplan, Set<QualifiedName> dirtySet,
-			double loss, double time) {
+			double penalty, double time) {
 		super();
 		this.physicalPlan = physicalPlan;
 		this.dirtySet = dirtySet;
-		this.loss = loss;
+		this.penalty = penalty;
 		this.time = time;
 		this.tableStats = tableStats;
 		this.subplan = subplan;
@@ -50,37 +50,30 @@ public class LogicalComposeImputation extends ImputedPlan {
 		dirtySet.removeAll(impute);
 
 		final TupleDesc schema = subplan.getPlan().getTupleDesc();
-		final double totalData = subplan.cardinality() * schema.numFields();
 		final Collection<Integer> imputeIndices = schema.fieldNamesToIndices(impute);
 
 		TableStats subplanTableStats = subplan.getTableStats(); // table stats for subplan
 
 		switch (imp) {
 		case DROP: {
-			final DbIterator physicalPlan = new Drop(toNames(impute), subplan.getPlan());
-			final double loss = 1.0;
-			final double time = 0.01 * subplan.cardinality();
+			Impute dropOp = new Drop(toNames(impute), subplan.getPlan());
+			final double penalty = dropOp.getEstimatedPenalty(subplan);
+			final double time = dropOp.getEstimatedTime(subplan);
 			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
-			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
+			return new LogicalComposeImputation(adjustedTableStats, dropOp, subplan, dirtySet, penalty, time);
 		}
 		case MAXIMAL:
 		case MINIMAL: 
 			Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
-			final DbIterator physicalPlan = imputeOp;
-			final double loss = (1 / Math.sqrt(totalData));
-			final int numComplete = schema.numFields() - dirtySet.size();
-			final double time = imputeOp.getEstimatedCost(imputeIndices.size(), numComplete, (int) subplan.cardinality());
+			final double penalty = imputeOp.getEstimatedPenalty(subplan);
+			final double time = imputeOp.getEstimatedTime(subplan);
 			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
-			return new LogicalComposeImputation(adjustedTableStats, physicalPlan, subplan, dirtySet, loss, time);
+			return new LogicalComposeImputation(adjustedTableStats, imputeOp, subplan, dirtySet, penalty, time);
 		case NONE:
 			throw new RuntimeException("NONE is no longer a valid ImputationType.");
 		default:
 			throw new RuntimeException("Unexpected ImputationType.");
 		}
-	}
-
-	public static double estimateNumNulls(ImputedPlan subplan, Collection<Integer> indices) {
-		return subplan.getTableStats().estimateTotalNull(indices);
 	}
 
 	public DbIterator getPlan() {
@@ -92,8 +85,8 @@ public class LogicalComposeImputation extends ImputedPlan {
 	}
 	
 	@Override
-	protected AvgAgg loss() {
-		return subplan.loss().add(loss);
+	protected AvgAgg penalty() {
+		return subplan.penalty().add(penalty);
 	}
 	
 	@Override

@@ -2,12 +2,13 @@ package simpledb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.Random;
 
 import weka.core.Instance;
@@ -273,17 +274,26 @@ public class ImputeRegressionTree extends Impute {
      * - the cost of initializing the dirty attributes with an "impute random" strategy
      * - the cost of pruning
      * - a more sophisticated cost complexity calculation
-     * @see simpledb.Impute#getEstimatedCost(int, int, int)
+     * @see simpledb.Impute#getEstimatedTime()
      */
 	@Override
-	public double getEstimatedCost(int numDirty, int numComplete, int numTuples) {
-		int m_c = numComplete;
-		int m_i = numDirty;
-		int n = numTuples;
+	public double getEstimatedTime(ImputedPlan subplan) {
+		TupleDesc schema = subplan.getPlan().getTupleDesc();
+		Set<QualifiedName> dirytSet = subplan.getDirtySet();
+		int m_c = schema.numFields() - dirytSet.size(); // number of clean attributes
+		int m_i = dropFieldsIndices.size(); // number of attributes to be imputed
+		int n = (int) subplan.cardinality(); // number of tuples
 		int k = numImputationEpochs;
 		double T = k * m_i * n * (m_c + m_i - 1) * Math.log(n);
 		
 		return T;
+	}
+
+	@Override
+	public double getEstimatedPenalty(ImputedPlan subplan) {
+		TupleDesc schema = subplan.getPlan().getTupleDesc();
+		double totalData = subplan.cardinality() * schema.numFields();
+		return (1 / Math.sqrt(totalData));
 	}
 
 }

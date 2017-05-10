@@ -55,28 +55,28 @@ public class ImputedPlanCachePareto extends AImputedPlanCache {
         }
     }
 
-    private double getMinLoss(Set<String> tables) {
-        double minLoss = Double.MAX_VALUE;
+    private double getMinPenalty(Set<String> tables) {
+        double minPenalty = Double.MAX_VALUE;
         for (ImputedPlanCachePareto.Value val : bestPlans(tables)) {
-            double loss = val.plan.getLoss();
-            if (loss < minLoss) {
-                minLoss = loss;
+            double penalty = val.plan.getPenalty();
+            if (penalty < minPenalty) {
+                minPenalty = penalty;
             }
         }
-        return minLoss;
+        return minPenalty;
     }
 
 
-    public ImputedPlan getFinalPlan(double lossBound, Set<String> tables) {
+    public ImputedPlan getFinalPlan(double alpha, Set<String> tables) {
         // need to know this upfront
-        double minLoss = getMinLoss(tables);
+        double minPenalty = getMinPenalty(tables);
         double minTime = Double.MAX_VALUE;
         ImputedPlan chosen = null;
         // be explicit about fetching plan for all tables with empty dirty set
         for (ImputedPlanCachePareto.Value val : bestPlans(tables, new HashSet<>())) {
             double time = val.plan.getTime();
-            double loss = val.plan.getLoss();
-            if ((loss - minLoss) <= lossBound && time < minTime) {
+            double penalty = val.plan.getPenalty();
+            if ((penalty - minPenalty) <= alpha && time < minTime) {
                 minTime = time;
                 chosen = val.plan;
             }
