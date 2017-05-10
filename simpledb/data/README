@@ -14,3 +14,8 @@ missing enumeration value for missing strings: enumerations are not necessarily 
 regression tree approach but will likely mess up simpler imputation models (like mean).
 Since comparisons are against the same imputation algo on the base table, this shouldn't
 be an issue for fair comparisons.
+
+After running ../create_data.sh, the .dat files here can be moved where necessary (along
+with the catalog.txt created and saved here as well).
+
+Enumerations used are found in the enums.txt file.
