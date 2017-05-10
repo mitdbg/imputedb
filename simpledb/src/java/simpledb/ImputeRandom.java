@@ -20,18 +20,18 @@ public class ImputeRandom extends Impute {
      * non-missing elements of the same column. Thus, this method requires that
      * we store all of the child tuples in a buffer until the child is
      * exhausted. Child is the physical plan obtained from subplan.
-     * @param subplan
+     * @param child
      */
-    public ImputeRandom(Collection<String> dropFields, ImputedPlan subplan){
-        super(dropFields, subplan);
+    public ImputeRandom(Collection<String> dropFields, DbIterator child){
+        super(dropFields, child);
         initRng();
         
         buffer = new ArrayList<>();
         nextTupleIndex = 0;
     }
 
-    public ImputeRandom(ImputedPlan subplan) {
-        this(null, subplan);
+    public ImputeRandom(DbIterator child) {
+        this(null, child);
     }
     
     private void initRng(){
@@ -109,7 +109,7 @@ public class ImputeRandom extends Impute {
      * @see simpledb.Impute#getEstimatedTime()
      */
 	@Override
-	public double getEstimatedTime() {
+	public double getEstimatedTime(ImputedPlan subplan) {
         int numTuples = (int) subplan.cardinality();
         int numDirty= subplan.getDirtySet().size(); // number of dirty attributes
 		double T = numTuples * numDirty;
@@ -118,7 +118,7 @@ public class ImputeRandom extends Impute {
 	}
 
 	@Override
-    public double getEstimatedPenalty() {
+    public double getEstimatedPenalty(ImputedPlan subplan) {
         return 0.5;
     }
 

@@ -56,17 +56,17 @@ public class LogicalComposeImputation extends ImputedPlan {
 
 		switch (imp) {
 		case DROP: {
-			Impute dropOp = new Drop(toNames(impute), subplan);
-			final double loss = dropOp.getEstimatedPenalty();
-			final double time = dropOp.getEstimatedTime();
+			Impute dropOp = new Drop(toNames(impute), subplan.getPlan());
+			final double loss = dropOp.getEstimatedPenalty(subplan);
+			final double time = dropOp.getEstimatedTime(subplan);
 			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(DROP, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, dropOp, subplan, dirtySet, loss, time);
 		}
 		case MAXIMAL:
 		case MINIMAL: 
-			Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan);
-			final double loss = imputeOp.getEstimatedPenalty();
-			final double time = imputeOp.getEstimatedTime();
+			Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
+			final double loss = imputeOp.getEstimatedPenalty(subplan);
+			final double time = imputeOp.getEstimatedTime(subplan);
 			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);
 			return new LogicalComposeImputation(adjustedTableStats, imputeOp, subplan, dirtySet, loss, time);
 		case NONE:

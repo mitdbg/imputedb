@@ -16,10 +16,10 @@ public class ImputeTotallyRandom extends Impute {
      * are drawn from a uniform distribution on [Integer.MIN_VALUE,
      * Integer.MAX_VALUE] and String fields are drawn from a uniform
      * distribution on ["a"*maxSize, "z"*maxSize].
-     * @param subplan
+     * @param child
      */
-    public ImputeTotallyRandom(Collection<String> dropFields, ImputedPlan subplan){
-        super(dropFields, subplan);
+    public ImputeTotallyRandom(Collection<String> dropFields, DbIterator child){
+        super(dropFields, child);
         initRng();
     }
     
@@ -99,12 +99,12 @@ public class ImputeTotallyRandom extends Impute {
     }
 
 	@Override
-	public double getEstimatedTime() {
+	public double getEstimatedTime(ImputedPlan subplan) {
 		return 0;
 	}
 
 	@Override
-    public double getEstimatedPenalty() {
+    public double getEstimatedPenalty(ImputedPlan subplan) {
         return 0.5;
     }
 

@@ -8,15 +8,13 @@ public abstract class Impute extends Operator {
 
     private static final long serialVersionUID = 1L;
 
-    protected ImputedPlan subplan;
     protected DbIterator child;
     protected TupleDesc td;
     protected final Collection<String> dropFields;
     protected final Collection<Integer> dropFieldsIndices;
 
-    public Impute(Collection<String> dropFields, ImputedPlan subplan){
-        this.subplan = subplan;
-        this.child = subplan.getPlan();
+    public Impute(Collection<String> dropFields, DbIterator child){
+        this.child = child;
         this.td = child.getTupleDesc();
         
         // Validate drop fields and convert to indices.
@@ -90,9 +88,9 @@ public abstract class Impute extends Operator {
      * imputation. This is a unitless quantity
      * @return estimated time
      */
-	public abstract double getEstimatedTime();
+	public abstract double getEstimatedTime(ImputedPlan subplan);
 
-    public abstract double getEstimatedPenalty();
+    public abstract double getEstimatedPenalty(ImputedPlan subplan);
 
 
 }

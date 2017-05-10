@@ -51,8 +51,8 @@ public class ImputeRegressionTree extends Impute {
 	// Map from indices in the Instances object to indices in the Tuple buffer.
 	private HashMap<Integer, Integer> dropFieldsIndicesMap;
 
-    public ImputeRegressionTree(Collection<String> dropFields, ImputedPlan subplan) {
-        super(dropFields, subplan);
+    public ImputeRegressionTree(Collection<String> dropFields, DbIterator child) {
+        super(dropFields, child);
         setNumImputationEpochs();
         initRng();
         buffer = new ArrayList<>();
@@ -277,11 +277,11 @@ public class ImputeRegressionTree extends Impute {
      * @see simpledb.Impute#getEstimatedTime()
      */
 	@Override
-	public double getEstimatedTime() {
+	public double getEstimatedTime(ImputedPlan subplan) {
 		TupleDesc schema = subplan.getPlan().getTupleDesc();
 		Set<QualifiedName> dirytSet = subplan.getDirtySet();
 		int m_c = schema.numFields() - dirytSet.size(); // number of clean attributes
-		int m_i = dropFieldsIndices.size(); // number of dirty attributes
+		int m_i = dropFieldsIndices.size(); // number of attributes to be imputed
 		int n = (int) subplan.cardinality(); // number of tuples
 		int k = numImputationEpochs;
 		double T = k * m_i * n * (m_c + m_i - 1) * Math.log(n);
@@ -290,7 +290,7 @@ public class ImputeRegressionTree extends Impute {
 	}
 
 	@Override
-	public double getEstimatedPenalty() {
+	public double getEstimatedPenalty(ImputedPlan subplan) {
 		TupleDesc schema = subplan.getPlan().getTupleDesc();
 		double totalData = subplan.cardinality() * schema.numFields();
 		return (1 / Math.sqrt(totalData));
