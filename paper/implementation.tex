@@ -1,29 +1,37 @@
 \section{Implementation}
-We discuss the main components required to implement dynamic query imputation.
+Adding imputation and our optimization algorithm to a standard SQL database requires modifications to several key database components.
+In this section we discuss the changes which must be made to implement dynamic imputation.
 
-\textbf{Extended histograms}: Planning imputation requires estimates of the distribution of missing values. 
-We extended standard histograms to include the count of missing values across table attributes.
-On the base tables, this provides an exact count of the missing fields. 
-In sub-plans, it allows us to use simple heuristics to estimate the number of missing values after applying
-both standard and imputation operators. These cardinality estimates are critical to the optimizer.
+\begin{itemize}
+\item \textbf{Extended histograms:}
+  Ranking query plans with imputation requires estimates of the distribution of missing values in the base tables and in the outputs of sub-plans.
+  We extended standard histograms to include the count of missing values for each attribute.
+  On the base tables, this provides an exact count of the missing values.
+  In sub-plans we use simple heuristics---as discussed in Section~\ref{sec:cardinal}---to estimate the number of missing values after applying both standard and imputation operators.
+  These cardinality estimates are critical to the optimizer's ability to compare the performance and imputation quality of different plans.
 
-\textbf{Dirty sets}: We over-approximate the attributes in a plan that may have missing values and need to be
-imputed (using $\mu$ or $\delta$). We extended
-the logical nodes in our planning data structures to carry a set of fully qualified attribute names as the dirty set. 
+\item \textbf{Dirty sets:}
+  The planner needs to know which attributes in the output of a plan might contain missing values so it can insert the correct imputation operators.
+  To provide the planner with this information, we over-approximate the set of attributes in a plan that may have missing values.
+  Each plan has an associated \emph{dirty set}, described in Section~\ref{sec:placement}, which tracks these attributes.
 
-\textbf{Additional Logical Operators}: While the $\mu$ and $\delta$ operations are not exposed directly to the user, they are a core extension
-the the standard logical operator nodes in the planner.
-Both operate on a subset of attributes, determined by
-a combination of the dirty set and planner-provided attributes. These are used to enumerate local imputation alternatives. Both operators
-can compute cardinality and adjust histogram estimates. In contrast to standard operators, they also provide $\textsc{Penalty}$ and $\textsc{Time}$ estimates (\Cref{sec:cost-model}),
-based on the underlying imputation algorithm and the data input.
+\item \textbf{Imputation operators:}
+  We extend the set of logical operations available to the planner with the \emph{Impute} and \emph{Drop} operators.
+  The database must have implementations for both operators and be able to correctly place them while planning.
+  In addition to the normal heuristics for estimating query runtime, these operators have a cost function $\textsc{Penalty}$ (Section~\ref{sec:quality}) which estimates the quality of their output.
+  The planner must be able to optimize both cost functions and select an appropriate plan from the set of Pareto-optimal plans.
+  
+  % While the \emph{Impute} and \emph{Drop} operations are not exposed directly to the user, they are a core extension the the standard logical operator nodes in the planner.
+  % Both operate on a subset of attributes, determined by a combination of the dirty set and planner-provided attributes. These are used to enumerate local imputation alternatives.
+  % Both operators can compute cardinality and adjust histogram estimates.
+  % In contrast to standard operators, they also provide $\textsc{Penalty}$ and $\textsc{Time}$ estimates (\Cref{sec:cost-model}), based on the underlying imputation algorithm and the data input.
 
-\textbf{Core optimizer}: Imputations early in the plan (e.g. before a selection) could be added to existing optimizers. However, the full
-planning algorithm used in \ProjectName{} is tightly integrated with core parts of the optimizer, such as join enumeration. This tight integration allows \ProjectName{}
-to influence join and imputation order, through the imputation cost model, and effectively prune out plans that are not in the relevant Pareto set.
-Substituting the standard optimizer for a custom version tailored to dynamic imputation optimization is critical to obtain the
-performance provided by \ProjectName{}.
-
+\item \textbf{Integrated optimizer:}
+  We believe that it would be relatively simple to extend an existing query optimizer to insert imputations immediately after scanning the base tables.
+  However, integrating the imputation placement rules into the optimizer allows us to explore a large space of query plans which contain imputations.
+  In particular, this tight integration allows us to jointly choose the most effective join order and imputation placement.
+  Our goal of integrating imputation placement into the optimizer requires the other modifications that we have discussed.
+\end{itemize}
 
 %%% Local Variables:
 %%% mode: latex
