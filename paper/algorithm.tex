@@ -102,6 +102,7 @@ the expense of performance). If $\alpha = 1.0$, then the optimal query should ha
 lowest runtime (at the expense of quality).
 
 \subsubsection{Cardinality estimation}
+\label{sec:cardinal}
 The computation of $\textsc{Time}(q)$ and $\textsc{Penalty}(q)$ rely accurate cardinality estimates for the plan $q$ and its sub-plans.
 These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational algebra, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
@@ -117,6 +118,7 @@ For example it will redistribute the count of tuples with \nullv{} in an imputed
 \end{algorithm}
 
 \subsubsection{Imputation quality}
+\label{sec:quality}
 We estimate the quality of the imputations in a plan $q$ using a heuristic measure $\text{Penalty}(q, P)$, which is computed as follows.
 
 \begin{align*}
