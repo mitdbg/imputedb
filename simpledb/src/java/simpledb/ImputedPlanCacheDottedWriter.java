@@ -30,7 +30,7 @@ public class ImputedPlanCacheDottedWriter implements ImputedPlanCacheWriter {
 			ImputedPlan plan = val.plan;
 			StringBuilder prefix = new StringBuilder();
 			prefix.append("queryplan_loss=");
-			prefix.append(plan.loss().get());
+			prefix.append(plan.penalty().get());
 			prefix.append("_time=");
 			prefix.append(plan.time());
 			prefix.append("_card=");

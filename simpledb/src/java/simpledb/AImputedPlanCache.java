@@ -61,18 +61,18 @@ public abstract class AImputedPlanCache implements ImputedPlanCache {
 		}
 
 		public boolean dominates(Value o) {
-			return plan.loss().get() <= o.plan.loss().get() && plan.time() <= o.plan.time();
+			return plan.penalty().get() <= o.plan.penalty().get() && plan.time() <= o.plan.time();
 		}
 
 		public boolean isApproximate(Value o) {
-			double lossRatio = o.plan.loss().get() / plan.loss().get();
+			double penaltyRatio = o.plan.penalty().get() / plan.penalty().get();
 			double timeRatio = o.plan.time() / plan.time();
-			return lossRatio >= 0.95 && lossRatio <= 1.05 && timeRatio >= 0.5 && timeRatio <= 1.5;
+			return penaltyRatio >= 0.95 && penaltyRatio <= 1.05 && timeRatio >= 0.5 && timeRatio <= 1.5;
 		}
 
 		@Override
 		public int compareTo(Value o) {
-			int lcmp = Double.compare(plan.loss().get(), o.plan.loss().get());
+			int lcmp = Double.compare(plan.penalty().get(), o.plan.penalty().get());
 			if (lcmp != 0) { return lcmp; }
 			return Double.compare(plan.time(), o.plan.time());
 		}

@@ -38,7 +38,7 @@ public class LogicalImputedScanNode extends ImputedPlan {
 	}
 	
 	@Override
-	protected AvgAgg loss() {
+	protected AvgAgg penalty() {
 		return AvgAgg.EMPTY;
 	}
 

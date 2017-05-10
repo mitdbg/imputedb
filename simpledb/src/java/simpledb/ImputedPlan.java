@@ -15,7 +15,7 @@ import simpledb.Utility.AvgAgg;
  * Each ImputedPlan carries a copy of its table statistics. These are modified according to imputation/selection/joins.
  */
 public abstract class ImputedPlan {
-	protected abstract AvgAgg loss();
+	protected abstract AvgAgg penalty();
 	protected abstract double time();
 	
 	public abstract Set<QualifiedName> getDirtySet();
@@ -25,11 +25,11 @@ public abstract class ImputedPlan {
 
 	public double cost(double lossWeight) {
 		assert 0.0 <= lossWeight && lossWeight <= 1.0;
-		return lossWeight * loss().get() + (1 - lossWeight) * time();
+		return lossWeight * penalty().get() + (1 - lossWeight) * time();
 	}
 
-	public double getLoss() {
-		return loss().get();
+	public double getPenalty() {
+		return penalty().get();
 	}
 
 	public double getTime() {
