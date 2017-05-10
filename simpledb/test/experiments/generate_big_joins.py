@@ -23,13 +23,8 @@ def self_join(tbl, n):
 def create_join_workload(n_tables, n_queries):
   random.seed(1)
   workload = []
-  # self joins of the given size
-  for table in tables:
-    workload.append(self_join(table, n_tables))
-
-  # random joins of given size
-  n_queries -= len(workload)
+  # n random queries with joins of given size
   for _ in range(0, n_queries):
-    random_tables = [tables[random.randint(0, len(tables) - 1)] for _ in range(0, n_joins)]
+    random_tables = [tables[random.randint(0, len(tables) - 1)] for _ in range(0, n_tables)]
     workload.append(join_query(random_tables))
   return '\n'.join([q + ';' for q in workload])
