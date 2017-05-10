@@ -70,7 +70,7 @@ Note that \textsc{Dirty} over-approximates the set of attributes that contain \n
 
 \subsection{Cost model}
 \label{sec:cost-model}
-The cost of a plan $q$ is expressed as a tuple $\langle \textsc{Penalty}(q), \textsc{Time}(q) \rangle$.
+The cost of a plan $q$ is a tuple $\langle \textsc{Penalty}(q), \textsc{Time}(q) \rangle$.
 $\textsc{Penalty}(q) \in [0,1]$ is an estimate of the amount of information lost by the imputation procedures used.
 $\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
 
@@ -99,11 +99,11 @@ lose a lot of information through dropping are also the fastest.
 
 If $\alpha=0.0$, then the optimal query should lose as little information as possible (at
 the expense of performance). If $\alpha = 1.0$, then the optimal query should have the
-fastest runtime (at the expense of quality).
+lowest runtime (at the expense of quality).
 
 \subsubsection{Cardinality estimation}
-The computation of $\textsc{Time}(q)$ and $\textsc{Penalty}(q)$ rely on having an accurate cardinality estimate of a query plan $q$ and its sub-plans.
-These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational calculus, but also by the imputation operators.
+The computation of $\textsc{Time}(q)$ and $\textsc{Penalty}(q)$ rely accurate cardinality estimates for the plan $q$ and its sub-plans.
+These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational algebra, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 
 To compute cardinality, we maintain histograms for each column in the database.
@@ -116,39 +116,45 @@ For example it will redistribute the count of tuples with \nullv{} in an imputed
 \input{algorithms/histogram-transform.tex}
 \end{algorithm}
 
-
 \subsubsection{Imputation quality}
-We estimate the quality of the imputations in a plan $Q$ using a heuristic measure $\text{Penalty}(Q)$, which is computed as follows.
+We estimate the quality of the imputations in a plan $q$ using a heuristic measure $\text{Penalty}(q, P)$, which is computed as follows.
 
 \begin{align*}
-  \textsc{L}(q) &= \begin{cases}
+  \textsc{L}(q, f) &= \begin{cases}
      1 + \textsc{L}(q') & q = \delta_C(q') \\
-    \frac{1}{\sqrt{ \textsc{Attr}(q') * \textsc{Card}(q')}} + \textsc{L}(q')  & q = \mu_C(q') \\
-    \textsc{L}(q_l') + \textsc{L}(q_r') & q = q_l' \bowtie_\psi q_r' \\
-    \textsc{L}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
-    0 & q = \text{some table } t\\
+     P(q') + \textsc{L}(q') & q = \mu_C(q') \\
+     \textsc{L}(q_l') + \textsc{L}(q_r') & q = q_l' \bowtie_\psi q_r' \\
+     \textsc{L}(q') & q = \sigma_\phi(q'),\ q = \pi_C(q') \\
+     0 & q = \text{some table } t\\
   \end{cases}\\
-    \textsc{N}(q) &= \begin{cases}
-     1 + \textsc{N}(q') & q = \delta_C(q') \\
-     1 + \textsc{N}(q')  & q = \mu_C(q') \\
-    \textsc{N}(q_l') + \textsc{N}(q_r') & q = q_l' \bowtie_\psi q_r' \\
-    \textsc{N}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
-    0 & q = \text{some table } t\\
-  \end{cases}\\
-  \textsc{Penalty}(q) &= \frac{\textsc{L}(q)}{\textsc{N}(q)}
+  %   \textsc{N}(q) &= \begin{cases}
+  %    1 + \textsc{N}(q') & q = \delta_C(q') \\
+  %    1 + \textsc{N}(q')  & q = \mu_C(q') \\
+  %   \textsc{N}(q_l') + \textsc{N}(q_r') & q = q_l' \bowtie_\psi q_r' \\
+  %   \textsc{N}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
+  %   0 & q = \text{some table } t\\
+  % \end{cases}\\
+  \textsc{Penalty}(q, P) &= \frac{\textsc{L}(q, P)}{\textsc{L}(q, 1)}
 \end{align*}
 
-Each imputation operator incurs an individual penalty.
-We define \textsc{Penalty} as the average over the penalties incurred by the imputation operators. Our recursive definition of $L$ accumulates these penalties and $N$ counts the number of imputation operations.
-For example, $\delta$ contributes a penalty of 1 (i.e. we lose all information  that dropped tuples might have encoded).
-Imputing \nullv{} fields with $\mu$ incurs a penalty $p \in (0, 1]$.
-In this case, the penalty is inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as the product of the number of attributes and the number of tuples.
-Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the penalty \textit{decreases} with more values to work with.
-Scaling the cell count by applying square root incorporates the intuition that the number of training observations has diminishing returns for imputation quality and we find that it works well in practice.
+$\textsc{Penalty}(q, P)$ assigns a cost in $(0,1]$ to each imputation operator in the plan $q$ according to its estimated quality, then averages over the individual costs.
+For example, each occurrence of $\delta$ incurs a cost of 1 (i.e.\ we lose all information that dropped tuples might have encoded).
+Imputing \nullv{} fields with $\mu$ incurs a cost in $(0, 1]$ according to a cost function $P$, which is specific to the imputation method in use.
+
+The choice of $P$ depends on the properties of the imputation method being used.
+A well chosen $P$ should provide a reasonable estimate of the quality of imputation from the histogram describing the input data.
+From this histogram, $P$ can obtain the number of attributes in its input, its cardinality, and an estimate of its variance.
+Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the $P$ should \textit{decrease} as the number of values increases.
+$P$ should never decrease to zero, as this would mean that it can perform perfect imputation.
+It should reflect the intuition that the number of training observations has diminishing returns by decreasing more slowly as the number of values increases.
+In Section~\ref{sec:imputation}, we discuss choices for $P$ for several common imputation methods.
+
+% In this case, the penalty is inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as the product of the number of attributes and the number of tuples.
+% Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the penalty \textit{decreases} with more values to work with.
+% Scaling the cell count by applying square root incorporates the intuition that the number of training observations has diminishing returns for imputation quality and we find that it works well in practice.
 
 \subsubsection{Query runtime}
-To compute $\textsc{Time}(Q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard 
-database. 
+To compute $\textsc{Time}(q, T)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard database.
 
 %\begin{align*}
 %  \textsc{T}(q) &= \begin{cases}
@@ -162,37 +168,85 @@ database.
 %  \textsc{Time}(q) &= \Sigma \textsc{T}(q)
 %\end{align*}
 
-Scan costs are estimated based on the number of tuples, 
-page size, and a unit-less I/O cost per page. 
+Scan costs are estimated based on the number of tuples, page size, and a unit-less I/O cost per page. 
 We assume that I/O costs dominate CPU costs for relational operators. 
-A database implementation for which this assumption is not true, i.e. an in memory database, will need a different cost model.
-Join costs are estimated as a function
-of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
-Filtering, projecting, and aggregating are all done in memory and have low computational overhead
-so we assume negligible time costs for those operations. 
+A database implementation for which this assumption is not true, e.g. an in memory database, will need a different cost model.
+Join costs are estimated as a function of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
+Filtering, projecting, and aggregating are all done in memory and have low computational overhead so we assume negligible time costs for those operations. 
 
-We extend these heuristics to 
-account for the new operators: \textit{Drop} and \textit{Impute}. \textit{Drop} is a special case of a filter, so its time complexity is correspondingly negligible. The time computation for \textit{Impute} depends on the properties of the underlying
-algorithm. \ProjectName{} treats the actual machine learning algorithm as a black box
-and simply queries it for a time estimate. In the implementation of our system,
-we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
-is a function of the number of attributes with no missing data, number of attributes with
-missing data being imputed, number of tuples, and the number of iterations for the algorithm.
+We extend these heuristics to account for the new operators: \textit{Drop} and \textit{Impute}.
+\textit{Drop} is a special case of a filter, so its time complexity is correspondingly negligible. 
+As with $\textsc{Penalty}$, the time computation for \textit{Impute} depends on the properties of the underlying algorithm via a function $T$.
 
-In general, evaluating the time complexity for different \textit{Impute} operators is
-complicated, as the properties of
-different algorithms can vary significantly, the underlying I/O cost
-is not easily extracted (especially in the case that the entire set of tuples does not
-fit in memory), and the CPU cost dominates (in contrast to the other operators, which do
-not consider CPU cost explicitly). For example,~\cite{martin1995time} finds that the
-time complexity of the \textit{build tree} algorithm for one commonly-used class of
-decision trees is a function of the number of classes, several overhead constants, the
-parameterization of the partition and heuristic functions, and the \textit{arity} (the
-number of subsets considered for each split). The \textit{build tree} phase often
-does not even dominate computation, as post-processing steps like pruning, which are vital
-in achieving good performance, can have cost exponential in the height of the tree.
-Nonetheless, in practice, we find that a simple parameterization can be acceptable (i.e.
-yields intelligent query plans).
+The choice of $T$ depends on the imputation method in use, and as with $P$, there are several intuitions which guide the choice of $T$.
+First, $\textsc{Time}$ is computed in terms of the I/O cost per page so $T$ must return a value in these units.
+It can be unnatural to compute the cost of imputation in terms of the I/O cost, so it may be simpler to compute the per-tuple cost and then convert.
+Second, $T$ should \emph{increase} as the number of tuples passed to the imputation function increases and it should be proportional to the complexity of the imputation algorithm.
+As with $P$, the ordering between queries generated by $T$ is more important than the precision of its estimates.
+\todo{Micah, how did you deal with the IO/CPU cost problem?}
+
+% In the implementation of our system,
+% we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
+% is a function of the number of attributes with no missing data, number of attributes with
+% missing data being imputed, number of tuples, and the number of iterations for the algorithm.
+
+% In general, evaluating the time complexity for different \textit{Impute} operators is complicated, as the properties of different algorithms can vary significantly, the underlying I/O cost is not easily extracted (especially in the case that the entire set of tuples does not fit in memory), and the CPU cost dominates (in contrast to the other operators, which do not consider CPU cost explicitly).
+% For example,~\cite{martin1995time} finds that the time complexity of the \textit{build tree} algorithm for one commonly-used class of decision trees is a function of the number of classes, several overhead constants, the parameterization of the partition and heuristic functions, and the \textit{arity} (the number of subsets considered for each split). 
+% The \textit{build tree} phase often does not even dominate computation, as post-processing steps like pruning, which are vital in achieving good performance, can have cost exponential in the height of the tree.
+% Nonetheless, in practice, we find that a simple parameterization can be acceptable (i.e.\ yields intelligent query plans).
+
+\subsection{Imputation strategies}
+\label{sec:imputation}
+
+\ProjectName{} is designed so that any imputation strategy
+can be plugged in with minimal effort and without changes to the optimizer, simply by adding
+time and penalty functions (\Cref{sec:cost-model}) which describe the new algorithm.
+For our purposes, an imputation strategy is a function $I(R, C) \rightarrow R'$ which fills in the missing
+attributes $C$ in a relation $R$, returning a new relation $R'$.
+The flexibility of this approach aligns with the spirit of query optimization, which aims to
+reconcile performance with a declarative interface to data manipulation.
+
+\subsubsection{Regression trees}
+
+New imputation algorithms can also be added. As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
+based on chained-equation decision trees.  Chained-equation
+imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
+regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
+a predictive model of one missing attribute, conditional on all complete attributes
+and all other missing attributes. Chained-equation decision trees algorithms are found to be
+effective~\cite{akande2015empirical} and are widely used in epidemiological
+domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REPTree}
+implementation~\cite{witten2016data}.
+
+\[P(q) = \frac{1}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}\]
+
+The reference algorithm used by the \textit{Impute} operator proceeds by iteratively fitting
+decision trees for the target imputation attribute on a subset of the data. In each
+iteration, the missing values of a separate attribute are replaced with newly imputed values.
+In one {\it epoch} of the algorithm, each of the target imputation
+attributes is filled in with imputed values in a single iteration.
+With each epoch, the quality of the imputation improves as values progressively
+reflect more accurate relationships between attributes. The algorithm terminates when
+convergence is achieved (i.e.\ the imputed values do not change across epochs) or a fixed
+number of epochs is reached. 
+
+These imputation algorithms are commonly used as part of a larger \textit{multiple imputation}
+process, in which multiple distinct copies of the complete data are generated and estimators
+are computed by averaging over the multiple datasets to form a single completed dataset~
+\cite{gelman2006data}. In \ProjectName{}, we consider only single imputation, though
+multiple imputation could incorporated as another avenue of assessing imputation confidence.
+
+\subsubsection{Mean}
+
+\todo{Fill this in.}
+
+\subsubsection{Hot-deck}
+
+\todo{Fill this in.}
+
+%\begin{algorithm}
+%    \input{algorithms/cart.tex}
+%\end{algorithm}
 
 \subsection{Query planning}
 \label{sec:planning}
@@ -252,47 +306,6 @@ The output of the join optimizer is the set of plans which satisfy all join pred
 
 %\begin{algorithm}
 %\input{algorithms/histogram-helpers.tex}
-%\end{algorithm}
-
-\subsection{Imputation Strategies}
-\label{sec:imputation}
-
-\ProjectName{} is designed so that any imputation strategy
-can be plugged in with minimal effort and without changes to the optimizer, simply by adding
-time and penalty functions (\Cref{sec:cost-model}) which describe the new algorithm.
-For our purposes, an imputation strategy is a function $I(R, C) \rightarrow R'$ which fills in the missing
-attributes $C$ in a relation $R$, returning a new relation $R'$.
-The flexibility of this approach aligns with the spirit of query optimization, which aims to
-reconcile performance with a declarative interface to data manipulation.
-
-New imputation algorithms can also be added. As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
-based on chained-equation decision trees.  Chained-equation
-imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
-regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
-a predictive model of one missing attribute, conditional on all complete attributes
-and all other missing attributes. Chained-equation decision trees algorithms are found to be
-effective~\cite{akande2015empirical} and are widely used in epidemiological
-domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REPTree}
-implementation~\cite{witten2016data}.
-
-The reference algorithm used by the \textit{Impute} operator proceeds by iteratively fitting
-decision trees for the target imputation attribute on a subset of the data. In each
-iteration, the missing values of a separate attribute are replaced with newly imputed values.
-In one {\it epoch} of the algorithm, each of the target imputation
-attributes is filled in with imputed values in a single iteration.
-With each epoch, the quality of the imputation improves as values progressively
-reflect more accurate relationships between attributes. The algorithm terminates when
-convergence is achieved (i.e.\ the imputed values do not change across epochs) or a fixed
-number of epochs is reached. 
-
-These imputation algorithms are commonly used as part of a larger \textit{multiple imputation}
-process, in which multiple distinct copies of the complete data are generated and estimators
-are computed by averaging over the multiple datasets to form a single completed dataset~
-\cite{gelman2006data}. In \ProjectName{}, we consider only single imputation, though
-multiple imputation could incorporated as another avenue of assessing imputation confidence.
-
-%\begin{algorithm}
-%    \input{algorithms/cart.tex}
 %\end{algorithm}
 
 %\subsection{Optimality}\label{sec:optimal}
