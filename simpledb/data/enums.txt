@@ -1,0 +1,298 @@
+Enumerated strings:
+Afghanistan:0
+Albania:1
+Algeria:2
+American Samoa:3
+Andorra:4
+Angola:5
+Antigua and Barbuda:6
+Arab World:7
+Argentina:8
+Armenia:9
+Aruba:10
+Australia:11
+Austria:12
+Azerbaijan:13
+Bahamas:14
+Bahrain:15
+Bangladesh:16
+Barbados:17
+Belarus:18
+Belgium:19
+Belize:20
+Benin:21
+Bermuda:22
+Bhutan:23
+Bolivia:24
+Bosnia and Herzegovina:25
+Botswana:26
+Brazil:27
+British Virgin Islands:28
+Brunei:29
+Bulgaria:30
+Burkina Faso:31
+Burundi:32
+Cabo Verde:33
+Cambodia:34
+Cameroon:35
+Canada:36
+Canary Islands:264
+Cape Verde:265
+Caribbean small states:37
+Cayman Islands:38
+Central African Republic:39
+Central Europe and the Baltics:40
+Chad:41
+Channel Islands:42
+Chile:43
+China:44
+Colombia:45
+Comoros:46
+Congo:266
+Congo, Dem. Rep.:47
+Congo, Rep.:48
+Costa Rica:49
+Cote D'Ivoire:50
+Croatia:51
+Cuba:52
+Curacao:53
+Cyprus:54
+Czech Republic:55
+Denmark:56
+Djibouti:57
+Dominica:58
+Dominican Republic:59
+Early-demographic dividend:60
+East Asia & Pacific:61
+East Asia & Pacific (IDA & IBRD countries):62
+East Asia & Pacific (excluding high income):63
+Ecuador:64
+Egypt:65
+El Salvador:66
+Equatorial Guinea:67
+Eritrea:68
+Estonia:69
+Ethiopia:70
+Euro area:71
+Europe & Central Asia:72
+Europe & Central Asia (IDA & IBRD countries):73
+Europe & Central Asia (excluding high income):74
+European Union:75
+Faroe Islands:76
+Fiji:77
+Finland:78
+Fragile and conflict affected situations:79
+France:80
+French Polynesia:81
+Gabon:82
+Gambia:83
+Georgia:84
+Germany:85
+Ghana:86
+Gibraltar:87
+Great Britain:267
+Greece:88
+Greenland:89
+Grenada:90
+Guam:91
+Guatemala:92
+Guinea:93
+Guinea-Bissau:94
+Guyana:95
+Haiti:96
+Hawaii:268
+Heavily indebted poor countries (HIPC):97
+High income:98
+Honduras:99
+Hong Kong:100
+Hungary:101
+IBRD only:102
+IDA & IBRD total:103
+IDA blend:104
+IDA only:105
+IDA total:106
+Iceland:107
+India:108
+Indonesia:109
+Iran:110
+Iraq:111
+Ireland:112
+Isle of Man:113
+Israel:114
+Italy:115
+Jamaica:116
+Japan:117
+Jordan:118
+Kazakhstan:119
+Kenya:120
+Kiribati:121
+Korea North:122
+Korea South:123
+Kosovo:124
+Kuwait:125
+Kyrgyzstan:126
+Lao PDR:127
+Late-demographic dividend:128
+Latin America & Caribbean:129
+Latin America & Caribbean (excluding high income):130
+Latin America & the Caribbean (IDA & IBRD countries):131
+Latvia:132
+Least developed countries: UN classification:133
+Lebanon:134
+Lesotho:135
+Liberia:136
+Libya:137
+Liechtenstein:138
+Lithuania:139
+Low & middle income:140
+Low income:141
+Lower middle income:142
+Luxembourg:143
+Macao SAR, China:144
+Macedonia:145
+Madagascar:146
+Malawi:147
+Malaysia:148
+Maldives:149
+Mali:150
+Malta:151
+Marshall Islands:152
+Martinique:269
+Mauritania:153
+Mauritius:154
+Mexico:155
+Micronesia, Fed. Sts.:156
+Middle East & North Africa:157
+Middle East & North Africa (IDA & IBRD countries):158
+Middle East & North Africa (excluding high income):159
+Middle income:160
+Moldova:161
+Monaco:162
+Mongolia:163
+Montenegro:164
+Morocco:165
+Mozambique:166
+Myanmar:167
+Nambia:270
+Namibia:168
+Nauru:169
+Nepal:170
+Netherland Antilles:271
+Netherlands:171
+New Caledonia:172
+New Zealand:173
+Nicaragua:174
+Niger:175
+Nigeria:176
+North America:177
+Northern Mariana Islands:178
+Norway:179
+Not classified:180
+OECD members:181
+Oman:182
+Other small states:183
+Pacific island small states:184
+Pakistan:185
+Palau:186
+Palestine:272
+Panama:187
+Papua New Guinea:188
+Paraguay:189
+Peru:190
+Ph.D.:279
+Philippines:191
+Poland:192
+Portugal:193
+Post-demographic dividend:194
+Pre-demographic dividend:195
+Puerto Rico:196
+Qatar:197
+Republic of Montenegro:273
+Republic of Serbia:274
+Reunion:275
+Romania:198
+Russia:199
+Rwanda:200
+Samoa:201
+San Marino:202
+Sao Tome and Principe:203
+Saudi Arabia:204
+Senegal:205
+Serbia:206
+Seychelles:207
+Sierra Leone:208
+Singapore:209
+Sint Maarten (Dutch part):210
+Slovakia:211
+Slovenia:212
+Small states:213
+Solomon Islands:214
+Somalia:215
+South Africa:216
+South Asia:217
+South Asia (IDA & IBRD):218
+South Sudan:219
+Spain:220
+Sri Lanka:221
+St. Kitts and Nevis:222
+St. Lucia:223
+St. Martin (French part):224
+St. Vincent and the Grenadines:225
+Sub-Saharan Africa:226
+Sub-Saharan Africa (IDA & IBRD countries):227
+Sub-Saharan Africa (excluding high income):228
+Sudan:229
+Suriname:230
+Swaziland:231
+Sweden:232
+Switzerland:233
+Syria:276
+Syrian Arab Republic:234
+Taiwan:277
+Tajikistan:235
+Tanzania:236
+Thailand:237
+Timor-Leste:238
+Togo:239
+Tonga:240
+Trinidad and Tobago:241
+Tunisia:242
+Turkey:243
+Turkmenistan:244
+Turks and Caicos Islands:245
+Tuvalu:246
+Uganda:247
+Ukraine:248
+United Arab Emirates:249
+United Kingdom:250
+United States of America:251
+Upper middle income:252
+Uruguay:253
+Uzbekistan:254
+Vanuatu:255
+Venezuela:256
+Vietnam:257
+Virgin Islands (USA):258
+West Bank and Gaza:259
+World:260
+Yemen:278
+Yemen, Rep.:261
+Zambia:262
+Zimbabwe:263
+agender:289
+associate's degree:280
+bachelor's degree:281
+between 100,000 and 1 million:294
+female:290
+genderqueer:291
+high school diploma or equivalent (GED):282
+less than 100,000:295
+male:292
+master's degree (non-professional):283
+more than 1 million:296
+no high school (secondary school):284
+professional degree (MBA, MD, JD, etc.):285
+some college credit, no degree:286
+some high school:287
+trade, technical, or vocational training:288
+trans:293
