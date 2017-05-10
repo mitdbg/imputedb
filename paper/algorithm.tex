@@ -15,7 +15,7 @@ We introduce two new relational operators to perform imputation: \textit{Impute}
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
 replace all \nullv{} values with non-\nullv{} values for attributes $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
-In our experiments, we implement \textit{Impute} using a chained-equation decision trees algorithm, but our system is agnostic to this choice.
+In our experiments, we implement \textit{Impute} using a general-purpose chained-equation decision trees algorithm, but our system is agnostic to this choice.
 \textit{Drop} simply removes from $R$ all tuples which have a \nullv{} value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no \nullv{} values for
 attributes in $C$.  
@@ -71,28 +71,28 @@ Note that \textsc{Dirty} over-approximates the set of attributes that contain \n
 \subsection{Cost model}
 \label{sec:cost-model}
 The cost of a plan $q$ is a tuple $\langle \textsc{Penalty}(q), \textsc{Time}(q) \rangle$.
-$\textsc{Penalty}(q) \in [0,1]$ is an estimate of the amount of information lost by the imputation procedures used.
+$\textsc{Penalty}(q) \in [0,1]$ is a heuristic that attempts to quantify the amount of information lost by the imputation procedures used.
 $\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
 
 \subsubsection{Pareto-optimal plans}
-Given a query, \ProjectName{} produces a final set of plans $P$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[P= \{ p ~|~ \not\exists p' \in S.\ p \neq p' \land \doms{p'}{p} \}.\]
+Given a query, \ProjectName{} produces a final set of query plans $Q$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[Q= \{ q ~|~ \not\exists q' \in S.\ q \neq q' \land \doms{q'}{q} \}.\]
 
 \begin{definition}
-We say that a plan $p$ with cost $\langle l, t \rangle$ \emph{dominates} a plan $p'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(p) = \textsc{Dirty}(p') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{p}{p'}$. 
+We say that a plan $q$ with cost $\langle l, t \rangle$ \emph{dominates} a plan $q'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(q) = \textsc{Dirty}(q') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{q}{q'}$. 
 \end{definition}
 
-This set $P$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of $\textsc{Time}$ and $\textsc{Penalty}$ for the current query.
+This set $Q$ will be the Pareto frontier of $S$~\cite{pareto1964cours}, and it contains the best option for all possible trade-offs of $\textsc{Time}$ and $\textsc{Penalty}$ for the current query.
 
 In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Penalty}$ value that the user is willing
 to tolerate relative to the minimum possible amongst frontier plans.
 
 \begin{definition}
-Let $P$ be a set of plans. For $p \in P$, we say $p$ is $\alpha$-bound, if $(\textsc{Penalty}(p) - \min_{p' \in P}(\textsc{Penalty}(p')) \leq \alpha$. We denote this as $p^\alpha$.
-We define the set of $\alpha$-bound plans in $P$ as $P^\alpha$.
-We say a plan $p^\alpha$ is $\alpha$-bound optimal if $\forall p' \in P^\alpha. \textsc{Time}(p) \leq \textsc{Time}(p')$. 
+Let $Q$ be a set of plans. For $q \in Q$, we say $q$ is $\alpha$-bound, if $(\textsc{Penalty}(q) - \min_{q' \in Q}(\textsc{Penalty}(q')) \leq \alpha$. We denote this as $q^\alpha$.
+We define the set of $\alpha$-bound plans in $Q$ as $Q^\alpha$.
+We say a plan $q^\alpha$ is $\alpha$-bound optimal if $\forall q' \in Q^\alpha. \textsc{Time}(q) \leq \textsc{Time}(q')$. 
 \end{definition}
 
-Given $\alpha$ and $P$, \ProjectName{} returns an $\alpha$-bound optimal plan in $P$.
+Given $\alpha$ and $Q$, \ProjectName{} returns an $\alpha$-bound optimal plan in $Q$.
 
 So in essence, $\alpha$ is a tunable parameter that determines whether the optimizer focuses on quality or on performance, as plans that
 lose a lot of information through dropping are also the fastest. 
@@ -103,7 +103,7 @@ lowest runtime (at the expense of quality).
 
 \subsubsection{Cardinality estimation}
 \label{sec:cardinal}
-The computation of $\textsc{Time}(q)$ and $\textsc{Penalty}(q)$ rely accurate cardinality estimates for the plan $q$ and its sub-plans.
+The computation of $\textsc{Penalty}(q)$ and$\textsc{Time}(q)$ relies on accurate cardinality estimates for the plan $q$ and its sub-plans.
 These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational algebra, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 
@@ -139,12 +139,13 @@ We estimate the quality of the imputations in a plan $q$ using a heuristic measu
   \textsc{Penalty}(q, P) &= \frac{\textsc{L}(q, P)}{\textsc{L}(q, 1)}
 \end{align*}
 
-$\textsc{Penalty}(q, P)$ assigns a cost in $(0,1]$ to each imputation operator in the plan $q$ according to its estimated quality, then averages over the individual costs.
-For example, each occurrence of $\delta$ incurs a cost of 1 (i.e.\ we lose all information that dropped tuples might have encoded).
-Imputing \nullv{} fields with $\mu$ incurs a cost in $(0, 1]$ according to a cost function $P$, which is specific to the imputation method in use.
+$\textsc{Penalty}(q, P)$ assigns a penalty in $(0,1]$ to each imputation operator in the
+plan $q$ according to its estimated quality, then averages over the individual penalties.
+For example, each occurrence of $\delta$ incurs a penalty of 1 (i.e.\ we lose all information that dropped tuples might have encoded).
+Imputing \nullv{} fields with $\mu$ incurs a penalty in $(0, 1]$ according to a cost function $P$, which is specific to the imputation method in use.
 
 The choice of $P$ depends on the properties of the imputation method being used.
-A well chosen $P$ should provide a reasonable estimate of the quality of imputation from the histogram describing the input data.
+A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the histogram describing the input data.
 From this histogram, $P$ can obtain the number of attributes in its input, its cardinality, and an estimate of its variance.
 Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the $P$ should \textit{decrease} as the number of values increases.
 $P$ should never decrease to zero, as this would mean that it can perform perfect imputation.
