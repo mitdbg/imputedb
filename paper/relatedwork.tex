@@ -80,6 +80,11 @@ However, in contrast to System R, \ProjectName{} performs additional optimizatio
 uses histogram transformations to account for the way relational and imputation operators affect the underlying
 tuple distributions.
 
+The planning algorithm that we present has similarities to the multi-objective query optimizer in~\cite{trummer2014}.
+Both algorithms handle plans which have multiple cost functions by maintaining sets of Pareto optimal plans and pruning plans which become dominated.
+In \ProjectName{}, costs are expected to grow monotonically as the size of the plan increases, which simplifies the optimization problem significantly.
+\cite{trummer2014} handles the more complex case of cost functions which are piecewise linear, but not necessarily monotonic.
+
 \subsection{Forecasting and Databases}
 \cite{parisi2011embedding} introduce the idea of incorporating time-series forecast operators into
 databases, along with the necessary relational algebra extensions. Their work explores the theoretical
