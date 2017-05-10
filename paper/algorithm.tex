@@ -119,42 +119,32 @@ For example it will redistribute the count of tuples with \nullv{} in an imputed
 
 \subsubsection{Imputation quality}
 \label{sec:quality}
-We estimate the quality of the imputations in a plan $q$ using a heuristic measure $\text{Penalty}(q, P)$, which is computed as follows.
+We estimate the quality of the imputations in a plan $q$ using a heuristic measure $\text{Penalty}_{P}(q)$, which is computed as follows.
 
 \begin{align*}
-  \textsc{L}(q, f) &= \begin{cases}
+    &\textsc{L}_{P}(q) = \begin{cases}
      1 + \textsc{L}(q') & q = \delta_C(q') \\
      P(q') + \textsc{L}(q') & q = \mu_C(q') \\
      \textsc{L}(q_l') + \textsc{L}(q_r') & q = q_l' \bowtie_\psi q_r' \\
      \textsc{L}(q') & q = \sigma_\phi(q'),\ q = \pi_C(q') \\
      0 & q = \text{some table } t\\
   \end{cases}\\
-  %   \textsc{N}(q) &= \begin{cases}
-  %    1 + \textsc{N}(q') & q = \delta_C(q') \\
-  %    1 + \textsc{N}(q')  & q = \mu_C(q') \\
-  %   \textsc{N}(q_l') + \textsc{N}(q_r') & q = q_l' \bowtie_\psi q_r' \\
-  %   \textsc{N}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
-  %   0 & q = \text{some table } t\\
-  % \end{cases}\\
-  \textsc{Penalty}(q, P) &= \frac{\textsc{L}(q, P)}{\textsc{L}(q, 1)}
+    &\textsc{Penalty}_{P}(q) = \frac{\textsc{L}_{P}(q)}{\textsc{L}_{P_1}(q)}
 \end{align*}
 
-$\textsc{Penalty}(q, P)$ assigns a penalty in $(0,1]$ to each imputation operator in the
-plan $q$ according to its estimated quality, then averages over the individual penalties.
-For example, each occurrence of $\delta$ incurs a penalty of 1 (i.e.\ we lose all information that dropped tuples might have encoded).
-Imputing \nullv{} fields with $\mu$ incurs a penalty in $(0, 1]$ according to a cost function $P$, which is specific to the imputation method in use.
+$\textsc{Penalty}_{P}(q)$ aggregates penalties from individual imputations to produce a measure of the quality of imputation for the entire plan.
+For imputation on a subplan $q'$, a penalty $P(q')$ in $(0,1]$ is assigned to $\mu(q')$
+and a penalty of $1$ is assigned to $\delta(q')$. Here, $P$ is an imputation-specific penalty function that estimates the heuristic penalty for imputing \nullv{} fields.
+The function $\textsc{L}_{P}(q')$ is then defined recursively to aggregate these penalties for the entire plan. The result is normalized by $\textsc{L}_{P_\delta}(q')$, which is the total penalty from choosing everywhere to drop tuples with \nullv{} values and equates to the count of imputations considered.
 
-The choice of $P$ depends on the properties of the imputation method being used.
-A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the histogram describing the input data.
-From this histogram, $P$ can obtain the number of attributes in its input, its cardinality, and an estimate of its variance.
-Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the $P$ should \textit{decrease} as the number of values increases.
-$P$ should never decrease to zero, as this would mean that it can perform perfect imputation.
-It should reflect the intuition that the number of training observations has diminishing returns by decreasing more slowly as the number of values increases.
+The form of $P$ is chosen to reflect the properties of the imputation method being used.
+A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the set of histograms describing the input data.
+From these histogram, $P$ can obtain the number of clean and dirty attributes in its input, their cardinality, and estimates of means, variances, and other statistics.
+Intuitively, imputation quality \textit{increases} when more complete attributes and complete tuples are available; correspondingly, $P(q')$ \textit{decreases} as the number of values increases.
+The heuristic penalty should also reflect the intuition that the number of training observations has diminishing returns by decreasing more slowly as the number of values increases. Finally, the heuristic penalty may increase as amount of noise or spread in the data increases, as this makes it more difficult to obtain precise imputations.
+
+Imputation quality $P(q')=0$ is unachievable, as this suggests the values of missing elements are known exactly. On the other hand, $P(q')=1$ occurs when all tuples with missing values are dropped, as this represents the worst case in terms of recovering information from these tuples.
 In Section~\ref{sec:imputation}, we discuss choices for $P$ for several common imputation methods.
-
-% In this case, the penalty is inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as the product of the number of attributes and the number of tuples.
-% Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the penalty \textit{decreases} with more values to work with.
-% Scaling the cell count by applying square root incorporates the intuition that the number of training observations has diminishing returns for imputation quality and we find that it works well in practice.
 
 \subsubsection{Query runtime}
 To compute $\textsc{Time}(q, T)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard database.
