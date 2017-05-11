@@ -80,7 +80,7 @@ been cleaned, we artificially dirtied it by replacing 40\% of the values uniform
 The final dataset consists of 671,153 rows and 37 integer columns.
 
 \subsection{Queries}
-We collect a set of queries (\Cref{fig:queries}) that we think are interesting to plan.
+We collect a set of queries (\Cref{tbl:queries}) that we think are interesting to plan.
 We believe that they could reasonably be written by a user in the course of data analysis.
 
 The queries consist not only of projections and selections, but also
@@ -104,6 +104,8 @@ provide performance figures relevant to practitioners using similar datasets.
 \begin{table*}
   \centering
   \input{queries}
+  \vspace{1ex}
+  \caption{Queries used in our experiments.}\label{tbl:queries}
 \end{table*}
 
 %\begin{table*}
@@ -122,10 +124,9 @@ quality ($\alpha=0$), \ProjectName{} optimizing for performance ($\alpha=1$), an
 at the base tables followed by executing the query traditionally. 
 
 \Cref{fig:runtimes} shows a summary of the performance results. The quality-optimized
-queries are an \todo{update/validate: order-of-magnitude faster than imputing on the base tables. We can get
-another order-of-magnitude speedup when optimizing for performance}. This performance
+queries are an \todo{update/validate: order-of-magnitude faster than imputing on the base tables. We get another order-of-magnitude speedup when optimizing for performance}. This performance
 differential means it is feasible
-to explore multiple imputations operations (including more expensive operators) when using
+to explore multiple imputation operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
@@ -142,11 +143,6 @@ to explore multiple imputations operations (including more expensive operators) 
 %\Cref{fig:plantimes} provides a summary of the planning times for each of the queries.
 %We exclude the planning time for queries that impute at base table, as that requires no
 %planning. 
-
-\todo{update: In the median across a variety of queries and choices of $\alpha$, planning took
-\planningmediantime{} ms, 
-constituting \planningruntimepercent{} percent of total runtime. In all cases, the optimizer
-returned a query plan within \planningmaxtime{} ms, with times similar across values of $\alpha$.}
 
 All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
 four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
@@ -238,7 +234,6 @@ For every imputation inserted into the query plan, a new statistical model is in
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
 
-
 \subsubsection{Planning times}
 \begin{table}
 \centering
@@ -252,9 +247,14 @@ planning time shown for 7 joins by approximately 45\%, on average.
 \label{table:planning-times}
 \end{table}
 
-We explored the practical implications of our planning algorithm by constructing a series of queries with increasing number of joins.
-We used the CDC tables and evaluated a combination of self-joins and joins across reference tables. Planning times for queries
-involving 1 to 5 joins, which although limited is a practical value for real world exploratory queries, take less than a second.
+\todo{Update: Planning times are reasonable, with a median planning time of \planningmediantime{} ms. over the benchmark queries, constituting \planningruntimepercent{}\% of total runtime.
+In all cases, the optimizer returned a query plan within \planningmaxtime{} ms.}
+The choice of $\alpha$ has no impact on planning times, because query selection is done after collecting the Pareto frontier.
+
+However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
+We explored the limits our planning algorithm by constructing a series of queries with increasing number of joins.
+We used the CDC tables and evaluated a combination of self-joins and joins across reference tables.
+Planning times for queries involving 1--5 joins, which is a practical value for real world exploratory queries, take less than a second.
 \todo{update: For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
 the plan space by maintaining only approximations of the Pareto set for queries involving a large number of joins.
 With this optimization, the same set of queries have an average planning time of 16 seconds (2 seconds SE).}
