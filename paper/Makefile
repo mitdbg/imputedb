@@ -1,6 +1,6 @@
 MAIN=main
 
-pdf:
+pdf: $(MAIN).tex $(MAIN).bcf
 	pdflatex main.tex
 	biber main.bcf
 	pdflatex main.tex
