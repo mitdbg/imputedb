@@ -124,7 +124,8 @@ In the case of $\sigma$ and $\bowtie$ operations, we estimate the cardinality of
 
 \subsubsection{Imputation quality} 
 \label{sec:quality}
-We estimate the quality of the imputations in a plan $q$ using a heuristic measure $\text{Penalty}_{P}(q)$, which is computed as follows.
+Every instantiation of the impute-operator defines a custom penalty function $P$ for imputing \nullv{} fields.
+\ProjectName{} estimates the aggregate quality of the imputations in a plan $q$ using the heuristic measure $\text{Penalty}_{P}(q)$, computed as follows.
 
 \begin{align*}
     &\textsc{L}_{P}(q) = \begin{cases}
@@ -134,17 +135,18 @@ We estimate the quality of the imputations in a plan $q$ using a heuristic measu
      \textsc{L}(q') & q = \sigma_\phi(q'),\ q = \pi_C(q') \\
      0 & q = \text{some table } t\\
   \end{cases}\\
-    &\textsc{Penalty}_{P}(q) = \frac{\textsc{L}_{P}(q)}{\textsc{L}_{P_1}(q)}
+    &\textsc{Penalty}_{P}(q) = \frac{\textsc{L}_{P}(q)}{\textsc{L}_{P_\delta}(q)}
 \end{align*}
 
 $\textsc{Penalty}_{P}(q)$ aggregates penalties from individual imputations to produce a measure of the quality of imputation for the entire plan.
 For imputation on a subplan $q'$, a penalty $P(q')$ in $(0,1]$ is assigned to $\mu(q')$
-and a penalty of $1$ is assigned to $\delta(q')$. Here, $P$ is an imputation-specific penalty function that estimates the heuristic penalty for imputing \nullv{} fields.
-The function $\textsc{L}_{P}(q')$ is then defined recursively to aggregate these penalties for the entire plan. The result is normalized by $\textsc{L}_{P_\delta}(q')$, which is the total penalty from choosing everywhere to drop tuples with \nullv{} values and equates to the count of imputations considered.
+and a penalty of $1$ is assigned to $\delta(q')$.
+The function $\textsc{L}_{P}(q')$ is then defined recursively to aggregate these penalties for the entire plan. 
+The result is normalized by $\textsc{L}_{P_\delta}(q')$, which is the total penalty for always dropping tuples with \nullv{} values and equates to the count of imputation operators considered.
 
-The form of $P$ is chosen to reflect the properties of the imputation method being used.
-A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the set of histograms describing the input data.
-From these histogram, $P$ can obtain the number of clean and dirty attributes in its input, their cardinality, and estimates of means, variances, and other statistics.
+\noindent{\textbf{Constructing $P$}}: The form of $P$ is chosen to reflect the properties of the imputation method being used.
+A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the set of plan histograms.
+From these, $P$ can obtain the number of clean and dirty attributes in its input, their cardinalities, and approximations to summary statistics such as mean and variance
 Intuitively, imputation quality \textit{increases} when more complete attributes and complete tuples are available; correspondingly, $P(q')$ \textit{decreases} as the number of values increases.
 The heuristic penalty should also reflect the intuition that the number of training observations has diminishing returns by decreasing more slowly as the number of values increases. Finally, the heuristic penalty may increase as amount of noise or spread in the data increases, as this makes it more difficult to obtain precise imputations.
 
@@ -152,7 +154,7 @@ Imputation quality $P(q')=0$ is unachievable, as this suggests the values of mis
 In Section~\ref{sec:imputation}, we discuss choices for $P$ for several common imputation methods.
 
 \subsubsection{Query runtime}
-To compute $\textsc{Time}(q, T)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard database.
+To compute $\textsc{Time}_{T}(q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard database.
 
 %\begin{align*}
 %  \textsc{T}(q) &= \begin{cases}
@@ -176,7 +178,7 @@ We extend these heuristics to account for the new operators: \textit{Drop} and \
 \textit{Drop} is a special case of a filter, so its time complexity is correspondingly negligible. 
 As with $\textsc{Penalty}$, the time computation for \textit{Impute} depends on the properties of the underlying algorithm via a function $T$.
 
-The choice of $T$ depends on the imputation method in use, and as with $P$, there are several intuitions which guide the choice of $T$.
+\noindent{\textbf{Constructing $T$}}: The choice of $T$ depends on the imputation method in use, and as with $P$, there are several intuitions which guide the choice of $T$.
 First, $\textsc{Time}$ is computed in terms of the I/O cost per page so $T$ must return a value in these units.
 It can be unnatural to compute the cost of imputation in terms of the I/O cost, so it may be simpler to compute the per-tuple cost and then convert.
 Second, $T$ should \emph{increase} as the number of tuples passed to the imputation function increases and it should be proportional to the complexity of the imputation algorithm.
@@ -237,6 +239,7 @@ multiple imputation could incorporated as another avenue of assessing imputation
 \subsubsection{Mean}
 
 \todo{Fill this in.}
+\[P(q) = \frac{1}{n} (1 + \overline{Variance(q)}) \]
 
 \subsubsection{Hot-deck}
 
