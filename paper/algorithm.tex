@@ -6,7 +6,7 @@ algebra operators must never observe a missing value in any attribute that they 
 The decision to place imputation operators is driven by our cost model (\Cref{sec:cost-model}), which characterizes a plan based on estimates for the 
 quality of the imputations performed and the runtime performance. Our imputation planning algorithm is
 agnostic to the type of imputation used (\Cref{sec:imputation}). Finally, we show
-that while our algorithm is exponential in the number of joins (\Cref{sec:complexity}), in practice, planning times are not a concern.
+that while our algorithm is exponential in the number of joins (\Cref{sec:complexity}), in practice, planning times are not a concern for most queries.
 
 
 \subsection{Imputation operators}
@@ -71,8 +71,9 @@ Note that \textsc{Dirty} over-approximates the set of attributes that contain \n
 \subsection{Cost model}
 \label{sec:cost-model}
 The cost of a plan $q$ is a tuple $\langle \textsc{Penalty}(q), \textsc{Time}(q) \rangle$.
-$\textsc{Penalty}(q) \in [0,1]$ is a heuristic that attempts to quantify the amount of information lost by the imputation procedures used.
-$\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
+$\textsc{Penalty}(q) \in (0,1]$ is a heuristic that attempts to quantify the amount of information lost by the imputation procedure used.
+$\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics, selectivity estimation of the query predicates, and the complexity of the
+impute operation. 
 
 \subsubsection{Pareto-optimal plans}
 Given a query, \ProjectName{} produces a final set of query plans $Q$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[Q= \{ q ~|~ \not\exists q' \in S.\ q \neq q' \land \doms{q'}{q} \}.\]
@@ -104,7 +105,7 @@ lowest runtime (at the expense of quality).
 \subsubsection{Cardinality estimation}
 \label{sec:cardinal}
 The computation of $\textsc{Penalty}(q)$ and$\textsc{Time}(q)$ relies on accurate cardinality estimates for the plan $q$ and its sub-plans.
-These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational algebra, but also by the imputation operators.
+These estimates are impacted not just by filtering or joining, as in the traditional relational algebra, but also by the imputation operators.
 For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 
 To compute cardinality, we maintain histograms for each column in the database.
@@ -113,11 +114,12 @@ When the optimizer creates a new query plan, it copies the histograms of the sub
 For example it will redistribute the count of tuples with \nullv{} in an imputed field.
 \Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
+\todo{Add a verbal explanation of the scaling steps}
 \begin{algorithm}
 \input{algorithms/histogram-transform.tex}
 \end{algorithm}
 
-\subsubsection{Imputation quality}
+\subsubsection{Imputation quality} 
 \label{sec:quality}
 We estimate the quality of the imputations in a plan $q$ using a heuristic measure $\text{Penalty}_{P}(q)$, which is computed as follows.
 
