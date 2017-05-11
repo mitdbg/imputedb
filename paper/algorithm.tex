@@ -154,6 +154,8 @@ Imputation quality $P(q')=0$ is unachievable, as this suggests the values of mis
 In Section~\ref{sec:imputation}, we discuss choices for $P$ for several common imputation methods.
 
 \subsubsection{Query runtime}
+\label{sec:query-runtime}
+
 To compute $\textsc{Time}_{T}(q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard database.
 
 %\begin{align*}
@@ -210,7 +212,10 @@ can be plugged in with minimal effort and without changes to the optimizer, simp
 penalty and time functions (\Cref{sec:cost-model}) pertinent to the algorithm.
 These can then be queried by the optimizer during planning.  The flexibility of
 this approach aligns with the spirit of query optimization, which aims to
-reconcile performance with a declarative interface to data manipulation.
+reconcile performance with a declarative interface to data manipulation. To
+motivate this API, we describe how an analyst would specify the form of these
+functions for a general-purpose imputation algorithm, as well as two simpler
+methods.
 
 \subsubsection{Decision trees}
 
@@ -258,17 +263,42 @@ improvement in imputation quality from more tuples and attributes as well as
 the diminishing returns to more data.
 
 \[
-    P(q) = \frac{1}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
+    P(q) = \frac{|\textsc{Dirty}(q)|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
 \]
 
 \subsubsection{Mean}
 
-\todo{Fill this in.}
-\[P(q) = \frac{1}{n} (1 + \overline{Variance(q)}) \]
+At the other end of the spectrum of complexity, an analyst could use a simpler
+method that replaces a missing value with the mean of the complete values of
+that attribute. Mean value imputation is a common choice for use in exploratory
+data analysis. One benefit of mean imputation in the context of \ProjectName{}
+is that taking advantage of the histograms associated with a plan $q$, we can
+estimate the mean and impute missing values in a non-blocking fashion. Thus,
+applying the heuristics from \ref{sec:quality} and \ref{sec:query-runtime}, we
+have
+
+\begin{equation*}
+\begin{aligned}
+    T(q) &\approx 0 \\
+    P(q) &= \frac{|\textsc{Dirty}(q)|}{\sqrt{\textsc{Card}(q)}} \\
+    P(q) &= \frac{1}{n} (1 + \overline{Variance(q)})
+\end{aligned}
+\end{equation*}
+>>>>>>> Add mean and hot-deck descriptions
 
 \subsubsection{Hot-deck}
 
-\todo{Fill this in.}
+Hot-deck imputation is a nonparametric method in which missing values are
+replaced with randomly selected complete values. This method preserves the
+distribution of the complete values. The heuristic $T$ and $P$ functions are
+similar except for the fact that hot-deck is blocking in our implementation.
+
+\begin{equation*}
+\begin{aligned}
+    T(q) &= \textsc{Card}(q) \\
+    P(q) &= \frac{|\textsc{Dirty}(q)|}{\sqrt{\textsc{Card}(q)}}
+\end{aligned}
+\end{equation*}
 
 %\begin{algorithm}
 %    \input{algorithms/cart.tex}
