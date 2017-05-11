@@ -25,11 +25,11 @@ GROUP BY attendedbootcamp;
 
 SELECT AVG(commutetime)
 FROM fcc
-WHERE gender = 178 AND countrycitizen = 158;
+WHERE gender = 290 AND countrycitizen = 251;
 
 SELECT schooldegree, AVG(studentdebtowe)
 FROM fcc
-WHERE studentdebtowe > 0 AND schooldegree >= 0
+WHERE studentdebtowe > 0
 GROUP BY schooldegree;
 
 SELECT attendedbootcamp, AVG(gdp_per_capita)
@@ -56,7 +56,7 @@ GROUP BY attendedbootcamp;
 
 SELECT AVG(commutetime)
 FROM fcc
-WHERE gender = 178
+WHERE gender = 290
 AND commutetime >= 120;
 
 SELECT gender, AVG(age)

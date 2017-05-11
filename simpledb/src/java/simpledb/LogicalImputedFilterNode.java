@@ -77,8 +77,8 @@ public class LogicalImputedFilterNode extends ImputedPlan {
 	}
 	
 	@Override
-	protected AvgAgg loss() {
-		return subplan.loss();
+	protected AvgAgg penalty() {
+		return subplan.penalty();
 	}
 	
 	@Override

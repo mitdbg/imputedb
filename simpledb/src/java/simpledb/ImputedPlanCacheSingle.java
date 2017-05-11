@@ -37,7 +37,7 @@ public class ImputedPlanCacheSingle extends AImputedPlanCache {
         }
 	}
 
-	public ImputedPlan getFinalPlan(double lossBound, Set<String> tables) {
+	public ImputedPlan getFinalPlan(double alpha, Set<String> tables) {
 		throw new UnsupportedOperationException("This class should not be used, use pareto");
 	}
 }

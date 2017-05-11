@@ -1,0 +1,21 @@
+ImputeDB currently only handles integer values. 
+
+The datasets used for evaluation have both floating point numbers and strings.
+For floating point, we multiplied by 100 and truncated. We multipled by 100 as various
+columns have values between 0 and 1, so just truncating wouldn't work and we wanted
+to treat all of these values in the same way.
+
+
+Strings are only used in the fcc benchmark queries. In this case, we enumerated the strings
+across all tables. We need enumerations to be consistent across tables to allow for joining
+across fcc and gdp on countrycitizen. This does add a slight complication to imputing the
+missing enumeration value for missing strings: enumerations are not necessarily contiguous
+(e.g. A, B may not map to 1 and 2, in a given table). This shouldn't affect the
+regression tree approach but will likely mess up simpler imputation models (like mean).
+Since comparisons are against the same imputation algo on the base table, this shouldn't
+be an issue for fair comparisons.
+
+After running ../create_data.sh, the .dat files here can be moved where necessary (along
+with the catalog.txt created and saved here as well).
+
+Enumerations used are found in the enums.txt file.

@@ -23,6 +23,11 @@ public class Parser {
         System.out.println("==> Using parser with alpha=" + alpha + " impute at base=" + imputeAtBase);
     }
 
+    public Parser() {
+        // if none specified, we default to best quality but not at base
+        this(0.0, false);
+    }
+
     public static Predicate.Op getOp(String s) throws simpledb.ParsingException {
         if (s.equals("="))
             return Predicate.Op.EQUALS;

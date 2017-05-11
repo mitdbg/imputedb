@@ -30,23 +30,18 @@ public class ImputedPlanCachePareto extends AImputedPlanCache {
         Value newPlan = new Value(newPlanIP, joins);
         if (bestPlans.containsKey(key)) {
         	SortedSet<Value> plans = bestPlans.get(key);
-            boolean canBeApproximated = false;
 
         	// Find dominating plans.
         	for (Value plan : plans) {
-        		// Found a dominating plan.
+                // Found a dominating plan, we don't add these plans regardless
         		if (plan.dominates(newPlan)) { return; }
-                canBeApproximated = canBeApproximated || plan.isApproximate(newPlan);
+                // if frontier is approximate and plan can be approximated, don't add
+                if (this.approximate && plan.isApproximate(newPlan)) { return; }
         	}
-        	
-        	// Remove dominated plans.
+            // remove dominated plans.
         	plans.removeIf(plan -> newPlan.dominates(plan));
-
-            if (!this.approximate || !canBeApproximated) {
-                // add any non-dominated plans if this is not an approximate cache
-                // or only add plans that can not be approximated, if we are an approximate cache
-                plans.add(newPlan);
-            }
+            // and add it to the frontier
+            plans.add(newPlan);
         } else {
         	// always insert if we don't have any info on this key combo
         	TreeSet<Value> plans = new TreeSet<>();
@@ -55,28 +50,27 @@ public class ImputedPlanCachePareto extends AImputedPlanCache {
         }
     }
 
-    private double getMinLoss(Set<String> tables) {
-        double minLoss = Double.MAX_VALUE;
+    private double getMinPenalty(Set<String> tables) {
+        double minPenalty = Double.MAX_VALUE;
         for (ImputedPlanCachePareto.Value val : bestPlans(tables)) {
-            double loss = val.plan.getLoss();
-            if (loss < minLoss) {
-                minLoss = loss;
+            double penalty = val.plan.getPenalty();
+            if (penalty < minPenalty) {
+                minPenalty = penalty;
             }
         }
-        return minLoss;
+        return minPenalty;
     }
 
 
-    public ImputedPlan getFinalPlan(double lossBound, Set<String> tables) {
+    public ImputedPlan getFinalPlan(double alpha, Set<String> tables) {
         // need to know this upfront
-        double minLoss = getMinLoss(tables);
+        double minPenalty = getMinPenalty(tables);
         double minTime = Double.MAX_VALUE;
         ImputedPlan chosen = null;
-        // be explicit about fetching plan for all tables with empty dirty set
-        for (ImputedPlanCachePareto.Value val : bestPlans(tables, new HashSet<>())) {
+        for (ImputedPlanCachePareto.Value val : bestPlans(tables)) {
             double time = val.plan.getTime();
-            double loss = val.plan.getLoss();
-            if ((loss - minLoss) <= lossBound && time < minTime) {
+            double penalty = val.plan.getPenalty();
+            if ((penalty - minPenalty) <= alpha && time < minTime) {
                 minTime = time;
                 chosen = val.plan;
             }

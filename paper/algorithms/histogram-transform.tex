@@ -1,23 +1,33 @@
-%\begin{algorithm}
-  \begin{algorithmic}
-    \Require{$\mathbb{H}$ is a map from attribute names to histograms, $op$ is an operator node in a query plan}
-    \Ensure{Returns an updated map $\mathbb{H'}$}
-    
-    \Function{UpdateHistograms}{$\mathbb{H}, op$}
-    	\If{op = $\delta_C$}
-		\State $\mathbb{H'} \gets \{ c \mapsto h' | h' = \mathbb{H}[c] \text{ without nulls } \text{ if } c \in C \text{ else } \mathbb{H}[c] \}$
-		\State $\{ c \mapsto h' | h' = \mathbb{H'}[c] \text{ scaled to } min \text{ cardinality in } \mathbb{H'} \}$
-	\ElsIf{op = $\mu_C$}
-	\State $\{ c \mapsto h' | h' = \text{ nulls redistributed by } \mathbb{H}[c]  \text{ if } c \in C \text{ else } \mathbb{H}[c]\}$
-	\ElsIf{op = $\sigma$}
-		\State $\{ c \mapsto h' | h' = \mathbb{H}[c] \text{ scaled by } \Call{Selectivity}{\sigma} \}$
-	\ElsIf{op = $\bowtie_\phi$}
-		\State $\{ c \mapsto h' | h' = \mathbb{H}[c] \text{ scaled to } \Call{Cardinality}{\bowtie_{\phi}} \}$
-	\Else
-		\State $\mathbb{H}$
-	\EndIf
-    \EndFunction
-  \end{algorithmic}
-  \caption{An algorithm for in-plan histogram updates}
-  \label{algo:histogram-transformation}
-%\end{algorithm}
+\newcommand{\InlineIte}[3]{#2\ \textbf{if}\ #1\ \textbf{else}\ #3}
+\renewcommand{\algorithmicindent}{1em}
+
+\begin{algorithmic}
+    \Require{
+    \Statex
+    \begin{itemize}[leftmargin=*,noitemsep]
+    \item $H$: A map from attribute names to histograms.
+    \item $op$: A relational operator.
+    \end{itemize}}
+  
+  \Function{UpdateHistograms}{$H,\ op$}
+  \If{op = $\delta_C$}
+  \State Set null count to zero for $H[c]$ where $c \in C$.
+  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = \min_d \Call{Card}{H[d]}$, $\forall c$.
+  \ElsIf{op = $\mu_C$}
+  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]}$ is unchanged and null
+  \State count is zero, $\forall c$.
+  \ElsIf{op = $\sigma_\phi$}
+  \State Scale $H[c]$ by $\Call{Selectivity}{\phi, H}$, $\forall c$.
+  \ElsIf{op = $\bowtie_\phi$}
+  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = \Call{Card}{\bowtie_\phi}$, $\forall c$.
+  \EndIf
+  \State \Return $H$
+  \EndFunction
+\end{algorithmic}
+\caption{An algorithm for in-plan histogram updates}
+\label{algo:histogram-transformation}
+  
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

@@ -3,11 +3,6 @@ For our experiments we plan and execute queries for three separate survey-based 
 We show that \ProjectName{} performs an order of magnitude better than traditional
 base-table imputation and produces results of comparable quality.
 
-\subsection{Implementation}
-To evaluate the performance of our approach, we implemented a prototype system in Java, following a traditional iterator model.
-Our database handles a subset of standard SQL, including filters, joins, projection, grouping and aggregation.
-For simplicity, \ProjectName{} only handles tables containing integer data.
-
 \subsection{Data sets}\label{subsec:datasets}
 We collect three data sets for our experiments.
 For all data sets, we selected a subset of the original attributes.
@@ -85,30 +80,32 @@ been cleaned, we artificially dirtied it by replacing 40\% of the values uniform
 The final dataset consists of 671,153 rows and 37 integer columns.
 
 \subsection{Queries}
-We collect a set of queries (\Cref{fig:queries}) that we think are interesting to plan.
+We collect a set of queries (\Cref{tbl:queries}) that we think are interesting to plan.
 We believe that they could reasonably be written by a user in the course of data analysis.
 
 The queries consist not only of projections and selections, but also
 interesting joins and aggregates. Our aim was to craft meaningful queries that would
 provide performance figures relevant to practitioners using similar datasets.
 
-Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
-\Cref{q1} calculates the average cuff size for individuals based on their income data, with a constraint on height.
-\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes and above a certain weight.
-\Cref{q3} extracts the average blood lead levels for children under 6 years of age.
-\Cref{q4} calculates the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. 
-\Cref{q5} calculates the average waist circumference for subjects above a certain height and weight.
-
-Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
-\Cref{q6} calculates the average income for higher-income survey participants, grouped by their bootcamp attendance.
-\Cref{q7} estimates the average commute time of women from the United States who participated.
-\Cref{q8} calculates the average amount of student debt based on school degree for survey participants who have student debt.
-\Cref{q9} joins the freeCodeCamp data with a table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
-The query calculates the average GDP per-capita by grouping 18+ year old participants who attended bootcamp versus those who did not.
+%Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
+%\Cref{q1} calculates the average cuff size for individuals based on their income data, with a constraint on height.
+%\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes and above a certain weight.
+%\Cref{q3} extracts the average blood lead levels for children under 6 years of age.
+%\Cref{q4} calculates the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. 
+%\Cref{q5} calculates the average waist circumference for subjects above a certain height and weight.
+%
+%Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
+%\Cref{q6} calculates the average income for higher-income survey participants, grouped by their bootcamp attendance.
+%\Cref{q7} estimates the average commute time of women from the United States who participated.
+%\Cref{q8} calculates the average amount of student debt based on school degree for survey participants who have student debt.
+%\Cref{q9} joins the freeCodeCamp data with a table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
+%The query calculates the average GDP per-capita by grouping 18+ year old participants who attended bootcamp versus those who did not.
 
 \begin{table*}
   \centering
   \input{queries}
+  \vspace{1ex}
+  \caption{Queries used in our experiments.}\label{tbl:queries}
 \end{table*}
 
 %\begin{table*}
@@ -122,15 +119,14 @@ The query calculates the average GDP per-capita by grouping 18+ year old partici
 
 \subsection{Results}\label{sec:results}
 
-For each query, we evaluate three different configurations: \ProjectName{} optimizing for
+For each query, we evaluate \todo{update: three different configurations}: \ProjectName{} optimizing for
 quality ($\alpha=0$), \ProjectName{} optimizing for performance ($\alpha=1$), and imputing
 at the base tables followed by executing the query traditionally. 
 
 \Cref{fig:runtimes} shows a summary of the performance results. The quality-optimized
-queries are an order-of-magnitude faster than imputing on the base tables. We can get
-another order-of-magnitude speedup when optimizing for performance. This performance
+queries are an \todo{update/validate: order-of-magnitude faster than imputing on the base tables. We get another order-of-magnitude speedup when optimizing for performance}. This performance
 differential means it is feasible
-to explore multiple imputations operations (including more expensive operators) when using
+to explore multiple imputation operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
 
 \begin{figure}
@@ -140,18 +136,13 @@ to explore multiple imputations operations (including more expensive operators) 
     performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
     magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
     imputation can provide another order-of-magnitude speedup at the expense of quality.}
-    
+\todo{update with new figure}   
 \label{fig:runtimes}
 \end{figure}
 
 %\Cref{fig:plantimes} provides a summary of the planning times for each of the queries.
 %We exclude the planning time for queries that impute at base table, as that requires no
 %planning. 
-
-In the median across a variety of queries and choices of $\alpha$, planning took
-\planningmediantime{} ms, 
-constituting \planningruntimepercent{} percent of total runtime. In all cases, the optimizer
-returned a query plan within \planningmaxtime{} ms, with times similar across values of $\alpha$.
 
 All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
 four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
@@ -179,12 +170,13 @@ place for dirty input data, for which ground truth is unavailable.
 In our case, the relevant comparison is against traditional
 imputation on the base table, given the unavailability of ground truth.
 
+\todo{Distinguish between underlying imputation methods}
 For $\alpha=0$ and $\alpha=1$, we pair up tuples and compute SMAPE for all queries. That is,
 we compute tuple-wise absolute percentage deviations within each iteration of a query, and
 we report this value averaged over all iterations.  We
 can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
-to the base-imputation approach is low---between \lowsmapealphazero{} and
-\highsmapealphaoneexacs{} percent---indicating that on-the-fly imputation produces similar
+to the base-imputation approach is low---\todo{update: between \lowsmapealphazero{} and
+\highsmapealphaoneexacs{} percent}---indicating that on-the-fly imputation produces similar
 results to imputation at the base tables. Notably, the results with largest error correspond
 most closely to one existing approach of dropping all \nullv{}s.
 
@@ -200,8 +192,8 @@ This highlights a challenge for a user handling data imputation traditionally: i
 By using \ProjectName{} this cost can be lowered significantly.
 
 \Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm.
-The diversity of plans highlights the possible tradeoffs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
-can be exposed to the user to help in guiding their workflow for exploring values of $\alpha$.
+and encapsulate the possible tradeoffs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
+can be exposed to the user to help in guiding their workflow.
 
 \begin{table}
 \centering
@@ -213,14 +205,15 @@ can be exposed to the user to help in guiding their workflow for exploring value
     efficiency ($\alpha=1$). The count fraction column shows the number of tuples used in calculating each aggregate
      as a fraction of the number of tuples used when running the same query after imputing on the base table.
     A lower count share reflects more potential for errors.}
+\todo{update with new figure}
 \label{table:smape}
 \end{table}
 
 \begin{figure}
-\includegraphics[width=\columnwidth]{figures/pareto_frontiers_plot.png}
-\caption{\ProjectName{}'s final Pareto frontier for \Cref{q1} and \Cref{q6}. The user can tradeoff between the plans by adjusting values of $\alpha$. Depending on the query
-there may be small clusters of plans centered around a similar penalty or time value. The frontier is produced before executing a plan and can be exposed
-to the user.}
+\centering
+\includegraphics[scale=0.4]{figures/pareto_frontiers_plot.png}
+\caption{\ProjectName{}'s final Pareto frontier for \Cref{q1} and \Cref{q6}. 
+For clarity, we have removed from the plot plans that provide nearly indistinguishable tradeoffs in either dimension. }
 \label{fig:pareto-frontiers}
 \end{figure}
 
@@ -241,7 +234,6 @@ For every imputation inserted into the query plan, a new statistical model is in
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
 
-
 \subsubsection{Planning times}
 \begin{table}
 \centering
@@ -249,16 +241,23 @@ this is not desirable because the specific rows of data, set of complete attribu
 \caption{Planning times are sub-second for up to 4 joins. For 5+  joins planning times rise. Many practical queries
 can be formulated with a smaller number of joins, but to support more complex queries \ProjectName{} provides an
 optimization that maintains approximate Pareto sets for queries with many joins. This reduces the 29 second
-planning time shown for 7 joins by approximately 45\%, on average.}
+planning time shown for 7 joins by approximately 45\%, on average.
+\todo{update with new table and values}
+}
 \label{table:planning-times}
 \end{table}
 
-We explored the practical implications of our planning algorithm by constructing a series of queries with increasing number of joins.
-We used the CDC tables and evaluated a combination of self-joins and joins across reference tables. Planning times for queries
-involving 1 to 5 joins, which although limited is a practical value for real world exploratory queries, take less than a second.
-For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
+\todo{Update: Planning times are reasonable, with a median planning time of \planningmediantime{} ms. over the benchmark queries, constituting \planningruntimepercent{}\% of total runtime.
+In all cases, the optimizer returned a query plan within \planningmaxtime{} ms.}
+The choice of $\alpha$ has no impact on planning times, because query selection is done after collecting the Pareto frontier.
+
+However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
+We explored the limits our planning algorithm by constructing a series of queries with increasing number of joins.
+We used the CDC tables and evaluated a combination of self-joins and joins across reference tables.
+Planning times for queries involving 1--5 joins, which is a practical value for real world exploratory queries, take less than a second.
+\todo{update: For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
 the plan space by maintaining only approximations of the Pareto set for queries involving a large number of joins.
-With this optimization, the same set of queries have an average planning time of 16 seconds (2 seconds SE).
+With this optimization, the same set of queries have an average planning time of 16 seconds (2 seconds SE).}
 
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 

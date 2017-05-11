@@ -42,7 +42,7 @@ public class ImputedPlanCacheFileWriter {
 			writeSet(val.plan.getDirtySet());
 			writer.print("\n");
 			
-			writer.format("Loss: %f\n", val.plan.loss().get());
+			writer.format("Loss: %f\n", val.plan.penalty().get());
 			writer.format("Time: %f\n", val.plan.time());
 			
 			try {

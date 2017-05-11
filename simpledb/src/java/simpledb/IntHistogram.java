@@ -78,6 +78,10 @@ public class IntHistogram {
     private int bucketMax(int v) {
     	return bucketMin(v) + valuesPerBucket - 1;
     }
+    
+    private double bucketMean(int v){
+    	return (bucketMin(v) + bucketMax(v)) / 2.0;
+    }
 
     /**
      * Add a value to the set of values that you are keeping a histogram of.
@@ -228,6 +232,23 @@ public class IntHistogram {
 		double res = 0;
 		for (double v : vs) res+= v;
 		return res;
+	}
+	
+	public double mean() {
+		double sum = 0.0;
+		for (int v=0; v<buckets.length; v++){
+			sum += buckets[v] * bucketMean(v);
+		}
+		return sum / this.numValues;
+	}
+	
+	public double variance() {
+		double mean = this.mean();
+		double sum  = 0.0;
+		for (int v=0; v<buckets.length; v++){
+			sum += buckets[v] * Math.pow(bucketMean(v) - mean, 2.0);
+		}
+		return sum / this.numValues;
 	}
 
 	/**

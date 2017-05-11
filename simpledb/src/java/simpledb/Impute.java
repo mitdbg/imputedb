@@ -85,13 +85,12 @@ public abstract class Impute extends Operator {
 
     /**
      * Return the estimated time cost (computational complexity) of the
-     * imputation. This is a unitless quantity that should be scaled by the
-     * caller.
-     * @param numDirty number of dirty attributes (to impute)
-     * @param numComplete number of complete attributes
-     * @param numTuples number of tuples
-     * @return estimated cost
+     * imputation. This is a unitless quantity
+     * @return estimated time
      */
-	public abstract double getEstimatedCost(int numDirty, int numComplete, int numTuples);
+	public abstract double getEstimatedTime(ImputedPlan subplan);
+
+    public abstract double getEstimatedPenalty(ImputedPlan subplan);
+
 
 }

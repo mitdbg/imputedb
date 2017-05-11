@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python2
 
 # Convert CDC and other data to simpledb format
 # Make floating point columns integer
@@ -109,11 +109,12 @@ def read_csv(path, col_map):
     df.columns = cols
   return df
 
-def add_nulls(df, pct):
-  print "Adding %f pct nulls" % pct
+def add_nulls_if_none(df, pct):
   if pd.isnull(df).any().any():
     return df
   else:
+    print "Adding %f pct nulls" % pct
+    np.random.seed(1)
     vals = df.values.flatten().copy().astype(float)
     n = len(vals)
     ix = np.random.choice(n, size=int(pct * n), replace=False)
@@ -169,7 +170,8 @@ def collect_enum(df, enum):
   str_cols = get_str_cols(df)
   for col in str_cols:
     keys = set(df[col])
-    missing = sorted([k for k in keys if not k in enum])
+    # only enumerate non-missing strings NaNs remain NaNs
+    missing = sorted([k for k in keys if not k in enum and not pd.isnull(k)])
     val = max(enum.values()) + 1 if len(enum) else 0
     for k in missing:
       enum[k] = val
@@ -182,13 +184,11 @@ def apply_enum(df, enum):
   str_cols = get_str_cols(df)
   if len(enum) == 0 or len(str_cols) == 0:
     return df
+  # entries not in the enum map to missing (NaN)
   robust_enum = defaultdict(lambda : np.nan, enum)
   df = df.copy()
   for col in str_cols:
     df[col] = df[col].map(robust_enum)
-  # no nulls allowed in enumeration cols
-  # presumably user has collected all valid values for enumeration
-  df = df[~pd.isnull(df[str_cols]).any(axis = 1)]
   return df.reset_index()
  
 def write_out_enum(path, enums):
@@ -283,17 +283,20 @@ def to_simpledb(dfs, prec, jar, path, suffix):
     # apply enumerations
     df = apply_enum(df, enums)
     # if has no nulls naturally, then add some
-    df = add_nulls(df, 0.4)
-    csv_path = os.path.join(path, name + suffix + '.csv')
+    df = add_nulls_if_none(df, 0.4)
+    csv_path_no_headers = os.path.join(path, name + suffix + '.csv')
+    csv_path_with_headers = os.path.join(path, name + suffix + '_with_headers.csv')
     # no suffix for the dat files, since those need to match schema name
     dat_path = os.path.join(path, name + '.dat')
-    df.to_csv(csv_path, float_format = '%.0f', header = False, index = False)
+    df.to_csv(csv_path_no_headers, float_format = '%.0f', header = False, index = False)
+    df.to_csv(csv_path_with_headers, float_format = '%.0f', header = True, index = False)
     with open(dat_path, 'w') as f:
       type_str = ','.join(get_types(df))
-      p1 = subprocess.Popen(['java', '-jar', jar, 'convert', csv_path, str(df.shape[1]), type_str], stdout=f)
+      p1 = subprocess.Popen(['java', '-jar', jar, 'convert', csv_path_no_headers, str(df.shape[1]), type_str], stdout=f)
       p1.communicate()
     schemas.append(get_schema(name, df))
-  with open('catalog.txt' , 'w') as f:
+  catalog_path = os.path.join(path, 'catalog.txt')
+  with open(catalog_path , 'w') as f:
     f.write("\n".join(schemas))
   
 def read_csv_data(path):

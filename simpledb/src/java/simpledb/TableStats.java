@@ -293,6 +293,14 @@ public class TableStats {
     	}
     	return ret;
     }
+    
+    public double estimateMean(int field){
+    	return this.intStats[field].mean();
+    }
+    
+    public double estimateVariance(int field){
+    	return this.intStats[field].variance();
+    }
 
     /**
      * return the total number of tuples in this table
@@ -318,26 +326,6 @@ public class TableStats {
 			}
 		}
 		return ret;
-	}
-	
-	public double estimateImputeCost(int numImputed) {
-		return numTuples * numImputed;
-	}
-
-
-	/**
-	 * Estimate the cost of imputing numDirty attributes given the chosen impute
-	 * operator. Delegates the computation to the underlying impute operator to
-	 * allow algorithm-agnostic results.
-	 * @param pp chosen impute operator
-	 * @param numDirty number of dirty attributes to impute
-	 * @param numComplete number of complete attributes
-	 * @return estimated cost of imputation
-	 */
-	public double estimateImputeCost(Impute pp, int numDirty, int numComplete) {
-		double T = pp.getEstimatedCost(numDirty, numComplete, numTuples);
-		
-		return T * IMPUTE_COST_FUDGE_FACTOR;
 	}
 
 	/**
