@@ -60,7 +60,7 @@ WHERE gender = "female" AND countrycitizen = "United States";
 \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
 SELECT schooldegree, AVG(studentdebtowe) FROM fcc
-WHERE studentdebtowe > 0 AND schooldegree >= 0 GROUP BY schooldegree;
+WHERE studentdebtowe > 0 GROUP BY schooldegree;
 \end{lstlisting}
 \end{minipage}\refstepcounter{queryno} \label[query]{q8}\\
 9 & 

@@ -42,6 +42,11 @@ in the results presented. This is a simple heuristic but we find that it would h
   % \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the training data is skewed. We think that this problem is avoidable with a minor tweak to the loss function. Instead of optimizing for a large training set, we can optimize for a \emph{diverse} training set by tracking the 
 % TODO also add an explanation of the coding of schooldegree -- and why it is filter >= 0,
     % which seems unreasonable to an observer.
+    
+\resp{To clarify, we've removed the predicate condition $schooldegree \geq 0$, this was actually a trivial satisfied predicate, given the way
+  our dataset was set up. 
+  \todo{still need to address the point on data skew}
+}
 
 \item - S3.4.4: It appears that Time() assumes that plans are IO-bound. This is a perfectly reasonable assumption, but should be stated explicitly, as datasets that fit in memory will require a different cost model.
 
