@@ -313,7 +313,6 @@ We store multiple plans rather than a single plan per dirty set, because maintai
 allows us to obtain the final set of plans that best trade-off computation
 cost and imputation quality. Details of the plan-cache semantics are shown in~\Cref{fig:semantics-plan-cache}.
 
-
 \begin{figure}
   \begin{align*}
     \llbracket Q[T] \rrbracket &= \begin{cases}
@@ -321,13 +320,12 @@ cost and imputation quality. Details of the plan-cache semantics are shown in~\C
       \emptyset & \text{otherwise} \\
     \end{cases} \\
     \llbracket Q[T] \lhd p \rrbracket &= \begin{aligned} Q \cup \{(T,\ P') \} \end{aligned}\\
-                                            \text{ where } \\
-                                           P' &= \left\{q ~|~ \begin{aligned}
-                                                                     q \in \llbracket Q[T] \rrbracket \cup \{p\}, \\
-                                                                     \textsc{Dirty}(q) = \textsc{Dirty}(p),\\
-                                                                     \forall q' \in \llbracket Q[T] \rrbracket.  \doms{q} {q'} 
-                                                                   \end{aligned}
-                                           \right\}
+    \text{ where }\ P' &= \left\{q ~\Bigg|~ \begin{aligned}
+        q \in \llbracket Q[T] \rrbracket \cup \{p\}, \\
+        \textsc{Dirty}(q) = \textsc{Dirty}(p),\\
+        \forall q' \in \llbracket Q[T] \rrbracket.  \doms{q} {q'} 
+      \end{aligned}
+    \right\}
   \end{align*}
   \caption{Semantics of a plan cache $Q$, where $T$ is a set of tables and $p$ is a query plan}
   \label{fig:semantics-plan-cache}
