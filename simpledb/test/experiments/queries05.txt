@@ -1,6 +1,7 @@
 SELECT income, AVG(cuff_size)
 FROM demo, exams
 WHERE demo.id = exams.id
+AND height >= 15000
 GROUP BY income;
 
 SELECT income, AVG(creatine)
@@ -19,35 +20,11 @@ WHERE demo.id = labs.id AND labs.id = exams.id AND
       body_mass_index >= 3000
 GROUP BY gender;
 
-SELECT attendedbootcamp, AVG(income)
-FROM fcc
-GROUP BY attendedbootcamp;
-
-SELECT AVG(commutetime)
-FROM fcc
-WHERE gender = 290 AND countrycitizen = 251;
-
-SELECT schooldegree, AVG(studentdebtowe)
-FROM fcc
-WHERE studentdebtowe > 0
-GROUP BY schooldegree;
-
-SELECT attendedbootcamp, AVG(gdp_per_capita)
-FROM fcc, gdp
-WHERE fcc.countrycitizen = gdp.country and age >= 18
-GROUP BY attendedbootcamp;
-
 SELECT AVG(waist_circumference)
 FROM demo, exams
 WHERE demo.id = exams.id 
 AND height >= 15000
 AND weight >= 10000;
-
-SELECT income, AVG(cuff_size)
-FROM demo, exams
-WHERE demo.id = exams.id
-AND height >= 15000
-GROUP BY income;
 
 SELECT attendedbootcamp, AVG(income)
 FROM fcc
@@ -56,9 +33,14 @@ GROUP BY attendedbootcamp;
 
 SELECT AVG(commutetime)
 FROM fcc
-WHERE gender = 290
-AND commutetime >= 120;
+WHERE gender = 178 AND countrycitizen = 158;
 
-SELECT gender, AVG(age)
-FROM fcc WHERE age >= 50
-GROUP BY gender;
+SELECT schooldegree, AVG(studentdebtowe)
+FROM fcc
+WHERE studentdebtowe > 0 AND schooldegree >= 0
+GROUP BY schooldegree;
+
+SELECT attendedbootcamp, AVG(gdp_per_capita)
+FROM fcc, gdp
+WHERE fcc.countrycitizen = gdp.country and age >= 18
+GROUP BY attendedbootcamp;

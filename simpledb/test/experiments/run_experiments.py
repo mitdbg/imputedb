@@ -58,6 +58,32 @@ def run_alt_experiment():
     run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
             queries, executable = executable_longimpute)
 
+def run_large03_experiment():
+    this_output_dir = os.path.join(output_dir, "large03")
+
+    iters     = 220
+    min_alpha = 0.00
+    max_alpha = 1.00
+    step      = 1.00
+
+    queries = "queries03.txt"
+
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute)
+
+def run_large04_experiment():
+    this_output_dir = os.path.join(output_dir, "large04")
+
+    iters     = 220
+    min_alpha = 0.00
+    max_alpha = 1.00
+    step      = 1.00
+
+    queries = "queries04.txt"
+
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute)
+
 def run_acs_experiment():
     catalog = catalog_default
     executable = executable_default
@@ -159,6 +185,8 @@ if __name__ == "__main__":
         "small" : run_small_experiment,
         "medium" : run_medium_experiment,
         "large" : run_large_experiment,
+        "large03" : run_large03_experiment,
+        "large04" : run_large04_experiment,
         "alt" : run_alt_experiment,
         "acs" : run_acs_experiment,
         "joins" : run_join_experiments,
