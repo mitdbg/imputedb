@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python2
 
 # Convert CDC and other data to simpledb format
 # Make floating point columns integer
