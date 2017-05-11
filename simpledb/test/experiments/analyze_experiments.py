@@ -17,21 +17,17 @@ except ImportError:
     from io import StringIO
 
 # configure this
-nqueries = 10
+nqueries = 9
 table_headers = [
     ['income', 'cuff_size'],                # query 0
     ['income', 'creatine'],                 # query 1
     ['blood_lead'],                         # query 2
     ['gender', 'blood_pressure_systolic'],  # query 3
-    ['attendedbootcamp', 'income'],         # query 4
-    ['commutetime'],                        # query 5
-    ['schooldegree', 'studentdebtowe'],     # query 6
-    ['attendedbootcamp', 'gdp_per_capita'], # query 7
-    ['waist_circumference'],                # query 8
-    ['income','cuff_size'],                 # query 9
-    ['attendedbootcamp','income'],          # query 10
-    ['commutetime'],                        # query 11
-    ['gender','age'],                       # query 12
+    ['waist_circumference'],                # query 4
+    ['attendedbootcamp', 'income'],         # query 5
+    ['commutetime'],                        # query 6
+    ['schooldegree', 'studentdebtowe'],     # query 7
+    ['attendedbootcamp', 'gdp_per_capita'], # query 8
 ]
 
 # basic utils
@@ -161,7 +157,7 @@ def collapse_results(experiments_dir, output_dir, base=False):
         data['is_experiment'] = False
         data['alpha'] = 'Impute at base tables'
 
-    data = drop_warmup(data, ['query', 'alpha'], drop=20)
+    data = drop_warmup(data, ['query', 'alpha'], drop=0)
 
     # time measures
     by = ['query', 'alpha']
