@@ -74,6 +74,16 @@ traditional databases and sophisticated modeling software. \ProjectName{}, in
 contrast, aims to remain squarely in the database realm, while allowing
 users to directly express queries on a potentially larger subset of their data.
 
+\todo{confirm that this reading of Yang is correct}
+\cite{yang2015lenses} develops an incremental approach to ETL data cleaning, through the use
+of probabilistic compositional repair operators, called Lenses. These can be used
+to repair missing values by imposing data constraints such as \verb|NOT NULL|. 
+Similarly to \ProjectName{}, they provide a way to balance between the quality of the cleaning 
+performed (expressed by the confidence of their output) and the cost of those operations. However, their 
+repairs take place on a per-tuple basis, with the non-deterministic layer of their system replacing place-holder
+variables with inferred values. Meanwhile, \ProjectName{} optimizes imputation at the plan-level and
+provides the same impute technique for all tuples streaming through a given operator.
+
 \ProjectName's cost-based query planner 
 is partially based on the seminal work developed for System R's query planning~\cite{blasgen1981system}.
 However, in contrast to System R, \ProjectName{} performs additional optimizations for imputing missing data and

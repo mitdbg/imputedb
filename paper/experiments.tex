@@ -253,7 +253,7 @@ The choice of $\alpha$ has no impact on planning times, because query selection 
 
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
 We explored the limits our planning algorithm by constructing a series of queries with increasing number of joins.
-We used the CDC tables and evaluated a combination of self-joins and joins across reference tables.
+We used the CDC tables and evaluated increasing number of joins across tables.
 Planning times for queries involving 1--5 joins, which is a practical value for real world exploratory queries, take less than a second.
 \todo{update: For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
 the plan space by maintaining only approximations of the Pareto set for queries involving a large number of joins.

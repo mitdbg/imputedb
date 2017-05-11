@@ -15,27 +15,35 @@
   \section{Reviewer 1}
   \begin{itemize}
   \item W2. The paper completely obscures the ML technique being used: (1) It would be nice to have some discussion of the complete API for implementing an ML technique, as well as how one might implement a cost-estimator for one or two examples. (2) It would be helpful to see the impact of a few different approaches (e.g., Tree-based, Interpolation, Regression, FD-based) on performance and accuracy. (3) Given that the ML time estimator is being treated as a black box, it would be useful to see how sensitive the plan selector is to inaccurate estimates.
-    \todo{}
+  
+  \resp{
+  We extended our evaluation to include two commonly used imputation methods: mean value imputation and hot-deck imputation. We also added
+ details on how to pick the heuristic functions that define the API for impute operators. We provide details on how these functions are defined
+ for all the methods used in our evaluation. 
+  } 
 
   \item W3. Reducing runtime to ~10s is excellent, but comes at a very serious accuracy cost (3-5x worse SMAPE). Worse still, there's no way for the user to differentiate between the cases of Q4 and Q8 at runtime. 24\% error relative to direct imputation is huge.
     
     \resp{
-      The outsized error in Q8 is a result of a drop operator placed very early on in the plan (a result of optimizing for performance). This produced significantly smaller sample sizes for various
+      The outsized error in Q8 is due to a drop operator placed very early on in the plan (a result of optimizing for performance). This produced significantly smaller sample sizes for various
       groups, which skewed the average calculation for each group significantly. For example, the average student debt for subjects with no high school degree was almost 83\% off from the estimate
       using the base table imputation, but if we look at the underlying population the former was calculated with 6 people, while the latter was with 258 people.
-      \todo{We have extended ImputeDB to provide users with a estimate of the number of tuples dropped in a calculation due to nulls, which may be indicative of the underlying error or skew
-        in the results presented. This is a simple heuristic but we find that it would have provided appropriate warning in cases such as Q8.}
     }
 
   \item Although it doesn't consider cost or the drop operator, a similar technique appears in Yang et. al. "Lenses: An On-Demand Approach to ETL." A comparison would be nice.
-    \todo{}
+   \resp{
+   Yang's work is definitely related, and we've added it to our related work section. However, it is worth noting that their decision process for application of lenses is at the tuple-level,
+   rather than with respect to the query plan.
+   }
 
-  \item S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach — between 0 and 24 percent" 24 percent error is pretty bad.
-    \todo{}
+  \item S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach between 0 and 24 percent" 24 percent error is pretty bad.
 
   \item S2: The drop operator appears to be a weaker form of SQL's null-value / 3-valued Boolean semantics. The latter might actually be more useful. For example, consider the case of a predicate (A $>$ 5 OR B $<$ 10). If A $>$ 5, then the condition is independent of B, and the tuple can still be salvaged. If A $\leq$ 5, then the expression evaluates to UNKNOWN and the tuple is dropped anyway. For aggregates there is a greater need, as one might have different aggregates computed over different subsets of the data, but even here it's not clear that this is any less informative than just throwing data away.
 
-    \resp{We agree that it could be interesting to allow drops to be omitted before filters. This would increase the plan space somewhat and might lead to better plans in some cases. For the conjunctive predicates in our experiments, our implementation splits the predicate into multiple filter nodes, so imputations or drops and filters can interleave. This should have the same effect, as the filter and the drop operator behave the same way on a tuple containing null. However, this optimization would also apply to disjunctive predicates, which cannot be split, and is worth definitely investigating.}
+    \resp{We agree that it would be interesting to allow drops to be omitted before filters.
+      This would increase the plan space somewhat and might lead to better plans in some cases.
+      This optimization would only change the output of the filter when the predicate is disjunctive, so would not have an impact on the queries we used in our experiments.
+      Filters with conjunctive predicates behave identically with and without the drop, although removing the drop will give a minor performance improvement.}
 
   \item S2: Why no unions?
     
@@ -49,8 +57,11 @@
 
     \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the query requires the construction a large, skewed data set. The problem seems to be particular to queries which generate large intermediate tables. In some cases, as when joining two datasets, the intermediate table is a good target for training because it exposes correlations which would be hidden in the separate tables. In other cases, this intermediate table is large and skewed, which causes problems for imputation. Avoiding this case requires us to estimate the skew in these intermediate tables.
 
-      To clarify the point about Q8, we've removed the predicate condition $schooldegree \geq 0$. This was in fact a trivially satisfied predicate given the way our dataset was set up.}
-    \todo{Need a better explanation here.}
+     To clarify the point about Q8, we've removed the predicate condition $schooldegree \geq 0$. 
+      We originally enumerated strings with positive integers and replaced missing values strings with 0, rather than perform imputation on them, so every enumerated value
+      satisfied this predicate trivially. We have changed our evaluation to impute string enumerations as well and dropped this predicate.
+      }
+    %\todo{Need a better explanation here.}
 
   \item S3.4.4: It appears that Time() assumes that plans are IO-bound. This is a perfectly reasonable assumption, but should be stated explicitly, as datasets that fit in memory will require a different cost model.
 
@@ -124,11 +135,21 @@
   \item W2. More work is required in the presentation: important parts are not explained in depth, while there are many details in other sections that can be omitted.
 
   \item W3. More experiments needed.
+  
+  \resp{
+  We've extended the evaluation section to include more impute operators and an evaluation of planning times.
+  }
 
   \item D1. Section 3, which is the meat of the paper, is very overloaded, without getting in depth in various parts of the system. It definitely should be split in more sections, and more details should be given. In particular:
     -- Give some more information about cardinality estimation. Also, Algorithm 3 is too far from the text, and needs some explanation too.
     -- Some more details are also required in the Imputation quality section. Why are you choosing these specific formulas for Loss, especially for the impute operator. Some examples would help.
     -- Algorithms 1 and 2 could probably be presented in an easier to grasp way.
+    
+    \resp{
+    We've broken up this section and consolidated algoirthm notation. The cardinality estimation section provides more detail about the algorithm. We also
+    added intuition for how the heuristic Penalty (a renaming of Loss, for clarity) and Time should be designed. We walk through these definitions for three different
+    impute operators.
+    }
 
   \item D2. It would be nice to show how exactly your approach can be implemented in an existing optimizer. This comes up in various places in the paper:
     -- When defining the search space, why not first define the transformation operators that inject the imputation operators. Then any optimizer can pick these rules up and add them in its plan enumeration. Of course, the used approach that follows System-R's plan enumeration is useful, but why lose generality when presenting the search space. Moreover, showing the transformation rules can help you show the size of the search space that will better justify the restrictions you apply.
