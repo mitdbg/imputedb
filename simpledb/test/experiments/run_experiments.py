@@ -122,7 +122,7 @@ def run_join_experiments():
 
 
 def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
-        queries=None, executable=None, plan_only=False):
+        queries=None, executable=None, plan_only=False, imputationMethod=""):
     if not os.path.isdir(this_output_dir):
         os.makedirs(this_output_dir)
 
@@ -135,35 +135,32 @@ def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
 
     catalog = catalog_default
 
+    if imputationMethod:
+        imputationMethodOpt = ["--imputationMethod={}".format(imputationMethod)]
+    else:
+        imputationMethodOpt = []
+
     # Timing using ImputeDB
     subprocess.call(executable +
         ["experiment", catalog, queries, this_output_dir,
-         str(iters), str(min_alpha), str(max_alpha), str(step)] + (['--planOnly'] if plan_only else []))
+         str(iters), str(min_alpha), str(max_alpha), str(step),
+         "--planOnly={}".format(plan_only)] + imputationMethodOpt
+        )
 
     # Timing using impute on base table
     if not plan_only:
-      subprocess.call(executable + ["experiment", catalog, queries, this_output_dir, str(iters), "--base"])
+      subprocess.call(executable + ["experiment", catalog, queries,
+          this_output_dir, str(iters), "--base"] +
+          imputationMethodOpt)
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) == 2:
-        experiment_size = sys.argv[1]
-    else:
-        experiment_size = "small"
-
-    if experiment_size == "small":
-        run_small_experiment()
-    elif experiment_size == "medium":
-        run_medium_experiment()
-    elif experiment_size == "large":
-        run_large_experiment()
-    elif experiment_size == "alt":
-        run_alt_experiment()
-    elif experiment_size == "acs":
-        run_acs_experiment()
-    elif experiment_size == "joins":
-        run_join_experiments()
-    else:
-        raise Error
-
+    import fire
+    fire.Fire({
+        "small" : run_small_experiment,
+        "medium" : run_medium_experiment,
+        "large" : run_large_experiment,
+        "alt" : run_alt_experiment,
+        "acs" : run_acs_experiment,
+        "joins" : run_join_experiments,
+    })
     print("Done.")

@@ -118,8 +118,10 @@ public class SimpleDb {
 
 		} else if (args[0].equals("experiment")) {
 			if (args.length < 6) {
-				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> <minAlpha> <maxAlpha> <step> [--planOnly]");
-				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> --base");
+				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> "
+						+ "<minAlpha> <maxAlpha> <step> [--planOnly] [--imputationMethod=METHOD]");
+				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> "
+						+ "--base [--imputationMethod=METHOD]");
 				System.exit(1);
 			}
 
@@ -131,15 +133,23 @@ public class SimpleDb {
 			ExperimentRunner runner;
 			if (args[5].equalsIgnoreCase("--base")) {
 				runner = new ExperimentRunner(iters, catalog, queries, outputDir);
+				String imputationMethod = ImputeFactory.DEFAULT_IMPUTATION_METHOD;
+				if (args.length >= 7 && args[6].startsWith("--imputationMethod=")){
+					imputationMethod = args[6].split("=")[1];
+				}
 			} else {
 				double minAlpha = Double.parseDouble(args[5]);
 				double maxAlpha = Double.parseDouble(args[6]);
 				double step = Double.parseDouble(args[7]);
 				boolean planOnly = false;
-				if (args.length == 9) {
+				String imputationMethod = ImputeFactory.DEFAULT_IMPUTATION_METHOD;
+				if (args.length >= 9) {
 					planOnly = args[8].equalsIgnoreCase("--planOnly");
 				}
-				runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters, catalog, queries, outputDir, planOnly);
+				if (args.length >= 10) {
+					imputationMethod = args[10].split("=")[1];
+				}
+				runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters, catalog, queries, outputDir, planOnly, imputationMethod);
 			}
 			try {
 				runner.runExperiments();

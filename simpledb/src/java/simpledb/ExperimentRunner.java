@@ -30,13 +30,14 @@ public class ExperimentRunner {
     private final Path queriesPath;
     private final Path outputBaseDir;
     private final boolean planOnly;
+    private final String imputationMethod;
     private FileWriter timesFileWriter;
     private FileWriter resultsFileWriter;
     private FileWriter plansFileWriter;
     private String[] queries;
 
     private ExperimentRunner(boolean imputeAtBase, double minAlpha, double maxAlpha, double step, int iters,
-        String catalog, String queries, String outputBaseDir, boolean planOnly)
+        String catalog, String queries, String outputBaseDir, boolean planOnly, String imputationMethod)
             throws IOException {
         this.imputeAtBase = imputeAtBase;
         this.minAlpha = minAlpha;
@@ -51,17 +52,19 @@ public class ExperimentRunner {
             this.outputBaseDir = Paths.get(outputBaseDir);
         }
         this.planOnly = planOnly;
+        this.imputationMethod = imputationMethod;
+       	ImputeFactory.setImputationMethod(this.imputationMethod);
     }
 
     public ExperimentRunner(int iters, String catalog, String queries, String outputDir)
             throws IOException {
-        this(true, 0.0, 0.0, 1.0, iters, catalog, queries, outputDir, false);
+        this(true, 0.0, 0.0, 1.0, iters, catalog, queries, outputDir, false, ImputeFactory.DEFAULT_IMPUTATION_METHOD);
     }
 
     public ExperimentRunner(double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries,
-        String outputDir, boolean planOnly)
+        String outputDir, boolean planOnly, String imputationMethod)
             throws IOException {
-        this(false, minAlpha, maxAlpha, step, iters, catalog, queries, outputDir, planOnly);
+        this(false, minAlpha, maxAlpha, step, iters, catalog, queries, outputDir, planOnly, imputationMethod);
     }
 
     private void init() throws IOException {
