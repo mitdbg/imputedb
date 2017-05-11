@@ -106,15 +106,18 @@ lowest runtime (at the expense of quality).
 \label{sec:cardinal}
 The computation of $\textsc{Penalty}(q)$ and$\textsc{Time}(q)$ relies on accurate cardinality estimates for the plan $q$ and its sub-plans.
 These estimates are impacted not just by filtering or joining, as in the traditional relational algebra, but also by the imputation operators.
-For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
 
 To compute cardinality, we maintain histograms for each column in the database.
 During query planning, each of the logical nodes in a query plan points to a set of histograms which describe the distribution of values in the output of the node.
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for the new operation in the plan.
-For example it will redistribute the count of tuples with \nullv{} in an imputed field.
-\Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
 
-\todo{Add a verbal explanation of the scaling steps}
+\Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
+Drop operators always reduce the cardinality of the relation. Given $\delta_C$, each column $c \in C$ clears its count of tuples with missing values,
+which can yield distinct cardinality estimates across attributes. To provide consistent estimates, we take the lowest such estimate $e$ and
+scale all attribute histograms based on their distribution such that each provides an estimate of $e$. In the case of $\mu_C$, the cardinality estimate
+remains constant. The count of missing values across attributes is cleared and redistributed along the appropriate histograms based on their distribution.
+In the case of $\sigma$ and $\bowtie$ operations, we estimate the cardinality of the output relation and adjust histogram counts based on their distribution to sum to that estimate.
+
 \begin{algorithm}
 \input{algorithms/histogram-transform.tex}
 \end{algorithm}
