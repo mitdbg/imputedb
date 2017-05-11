@@ -1,10 +1,10 @@
 \section{Implementation}
 Adding imputation and our optimization algorithm to a standard SQL database requires modifications to several key database components.
-In this section we discuss the changes which must be made to implement dynamic imputation.
+In this section we discuss the changes required to implement dynamic imputation.
 
 \begin{itemize}
 \item \textbf{Extended histograms:}
-  Ranking query plans with imputation requires estimates of the distribution of missing values in the base tables and in the outputs of sub-plans.
+  Ranking query plans with imputation needs estimates of the distribution of missing values in the base tables and in the outputs of sub-plans.
   We extended standard histograms to include the count of missing values for each attribute.
   On the base tables, this provides an exact count of the missing values.
   In sub-plans we use simple heuristics---as discussed in Section~\ref{sec:cardinal}---to estimate the number of missing values after applying both standard and imputation operators.

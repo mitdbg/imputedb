@@ -48,14 +48,12 @@ are similar in quality to those obtained with the traditional imputation approac
 percent, in one error measure --- in our empirical results over real-world data sets (see~\Cref{sec:experiments}
 for details).
 
-% Scope
-\ProjectName{} is designed to enable early data exploration, by allowing analysts to run
-their queries without an explicit base-table imputation step.
-% SAM -- cut the following -- could consider moving later but feels out of place here
-%However, we optimize query plans with respect to a heuristic measure of imputation quality, and provide no hard guarantees about the accuracy of the results.
 
 \subsection{Contributions}
-\ProjectName{} leverages a number of contributions to minimize imputation time while producing comparable results to traditional approaches.
+\ProjectName{} is designed to enable early data exploration, by allowing analysts to run
+their queries without an explicit base-table imputation step. To do so, it leverages a number of contributions
+to minimize imputation time while producing comparable results to traditional approaches.
+
 These contributions include:
 \begin{itemize}
 \item \textbf{Relational algebra extended with imputation:}

@@ -17,7 +17,7 @@
   \State Scale $H[c]$ s.t. $\Call{Card}{H[c]}$ is unchanged and null
   \State count is zero, $\forall c$.
   \ElsIf{op = $\sigma_\phi$}
-  \State Scale $H[c]$ by $\Call{Selectivity}{\phi, H[c]}$, $\forall c$.
+  \State Scale $H[c]$ by $\Call{Selectivity}{\phi, H}$, $\forall c$.
   \ElsIf{op = $\bowtie_\phi$}
   \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = \Call{Card}{\bowtie_\phi}$, $\forall c$.
   \EndIf

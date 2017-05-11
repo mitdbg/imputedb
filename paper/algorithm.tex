@@ -6,7 +6,7 @@ algebra operators must never observe a missing value in any attribute that they 
 The decision to place imputation operators is driven by our cost model (\Cref{sec:cost-model}), which characterizes a plan based on estimates for the 
 quality of the imputations performed and the runtime performance. Our imputation planning algorithm is
 agnostic to the type of imputation used (\Cref{sec:imputation}). Finally, we show
-that while our algorithm is exponential in the number of joins (\Cref{sec:complexity}), in practice, planning times are not a concern.
+that while our algorithm is exponential in the number of joins (\Cref{sec:complexity}), in practice, planning times are not a concern for most queries.
 
 
 \subsection{Imputation operators}
@@ -71,8 +71,9 @@ Note that \textsc{Dirty} over-approximates the set of attributes that contain \n
 \subsection{Cost model}
 \label{sec:cost-model}
 The cost of a plan $q$ is a tuple $\langle \textsc{Penalty}(q), \textsc{Time}(q) \rangle$.
-$\textsc{Penalty}(q) \in [0,1]$ is a heuristic that attempts to quantify the amount of information lost by the imputation procedures used.
-$\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics and selectivity estimation of the query predicates. 
+$\textsc{Penalty}(q) \in (0,1]$ is a heuristic that attempts to quantify the amount of information lost by the imputation procedure used.
+$\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics, selectivity estimation of the query predicates, and the complexity of the
+impute operation. 
 
 \subsubsection{Pareto-optimal plans}
 Given a query, \ProjectName{} produces a final set of query plans $Q$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[Q= \{ q ~|~ \not\exists q' \in S.\ q \neq q' \land \doms{q'}{q} \}.\]
@@ -104,60 +105,58 @@ lowest runtime (at the expense of quality).
 \subsubsection{Cardinality estimation}
 \label{sec:cardinal}
 The computation of $\textsc{Penalty}(q)$ and$\textsc{Time}(q)$ relies on accurate cardinality estimates for the plan $q$ and its sub-plans.
-These cardinality estimates are impacted not just by filtering or joining, as in the traditional relational algebra, but also by the imputation operators.
-For example, a drop operator will reduce the cardinality of the result while an impute operator will maintain the same cardinality as the input.
+These estimates are impacted not just by filtering or joining, as in the traditional relational algebra, but also by the imputation operators.
 
 To compute cardinality, we maintain histograms for each column in the database.
 During query planning, each of the logical nodes in a query plan points to a set of histograms which describe the distribution of values in the output of the node.
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as necessary to account for the new operation in the plan.
-For example it will redistribute the count of tuples with \nullv{} in an imputed field.
+
 \Cref{algo:histogram-transformation} describes the process of generating new histograms from sub-plans.
+Drop operators always reduce the cardinality of the relation. Given $\delta_C$, each column $c \in C$ clears its count of tuples with missing values,
+which can yield distinct cardinality estimates across attributes. To provide consistent estimates, we take the lowest such estimate $e$ and
+scale all attribute histograms based on their distribution such that each provides an estimate of $e$. In the case of $\mu_C$, the cardinality estimate
+remains constant. The count of missing values across attributes is cleared and redistributed along the appropriate histograms based on their distribution.
+In the case of $\sigma$ and $\bowtie$ operations, we estimate the cardinality of the output relation and adjust histogram counts based on their distribution to sum to that estimate.
 
 \begin{algorithm}
 \input{algorithms/histogram-transform.tex}
 \end{algorithm}
 
-\subsubsection{Imputation quality}
+\subsubsection{Imputation quality} 
 \label{sec:quality}
-We estimate the quality of the imputations in a plan $q$ using a heuristic measure $\text{Penalty}(q, P)$, which is computed as follows.
+Every instantiation of the impute-operator defines a custom penalty function $P$ for imputing \nullv{} fields.
+\ProjectName{} estimates the aggregate quality of the imputations in a plan $q$ using the heuristic measure $\text{Penalty}_{P}(q)$, computed as follows.
 
 \begin{align*}
-  \textsc{L}(q, f) &= \begin{cases}
+    &\textsc{L}_{P}(q) = \begin{cases}
      1 + \textsc{L}(q') & q = \delta_C(q') \\
      P(q') + \textsc{L}(q') & q = \mu_C(q') \\
      \textsc{L}(q_l') + \textsc{L}(q_r') & q = q_l' \bowtie_\psi q_r' \\
      \textsc{L}(q') & q = \sigma_\phi(q'),\ q = \pi_C(q') \\
      0 & q = \text{some table } t\\
   \end{cases}\\
-  %   \textsc{N}(q) &= \begin{cases}
-  %    1 + \textsc{N}(q') & q = \delta_C(q') \\
-  %    1 + \textsc{N}(q')  & q = \mu_C(q') \\
-  %   \textsc{N}(q_l') + \textsc{N}(q_r') & q = q_l' \bowtie_\psi q_r' \\
-  %   \textsc{N}(q') & q = \sigma_\phi(q'), q = \pi_C(q') \\
-  %   0 & q = \text{some table } t\\
-  % \end{cases}\\
-  \textsc{Penalty}(q, P) &= \frac{\textsc{L}(q, P)}{\textsc{L}(q, 1)}
+    &\textsc{Penalty}_{P}(q) = \frac{\textsc{L}_{P}(q)}{\textsc{L}_{P_\delta}(q)}
 \end{align*}
 
-$\textsc{Penalty}(q, P)$ assigns a penalty in $(0,1]$ to each imputation operator in the
-plan $q$ according to its estimated quality, then averages over the individual penalties.
-For example, each occurrence of $\delta$ incurs a penalty of 1 (i.e.\ we lose all information that dropped tuples might have encoded).
-Imputing \nullv{} fields with $\mu$ incurs a penalty in $(0, 1]$ according to a cost function $P$, which is specific to the imputation method in use.
+$\textsc{Penalty}_{P}(q)$ aggregates penalties from individual imputations to produce a measure of the quality of imputation for the entire plan.
+For imputation on a subplan $q'$, a penalty $P(q')$ in $(0,1]$ is assigned to $\mu(q')$
+and a penalty of $1$ is assigned to $\delta(q')$.
+The function $\textsc{L}_{P}(q')$ is then defined recursively to aggregate these penalties for the entire plan. 
+The result is normalized by $\textsc{L}_{P_\delta}(q')$, which is the total penalty for always dropping tuples with \nullv{} values and equates to the count of imputation operators considered.
 
-The choice of $P$ depends on the properties of the imputation method being used.
-A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the histogram describing the input data.
-From this histogram, $P$ can obtain the number of attributes in its input, its cardinality, and an estimate of its variance.
-Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the $P$ should \textit{decrease} as the number of values increases.
-$P$ should never decrease to zero, as this would mean that it can perform perfect imputation.
-It should reflect the intuition that the number of training observations has diminishing returns by decreasing more slowly as the number of values increases.
+\noindent{\textbf{Constructing $P$}}: The form of $P$ is chosen to reflect the properties of the imputation method being used.
+A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the set of plan histograms.
+From these, $P$ can obtain the number of clean and dirty attributes in its input, their cardinalities, and approximations to summary statistics such as mean and variance
+Intuitively, imputation quality \textit{increases} when more complete attributes and complete tuples are available; correspondingly, $P(q')$ \textit{decreases} as the number of values increases.
+The heuristic penalty should also reflect the intuition that the number of training observations has diminishing returns by decreasing more slowly as the number of values increases. Finally, the heuristic penalty may increase as amount of noise or spread in the data increases, as this makes it more difficult to obtain precise imputations.
+
+Imputation quality $P(q')=0$ is unachievable, as this suggests the values of missing elements are known exactly. On the other hand, $P(q')=1$ occurs when all tuples with missing values are dropped, as this represents the worst case in terms of recovering information from these tuples.
 In Section~\ref{sec:imputation}, we discuss choices for $P$ for several common imputation methods.
 
-% In this case, the penalty is inversely proportional to the square root of the number of cells available to train the imputation algorithm, which is defined as the product of the number of attributes and the number of tuples.
-% Intuitively, imputation accuracy \textit{increases} when more complete attributes and complete tuples are available; correspondingly, the penalty \textit{decreases} with more values to work with.
-% Scaling the cell count by applying square root incorporates the intuition that the number of training observations has diminishing returns for imputation quality and we find that it works well in practice.
-
 \subsubsection{Query runtime}
-To compute $\textsc{Time}(q, T)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard database.
+\label{sec:query-runtime}
+
+To compute $\textsc{Time}_{T}(q)$, an additive measure of runtime cost, we retain a simple set of heuristics used by a standard database.
 
 %\begin{align*}
 %  \textsc{T}(q) &= \begin{cases}
@@ -173,20 +172,27 @@ To compute $\textsc{Time}(q, T)$, an additive measure of runtime cost, we retain
 
 Scan costs are estimated based on the number of tuples, page size, and a unit-less I/O cost per page. 
 We assume that I/O costs dominate CPU costs for relational operators. 
-A database implementation for which this assumption is not true, e.g. an in memory database, will need a different cost model.
+A database implementation for which this assumption is not true, e.g. an in-memory database, will need a different cost model.
 Join costs are estimated as a function of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
 Filtering, projecting, and aggregating are all done in memory and have low computational overhead so we assume negligible time costs for those operations. 
 
 We extend these heuristics to account for the new operators: \textit{Drop} and \textit{Impute}.
 \textit{Drop} is a special case of a filter, so its time complexity is correspondingly negligible. 
-As with $\textsc{Penalty}$, the time computation for \textit{Impute} depends on the properties of the underlying algorithm via a function $T$.
 
-The choice of $T$ depends on the imputation method in use, and as with $P$, there are several intuitions which guide the choice of $T$.
-First, $\textsc{Time}$ is computed in terms of the I/O cost per page so $T$ must return a value in these units.
-It can be unnatural to compute the cost of imputation in terms of the I/O cost, so it may be simpler to compute the per-tuple cost and then convert.
-Second, $T$ should \emph{increase} as the number of tuples passed to the imputation function increases and it should be proportional to the complexity of the imputation algorithm.
-As with $P$, the ordering between queries generated by $T$ is more important than the precision of its estimates.
-\todo{Micah, how did you deal with the IO/CPU cost problem?}
+\noindent{\textbf{Constructing $T$}}: As with $\textsc{Penalty}$, the time computation for \textit{Impute} depends on
+the properties of the underlying algorithm via a function $T$. If we assume
+that the \textit{Impute} routine is CPU-bound, then we will adjust
+\textsc{Time} by some constant factor $f$, thereby scaling the result to be
+comparable with IO-bound routines.
+
+The form of $T$ depends on the specific imputation method, and as with $P$,
+there are some principles to capture the intuition.  $T$ should \emph{increase}
+as the number of tuples and complete and dirty attributes passed to the
+imputation function increases and it should be take into account the complexity
+of the imputation algorithm. Analysis of the time complexity of different
+imputation algorithms, especially with in-database execution, is beyond the
+scope of this paper. As with $P$, it is the ordering between queries
+generated by $T$ that is more important than the precision of estimates.
 
 % In the implementation of our system,
 % we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
@@ -202,50 +208,95 @@ As with $P$, the ordering between queries generated by $T$ is more important tha
 \label{sec:imputation}
 
 \ProjectName{} is designed so that any imputation strategy
-can be plugged in with minimal effort and without changes to the optimizer, simply by adding
-time and penalty functions (\Cref{sec:cost-model}) which describe the new algorithm.
-For our purposes, an imputation strategy is a function $I(R, C) \rightarrow R'$ which fills in the missing
-attributes $C$ in a relation $R$, returning a new relation $R'$.
-The flexibility of this approach aligns with the spirit of query optimization, which aims to
-reconcile performance with a declarative interface to data manipulation.
+can be plugged in with minimal effort and without changes to the optimizer, simply by supplying
+penalty and time functions (\Cref{sec:cost-model}) pertinent to the algorithm.
+These can then be queried by the optimizer during planning.  The flexibility of
+this approach aligns with the spirit of query optimization, which aims to
+reconcile performance with a declarative interface to data manipulation. To
+motivate this API, we describe how an analyst would specify the form of these
+functions for a general-purpose imputation algorithm, as well as two simpler
+methods.
 
-\subsubsection{Regression trees}
+\subsubsection{Decision trees}
 
-New imputation algorithms can also be added. As a reference implementation, \ProjectName{} uses a general-purpose imputation strategy
-based on chained-equation decision trees.  Chained-equation
-imputation methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
-regression}~\cite{gelman2006data}) impute multiple missing attributes by iteratively fitting
-a predictive model of one missing attribute, conditional on all complete attributes
-and all other missing attributes. Chained-equation decision trees algorithms are found to be
-effective~\cite{akande2015empirical} and are widely used in epidemiological
-domains~\cite{burgette2010multiple}. For our experiments, we use Weka's {\tt REPTree}
-implementation~\cite{witten2016data}.
-
-\[P(q) = \frac{1}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}\]
-
-The reference algorithm used by the \textit{Impute} operator proceeds by iteratively fitting
-decision trees for the target imputation attribute on a subset of the data. In each
-iteration, the missing values of a separate attribute are replaced with newly imputed values.
-In one {\it epoch} of the algorithm, each of the target imputation
-attributes is filled in with imputed values in a single iteration.
-With each epoch, the quality of the imputation improves as values progressively
-reflect more accurate relationships between attributes. The algorithm terminates when
-convergence is achieved (i.e.\ the imputed values do not change across epochs) or a fixed
-number of epochs is reached. 
+New imputation algorithms can also be added. As a reference implementation,
+\ProjectName{} uses a general-purpose imputation strategy based on
+chained-equation decision trees.  Chained-equation imputation
+methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
+regression}~\cite{gelman2006data}) impute multiple missing attributes by
+iteratively fitting a predictive model of one missing attribute, conditional on
+all complete attributes and all other missing attributes. Chained-equation
+decision trees algorithms are found to be effective~\cite{akande2015empirical}
+and are widely used in epidemiological domains~\cite{burgette2010multiple}.
 
 These imputation algorithms are commonly used as part of a larger \textit{multiple imputation}
 process, in which multiple distinct copies of the complete data are generated and estimators
 are computed by averaging over the multiple datasets to form a single completed dataset~
 \cite{gelman2006data}. In \ProjectName{}, we consider only single imputation, though
-multiple imputation could incorporated as another avenue of assessing imputation confidence.
+multiple imputation could be incorporated as another avenue of assessing imputation confidence.
+
+In the reference implementation, the chained-equation algorithm proceeds by
+iteratively fitting decision trees for the target imputation attributes. In
+each iteration, the missing values of a separate attribute are replaced with
+newly imputed values.  Values in a single column can be updated over multiple
+iterations of the algorithm. With more iterations, the quality of the
+imputation improves as values progressively reflect more accurate relationships
+between attributes. The algorithm terminates after a fixed number of
+iterations, or earlier if convergence is achieved. (That is, when the imputed
+values of one column are not updated by subsequent iterations that update that
+column.) For our experiments, we use Weka's \texttt{REPTree}
+implementation~\cite{witten2016data}, a variant of the canonical \texttt{C4.5}
+algorithm~\cite{quinlan1993}. Roughly, the time complexity of building one
+decision tree is $\mathcal{O}(nm \text{ } log(n))$, where $n$ is the number of tuples
+and $m$ is the number of dependent attributes~\cite{witten2016data}. Since we build
+$k * |\textsc{Dirty}(q)|$ trees, we have
+
+\begin{equation*}
+    \begin{aligned}
+    T(q) = k * &|\textsc{Dirty}(q)| * \textsc{Card}(q) * \\
+               &(|\textsc{Clean}(q)| + |\textsc{Dirty}(q)| - 1) * log(\textsc{Card}(q))
+    \end{aligned}
+\end{equation*}
+
+Separately, we specify a heuristic penalty that takes into account the
+improvement in imputation quality from more tuples and attributes as well as
+the diminishing returns to more data.
+
+\[
+    P(q) = \frac{|\textsc{Dirty}(q)|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
+\]
 
 \subsubsection{Mean}
 
-\todo{Fill this in.}
+At the other end of the spectrum of complexity, an analyst could use a simpler
+method that replaces a missing value with the mean of the complete values of
+that attribute. Mean value imputation is a common choice for use in exploratory
+data analysis. One benefit of mean imputation in the context of \ProjectName{}
+is that taking advantage of the histograms associated with a plan $q$, we can
+estimate the mean and impute missing values in a non-blocking fashion. Thus,
+applying the heuristics from \ref{sec:quality} and \ref{sec:query-runtime}, we
+have
+
+\begin{equation*}
+\begin{aligned}
+    T(q) &\approx 0 \\
+    P(q) &= \sum_{A \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(A)}{\textsc{Card}(q)}
+\end{aligned}
+\end{equation*}
 
 \subsubsection{Hot-deck}
 
-\todo{Fill this in.}
+Hot-deck imputation is a nonparametric method in which missing values are
+replaced with randomly selected complete values. This method preserves the
+distribution of the complete values. The heuristic $T$ and $P$ functions are
+similar except for the fact that hot-deck is blocking in our implementation.
+
+\begin{equation*}
+\begin{aligned}
+    T(q) &= \textsc{Card}(q) \\
+    P(q) &= \sum_{A \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(A)}{\textsc{Card}(q)}
+\end{aligned}
+\end{equation*}
 
 %\begin{algorithm}
 %    \input{algorithms/cart.tex}
@@ -283,9 +334,9 @@ cost and imputation quality. Details of the plan-cache semantics are shown in~\C
 \end{figure}
 
 The plan cache uses the partial order of plans defined by  $\langle \textsc{Dirty}, \textsc{Penalty}, \textsc{Time} \rangle$ to
-collect sound and complete Pareto frontiers. For plans with the same dirty set, we can treat $\langle \textsc{Penalty}, \textsc{Time} \rangle$
-as a total order, allowing us to appropriately select the frontier. Plans with different $\textsc{Dirty}$ sets cannot be compared. The final
-Pareto frontier produced by the optimizer corresponds to the collection of plans associated with the empty dirty set.
+collect sound and complete Pareto frontiers. Plans with different $\textsc{Dirty}$ sets cannot be compared. The final
+Pareto frontier produced by the optimizer corresponds to the collection of plans that best tradeoff imputation quality and
+execution time.
 
 \subsubsection{Planning algorithm}
 The planner (\Cref{algo:top-level-planner}) operates as follows.
@@ -395,10 +446,10 @@ Recall that the planner maintains different plans for different dirty sets, keep
 So in many cases we can drop some of the intermediate plans generated at each operator.
 The worst case complexity only occurs if the dirty sets tracked are distinct through the entire planning phase.
 
-In order to support a large number of joins, with reasonable planning times, \ProjectName{} can maintain approximations of the Pareto sets,
-rather than exact sets. To do so, dominated plans are still removed based on new non-dominated plans, but new plans are only added
-if they are significantly different from any existing plan in the set. The distance between plans is determined based on the cost penalty and time
-values associated with a plan.  Planning times are discussed further in \Cref{sec:results}.
+In order to support a large number of joins, with reasonable planning times, \ProjectName{} can maintain approximations of the Pareto sets. 
+A non-dominated plan can be approximated by an existing plan in the set, if the distance between them is smaller than some predefined bound.
+Approximated plans are not added to the frontier, pruning the search space further. 
+Planning times across both exact and approximate Pareto frontiers are discussed further in \Cref{sec:results}.
 
 %%% Local Variables:
 %%% mode: latex

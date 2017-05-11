@@ -30,23 +30,18 @@ public class ImputedPlanCachePareto extends AImputedPlanCache {
         Value newPlan = new Value(newPlanIP, joins);
         if (bestPlans.containsKey(key)) {
         	SortedSet<Value> plans = bestPlans.get(key);
-            boolean canBeApproximated = false;
 
         	// Find dominating plans.
         	for (Value plan : plans) {
-        		// Found a dominating plan.
+                // Found a dominating plan, we don't add these plans regardless
         		if (plan.dominates(newPlan)) { return; }
-                canBeApproximated = canBeApproximated || plan.isApproximate(newPlan);
+                // if frontier is approximate and plan can be approximated, don't add
+                if (this.approximate && plan.isApproximate(newPlan)) { return; }
         	}
-        	
-        	// Remove dominated plans.
+            // remove dominated plans.
         	plans.removeIf(plan -> newPlan.dominates(plan));
-
-            if (!this.approximate || !canBeApproximated) {
-                // add any non-dominated plans if this is not an approximate cache
-                // or only add plans that can not be approximated, if we are an approximate cache
-                plans.add(newPlan);
-            }
+            // and add it to the frontier
+            plans.add(newPlan);
         } else {
         	// always insert if we don't have any info on this key combo
         	TreeSet<Value> plans = new TreeSet<>();

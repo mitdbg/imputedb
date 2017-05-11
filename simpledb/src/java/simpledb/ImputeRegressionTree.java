@@ -279,8 +279,7 @@ public class ImputeRegressionTree extends Impute {
 	@Override
 	public double getEstimatedTime(ImputedPlan subplan) {
 		TupleDesc schema = subplan.getPlan().getTupleDesc();
-		Set<QualifiedName> dirytSet = subplan.getDirtySet();
-		int m_c = schema.numFields() - dirytSet.size(); // number of clean attributes
+		int m_c = schema.numFields() - subplan.getDirtySet().size(); // number of clean attributes
 		int m_i = dropFieldsIndices.size(); // number of attributes to be imputed
 		int n = (int) subplan.cardinality(); // number of tuples
 		int k = numImputationEpochs;
@@ -291,9 +290,10 @@ public class ImputeRegressionTree extends Impute {
 
 	@Override
 	public double getEstimatedPenalty(ImputedPlan subplan) {
+		int m_d = subplan.getDirtySet().size();
 		TupleDesc schema = subplan.getPlan().getTupleDesc();
 		double totalData = subplan.cardinality() * schema.numFields();
-		return (1 / Math.sqrt(totalData));
+		return (m_d / Math.sqrt(totalData));
 	}
 
 }
