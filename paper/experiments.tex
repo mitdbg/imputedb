@@ -117,13 +117,13 @@ provide performance figures relevant to practitioners using similar datasets.
 
 \subsection{Results}\label{sec:results}
 
-For each query, we evaluate three different configurations: \ProjectName{} optimizing for
+For each query, we evaluate \todo{update: three different configurations}: \ProjectName{} optimizing for
 quality ($\alpha=0$), \ProjectName{} optimizing for performance ($\alpha=1$), and imputing
 at the base tables followed by executing the query traditionally. 
 
 \Cref{fig:runtimes} shows a summary of the performance results. The quality-optimized
-queries are an order-of-magnitude faster than imputing on the base tables. We can get
-another order-of-magnitude speedup when optimizing for performance. This performance
+queries are an \todo{update/validate: order-of-magnitude faster than imputing on the base tables. We can get
+another order-of-magnitude speedup when optimizing for performance}. This performance
 differential means it is feasible
 to explore multiple imputations operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of base table imputation.
@@ -135,7 +135,7 @@ to explore multiple imputations operations (including more expensive operators) 
     performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
     magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
     imputation can provide another order-of-magnitude speedup at the expense of quality.}
-    
+\todo{update with new figure}   
 \label{fig:runtimes}
 \end{figure}
 
@@ -143,10 +143,10 @@ to explore multiple imputations operations (including more expensive operators) 
 %We exclude the planning time for queries that impute at base table, as that requires no
 %planning. 
 
-In the median across a variety of queries and choices of $\alpha$, planning took
+\todo{update: In the median across a variety of queries and choices of $\alpha$, planning took
 \planningmediantime{} ms, 
 constituting \planningruntimepercent{} percent of total runtime. In all cases, the optimizer
-returned a query plan within \planningmaxtime{} ms, with times similar across values of $\alpha$.
+returned a query plan within \planningmaxtime{} ms, with times similar across values of $\alpha$.}
 
 All experiments were run on a single Amazon Web Services EC2 {\tt c4.xlarge} instance, with
 four 2.9 GHz Intel Xeon E5--2666 v3 virtual CPUs and 7.5 GiB of main memory, on Debian Linux.
@@ -174,12 +174,13 @@ place for dirty input data, for which ground truth is unavailable.
 In our case, the relevant comparison is against traditional
 imputation on the base table, given the unavailability of ground truth.
 
+\todo{Distinguish between underlying imputation methods}
 For $\alpha=0$ and $\alpha=1$, we pair up tuples and compute SMAPE for all queries. That is,
 we compute tuple-wise absolute percentage deviations within each iteration of a query, and
 we report this value averaged over all iterations.  We
 can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
-to the base-imputation approach is low---between \lowsmapealphazero{} and
-\highsmapealphaoneexacs{} percent---indicating that on-the-fly imputation produces similar
+to the base-imputation approach is low---\todo{update: between \lowsmapealphazero{} and
+\highsmapealphaoneexacs{} percent}---indicating that on-the-fly imputation produces similar
 results to imputation at the base tables. Notably, the results with largest error correspond
 most closely to one existing approach of dropping all \nullv{}s.
 
@@ -208,6 +209,7 @@ can be exposed to the user to help in guiding their workflow.
     efficiency ($\alpha=1$). The count fraction column shows the number of tuples used in calculating each aggregate
      as a fraction of the number of tuples used when running the same query after imputing on the base table.
     A lower count share reflects more potential for errors.}
+\todo{update with new figure}
 \label{table:smape}
 \end{table}
 
@@ -244,16 +246,18 @@ this is not desirable because the specific rows of data, set of complete attribu
 \caption{Planning times are sub-second for up to 4 joins. For 5+  joins planning times rise. Many practical queries
 can be formulated with a smaller number of joins, but to support more complex queries \ProjectName{} provides an
 optimization that maintains approximate Pareto sets for queries with many joins. This reduces the 29 second
-planning time shown for 7 joins by approximately 45\%, on average.}
+planning time shown for 7 joins by approximately 45\%, on average.
+\todo{update with new table and values}
+}
 \label{table:planning-times}
 \end{table}
 
 We explored the practical implications of our planning algorithm by constructing a series of queries with increasing number of joins.
 We used the CDC tables and evaluated a combination of self-joins and joins across reference tables. Planning times for queries
 involving 1 to 5 joins, which although limited is a practical value for real world exploratory queries, take less than a second.
-For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
+\todo{update: For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
 the plan space by maintaining only approximations of the Pareto set for queries involving a large number of joins.
-With this optimization, the same set of queries have an average planning time of 16 seconds (2 seconds SE).
+With this optimization, the same set of queries have an average planning time of 16 seconds (2 seconds SE).}
 
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
