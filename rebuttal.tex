@@ -35,7 +35,10 @@
 
   \item S2: The drop operator appears to be a weaker form of SQL's null-value / 3-valued Boolean semantics. The latter might actually be more useful. For example, consider the case of a predicate (A $>$ 5 OR B $<$ 10). If A $>$ 5, then the condition is independent of B, and the tuple can still be salvaged. If A $\leq$ 5, then the expression evaluates to UNKNOWN and the tuple is dropped anyway. For aggregates there is a greater need, as one might have different aggregates computed over different subsets of the data, but even here it's not clear that this is any less informative than just throwing data away.
 
-    \resp{We agree that it could be interesting to allow drops to be omitted before filters. This would increase the plan space somewhat and might lead to better plans in some cases. For the conjunctive predicates in our experiments, our implementation splits the predicate into multiple filter nodes, so imputations or drops and filters can interleave. This should have the same effect, as the filter and the drop operator behave the same way on a tuple containing null. However, this optimization would also apply to disjunctive predicates, which cannot be split, and is worth definitely investigating.}
+    \resp{We agree that it would be interesting to allow drops to be omitted before filters.
+      This would increase the plan space somewhat and might lead to better plans in some cases.
+      This optimization would only change the output of the filter when the predicate is disjunctive, so would not have an impact on the queries we used in our experiments.
+      Filters with conjunctive predicates behave identically with and without the drop, although removing the drop will give a minor performance improvement.}
 
   \item S2: Why no unions?
     
