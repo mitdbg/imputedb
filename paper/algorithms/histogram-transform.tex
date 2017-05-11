@@ -1,7 +1,7 @@
 \newcommand{\InlineIte}[3]{#2\ \textbf{if}\ #1\ \textbf{else}\ #3}
 \renewcommand{\algorithmicindent}{1em}
 
-\begin{algorithmic}
+\begin{algorithmic}[1]
     \Require{
     \Statex
     \begin{itemize}[leftmargin=*,noitemsep]
@@ -10,17 +10,17 @@
     \end{itemize}}
   
   \Function{UpdateHistograms}{$H,\ op$}
-  \If{op = $\delta_C$}
+  \If{op = $\delta_C$}\label{lst:drop-start}
   \State Set null count to zero for $H[c]$ where $c \in C$.
-  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = \min_d \Call{Card}{H[d]}$, $\forall c$.
-  \ElsIf{op = $\mu_C$}
+  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = \min_d \Call{Card}{H[d]}$, $\forall c$.\label{lst:drop-end}
+  \ElsIf{op = $\mu_C$}\label{lst:impute-start}
   \State Scale $H[c]$ s.t. $\Call{Card}{H[c]}$ is unchanged and null
-  \State count is zero, $\forall c$.
-  \ElsIf{op = $\sigma_\phi$}
+  \State count is zero, $\forall c$.\label{lst:impute-end}
+  \ElsIf{op = $\sigma_\phi$}\label{lst:std-start}
   \State Scale $H[c]$ by $\Call{Selectivity}{\phi, H}$, $\forall c$.
   \ElsIf{op = $\bowtie_\phi$}
   \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = \Call{Card}{\bowtie_\phi}$, $\forall c$.
-  \EndIf
+  \EndIf\label{lst:std-end}
   \State \Return $H$
   \EndFunction
 \end{algorithmic}
