@@ -280,11 +280,9 @@ have
 \begin{equation*}
 \begin{aligned}
     T(q) &\approx 0 \\
-    P(q) &= \frac{|\textsc{Dirty}(q)|}{\sqrt{\textsc{Card}(q)}} \\
-    P(q) &= \frac{1}{n} (1 + \overline{Variance(q)})
+    P(q) &= \sum_{A \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(A)}{\textsc{Card}(q)}
 \end{aligned}
 \end{equation*}
->>>>>>> Add mean and hot-deck descriptions
 
 \subsubsection{Hot-deck}
 
@@ -296,7 +294,7 @@ similar except for the fact that hot-deck is blocking in our implementation.
 \begin{equation*}
 \begin{aligned}
     T(q) &= \textsc{Card}(q) \\
-    P(q) &= \frac{|\textsc{Dirty}(q)|}{\sqrt{\textsc{Card}(q)}}
+    P(q) &= \sum_{A \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(A)}{\textsc{Card}(q)}
 \end{aligned}
 \end{equation*}
 
