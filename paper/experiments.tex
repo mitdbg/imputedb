@@ -87,19 +87,19 @@ The queries consist not only of projections and selections, but also
 interesting joins and aggregates. Our aim was to craft meaningful queries that would
 provide performance figures relevant to practitioners using similar datasets.
 
-Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
-\Cref{q1} calculates the average cuff size for individuals based on their income data, with a constraint on height.
-\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes and above a certain weight.
-\Cref{q3} extracts the average blood lead levels for children under 6 years of age.
-\Cref{q4} calculates the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. 
-\Cref{q5} calculates the average waist circumference for subjects above a certain height and weight.
-
-Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
-\Cref{q6} calculates the average income for higher-income survey participants, grouped by their bootcamp attendance.
-\Cref{q7} estimates the average commute time of women from the United States who participated.
-\Cref{q8} calculates the average amount of student debt based on school degree for survey participants who have student debt.
-\Cref{q9} joins the freeCodeCamp data with a table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
-The query calculates the average GDP per-capita by grouping 18+ year old participants who attended bootcamp versus those who did not.
+%Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
+%\Cref{q1} calculates the average cuff size for individuals based on their income data, with a constraint on height.
+%\Cref{q2} compares creatine levels for individuals with low, medium, and high incomes and above a certain weight.
+%\Cref{q3} extracts the average blood lead levels for children under 6 years of age.
+%\Cref{q4} calculates the average systolic blood pressure, by gender, for subjects with a body mass index indicating obesity. 
+%\Cref{q5} calculates the average waist circumference for subjects above a certain height and weight.
+%
+%Our second set of queries is on the freeCodeCamp data (\Cref{fig:queries-fcc}).
+%\Cref{q6} calculates the average income for higher-income survey participants, grouped by their bootcamp attendance.
+%\Cref{q7} estimates the average commute time of women from the United States who participated.
+%\Cref{q8} calculates the average amount of student debt based on school degree for survey participants who have student debt.
+%\Cref{q9} joins the freeCodeCamp data with a table provided by the World Bank which summarizes GDP per-capita across various countries~\cite{worldbank-data}.
+%The query calculates the average GDP per-capita by grouping 18+ year old participants who attended bootcamp versus those who did not.
 
 \begin{table*}
   \centering
@@ -195,8 +195,8 @@ This highlights a challenge for a user handling data imputation traditionally: i
 By using \ProjectName{} this cost can be lowered significantly.
 
 \Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm.
-The diversity of plans highlights the possible tradeoffs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
-can be exposed to the user to help in guiding their workflow for exploring values of $\alpha$.
+and encapsulate the possible tradeoffs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
+can be exposed to the user to help in guiding their workflow.
 
 \begin{table}
 \centering
@@ -214,9 +214,8 @@ can be exposed to the user to help in guiding their workflow for exploring value
 \begin{figure}
 \centering
 \includegraphics[scale=0.4]{figures/pareto_frontiers_plot.png}
-\caption{\ProjectName{}'s final Pareto frontier for \Cref{q1} and \Cref{q6}. The user can tradeoff between the plans by adjusting values of $\alpha$. Depending on the query
-there may be small clusters of plans centered around a similar penalty or time value. This may occur as no plan actually dominates another at a given level of precision.
-For clarity, we have removed from the plot plans that provide similar tradeoffs in either dimension. }
+\caption{\ProjectName{}'s final Pareto frontier for \Cref{q1} and \Cref{q6}. 
+For clarity, we have removed from the plot plans that provide nearly indistinguishable tradeoffs in either dimension. }
 \label{fig:pareto-frontiers}
 \end{figure}
 
