@@ -97,8 +97,8 @@ public class QueryPlanDotter {
                 String oplabel;
                 if (imp instanceof Drop) {
                     oplabel = "drop";
-                } else if (imp instanceof ImputeRandom) {
-                    oplabel = "impute_random";
+                } else if (imp instanceof ImputeHotDeck) {
+                    oplabel = "impute_hotdeck";
                 } else if (imp instanceof ImputeTotallyRandom) {
                     oplabel = "impute_total_random";
                 } else if (imp instanceof ImputeRegressionTree) {

@@ -262,7 +262,7 @@ public class QueryPlanVisualizer {
                                 - currentStartPosition);
                 thisNode.leftChild = child;
                 thisNode.height = currentDepth;
-            } else if (plan instanceof ImputeRandom || plan instanceof ImputeRegressionTree) {
+            } else if (plan instanceof ImputeHotDeck || plan instanceof ImputeMean || plan instanceof ImputeRegressionTree) {
                 Impute p = (Impute) plan;
                 String fields = "";
                 for (String fieldName : p.getDropFields()) {

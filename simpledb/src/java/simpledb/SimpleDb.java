@@ -23,16 +23,16 @@ public class SimpleDb {
 					System.err.println("Usage: simpledb convert FILE NUM_COLUMNS TYPE_STRING [FIELD_SEP]");
 					System.exit(-1);
 				}
-				
+
 				File inFile = new File(args[1]);
 				if (!inFile.canRead()) {
 					System.err.format("Cannot read input file: %s", inFile);
 					System.exit(-1);
 				}
 				in = new BufferedReader(new FileReader(args[1]));
-				
+
 				out = new BufferedOutputStream(System.out);
-				
+
 				int numOfAttributes = Integer.parseInt(args[2]);
 				Type[] ts = new Type[numOfAttributes];
 				char fieldSeparator = ',';
@@ -76,11 +76,11 @@ public class SimpleDb {
 				System.out.println("Usage: simpledb print FILE NUM_COLUMNS");
 				System.exit(-1);
 			}
-			
+
 			File tableFile = new File(args[1]);
 			int columns = Integer.parseInt(args[2]);
 			DbFile table = Utility.openHeapFile(columns, tableFile);
-			
+
 			TransactionId tid = new TransactionId();
 			DbFileIterator it = table.iterator(tid);
 			if (null == it) {
@@ -118,8 +118,21 @@ public class SimpleDb {
 
 		} else if (args[0].equals("experiment")) {
 			if (args.length < 6) {
-				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> <minAlpha> <maxAlpha> <step> [--planOnly]");
-				System.err.println("Usage: java -jar <JAR> experiment <catalog> <queries> <output-dir> <iters> --base");
+                //                                         0          1
+				System.err.println("Usage: java -jar <JAR> experiment <catalog> "
+                //    2         3            4 
+                    +"<queries> <output-dir> <iters> "
+                //    5           6          7
+                    + "<minAlpha> <maxAlpha> <step> "
+                //    8                  9
+                    + "[--planOnly=BOOL] [--imputationMethod=METHOD]");
+
+                //                                         0          1
+				System.err.println("Usage: java -jar <JAR> experiment <catalog> "
+                //    2          3            4 
+                    + "<queries> <output-dir> <iters> "
+                //    5       6
+                    + "--base [--imputationMethod=METHOD]");
 				System.exit(1);
 			}
 
@@ -130,16 +143,26 @@ public class SimpleDb {
 
 			ExperimentRunner runner;
 			if (args[5].equalsIgnoreCase("--base")) {
-				runner = new ExperimentRunner(iters, catalog, queries, outputDir);
+				String imputationMethod = ImputeFactory.DEFAULT_IMPUTATION_METHOD;
+				if (args.length >= 7 && args[6].startsWith("--imputationMethod=")){
+					imputationMethod = args[6].split("=")[1];
+				}
+				runner = new ExperimentRunner(iters, catalog, queries, outputDir, imputationMethod);
 			} else {
 				double minAlpha = Double.parseDouble(args[5]);
 				double maxAlpha = Double.parseDouble(args[6]);
 				double step = Double.parseDouble(args[7]);
 				boolean planOnly = false;
-				if (args.length == 9) {
-					planOnly = args[8].equalsIgnoreCase("--planOnly");
+				if (args.length >= 9  && args[8].startsWith("--planOnly=")) {
+					planOnly = Boolean.parseBoolean(args[8].split("=")[1]);
 				}
-				runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters, catalog, queries, outputDir, planOnly);
+				String imputationMethod = ImputeFactory.DEFAULT_IMPUTATION_METHOD;
+				if (args.length >= 10 && args[9].startsWith("--imputationMethod=")) {
+					imputationMethod = args[9].split("=")[1];
+				}
+                runner = new ExperimentRunner(minAlpha, maxAlpha, step, iters,
+                        catalog, queries, outputDir, planOnly,
+                        imputationMethod);
 			}
 			try {
 				runner.runExperiments();

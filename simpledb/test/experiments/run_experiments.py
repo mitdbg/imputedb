@@ -12,51 +12,29 @@ output_dir            = os.path.join(os.path.dirname(os.path.realpath(__file__))
 catalog_default       = "../../catalog.txt"
 queries_default       = "queries.txt"
 
-def run_small_experiment():
-    this_output_dir = os.path.join(output_dir, "small")
-
-    iters     = 3
-    min_alpha = 0.01
-    max_alpha = 0.99
-    step      = 0.32
-
-    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step)
-
-def run_medium_experiment():
-    this_output_dir = os.path.join(output_dir, "medium")
-
-    iters     = 100
-    min_alpha = 0.00
-    max_alpha = 1.00
-    step      = 0.20
-
-    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step)
-
-def run_large_experiment():
-    this_output_dir = os.path.join(output_dir, "large")
+def run_large05_experiment():
 
     iters     = 220
     min_alpha = 0.00
     max_alpha = 1.00
-    step      = 1.00
+    step      = 0.499999
 
-    queries = "queries01.txt"
+    queries = queries_default
 
+    this_output_dir = os.path.join(output_dir, "regression_tree")
     run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
-            queries, executable = executable_longimpute)
+            queries, executable = executable_longimpute, imputationMethod =
+            "REGRESSION_TREE")
 
-def run_alt_experiment():
-    this_output_dir = os.path.join(output_dir, "alt")
-
-    iters     = 220
-    min_alpha = 0.00
-    max_alpha = 1.00
-    step      = 1.00
-
-    queries = "queries02.txt"
-
+    this_output_dir = os.path.join(output_dir, "mean")
     run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
-            queries, executable = executable_longimpute)
+            queries, executable = executable_longimpute, imputationMethod =
+            "MEAN")
+
+    this_output_dir = os.path.join(output_dir, "hot_deck")
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute, imputationMethod =
+            "HOTDECK")
 
 def run_acs_experiment():
     catalog = catalog_default
@@ -122,7 +100,7 @@ def run_join_experiments():
 
 
 def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
-        queries=None, executable=None, plan_only=False):
+        queries=None, executable=None, plan_only=False, imputationMethod=""):
     if not os.path.isdir(this_output_dir):
         os.makedirs(this_output_dir)
 
@@ -135,35 +113,30 @@ def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
 
     catalog = catalog_default
 
+    if imputationMethod:
+        imputationMethodOpt = ["--imputationMethod={}".format(imputationMethod)]
+    else:
+        imputationMethodOpt = []
+
+    planOnlyOpt = ["--planOnly={}".format(plan_only)]
+
     # Timing using ImputeDB
     subprocess.call(executable +
         ["experiment", catalog, queries, this_output_dir,
-         str(iters), str(min_alpha), str(max_alpha), str(step)] + (['--planOnly'] if plan_only else []))
+         str(iters), str(min_alpha), str(max_alpha), str(step)] + planOnlyOpt +
+        imputationMethodOpt)
 
     # Timing using impute on base table
     if not plan_only:
-      subprocess.call(executable + ["experiment", catalog, queries, this_output_dir, str(iters), "--base"])
+      subprocess.call(executable + ["experiment", catalog, queries,
+          this_output_dir, str(iters), "--base"] +
+          imputationMethodOpt)
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) == 2:
-        experiment_size = sys.argv[1]
-    else:
-        experiment_size = "small"
-
-    if experiment_size == "small":
-        run_small_experiment()
-    elif experiment_size == "medium":
-        run_medium_experiment()
-    elif experiment_size == "large":
-        run_large_experiment()
-    elif experiment_size == "alt":
-        run_alt_experiment()
-    elif experiment_size == "acs":
-        run_acs_experiment()
-    elif experiment_size == "joins":
-        run_join_experiments()
-    else:
-        raise Error
-
+    import fire
+    fire.Fire({
+        "large05" : run_large05_experiment,
+        "acs" : run_acs_experiment,
+        "joins" : run_join_experiments,
+    })
     print("Done.")

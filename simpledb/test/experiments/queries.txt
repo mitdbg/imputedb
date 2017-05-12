@@ -1,6 +1,7 @@
 SELECT income, AVG(cuff_size)
 FROM demo, exams
 WHERE demo.id = exams.id
+AND height >= 15000
 GROUP BY income;
 
 SELECT income, AVG(creatine)
@@ -19,8 +20,15 @@ WHERE demo.id = labs.id AND labs.id = exams.id AND
       body_mass_index >= 3000
 GROUP BY gender;
 
+SELECT AVG(waist_circumference)
+FROM demo, exams
+WHERE demo.id = exams.id 
+AND height >= 15000
+AND weight >= 10000;
+
 SELECT attendedbootcamp, AVG(income)
 FROM fcc
+WHERE income >= 50000
 GROUP BY attendedbootcamp;
 
 SELECT AVG(commutetime)
@@ -29,7 +37,7 @@ WHERE gender = 290 AND countrycitizen = 251;
 
 SELECT schooldegree, AVG(studentdebtowe)
 FROM fcc
-WHERE studentdebtowe > 0 AND schooldegree >= 0
+WHERE studentdebtowe > 0
 GROUP BY schooldegree;
 
 SELECT attendedbootcamp, AVG(gdp_per_capita)
