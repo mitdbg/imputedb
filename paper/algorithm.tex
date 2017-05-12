@@ -9,7 +9,7 @@ agnostic to the type of imputation used (\Cref{sec:imputation}). Finally, we sho
 that while our algorithm is exponential in the number of joins (\Cref{sec:complexity}), in practice, planning times are not a concern for most queries.
 
 
-\subsection{Imputation operators}
+\subsection{Imputation Operators}
 \label{sec:operators}
 We introduce two new relational operators to perform imputation: \textit{Impute} ($\mu$) and
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
@@ -20,7 +20,7 @@ In our experiments, we implement \textit{Impute} using a general-purpose chained
 Both operators guarantee that the resulting relation will contain no \nullv{} values for
 attributes in $C$.  
 
-\subsection{Search space}
+\subsection{Search Space}
 \label{sec:search-space}
 To keep the query plan search space tractable, only plans that fit the following template are considered.
 
@@ -49,7 +49,7 @@ cost-based optimizer~\cite{blasgen1981system}, with the addition of imputation o
   \end{minipage}
 \end{figure}
 
-\subsection{Imputation placement}
+\subsection{Imputation Placement}
 \label{sec:placement}
 We place imputation operators into the query plan so that no relational operator encounters a tuple containing \nullv{} in an attribute that the operator examines, regardless of the state of the data in the base tables.
 
@@ -68,7 +68,7 @@ Imputation operators can be placed at any point, but there are cases where an im
 Note that \textsc{Dirty} over-approximates the set of attributes that contain \nullv{}. For example, a filter might remove all tuples which contain \nullv{}, but the dirty set would be unchanged. We choose to over-approximate to ensure that all \nullv{} values are explicitly imputed or dropped.
 
 
-\subsection{Cost model}
+\subsection{Cost Model}
 \label{sec:cost-model}
 The cost of a plan $q$ is a tuple $\langle \textsc{Penalty}(q), \textsc{Time}(q) \rangle$.
 $\textsc{Penalty}(q) \in (0,1]$ is a heuristic that quantifies the amount of information lost by the imputation procedure used.
@@ -205,7 +205,7 @@ We discuss several values of $T$ for different imputation methods in \Cref{sec:i
 % The \textit{build tree} phase often does not even dominate computation, as post-processing steps like pruning, which are vital in achieving good performance, can have cost exponential in the height of the tree.
 % Nonetheless, in practice, we find that a simple parameterization can be acceptable (i.e.\ yields intelligent query plans).
 
-\subsection{Imputation strategies and their API}
+\subsection{Imputation Strategies and their API}
 \label{sec:imputation}
 
 \ProjectName{} is designed so that any imputation strategy can be plugged in with minimal effort and without changes to the optimizer, by supplying penalty ($P$) and time ($T$) functions (\Cref{sec:cost-model}) pertinent to the algorithm.
@@ -292,7 +292,7 @@ We use the same $P$ as for mean value imputation, but we modify $T$ to account f
 \end{aligned}
 \end{equation*}
 
-\subsection{Query planning}
+\subsection{Query Planning}
 \label{sec:planning}
 The query planner must select a join ordering in addition to placing imputation operators as described in~\Cref{sec:placement}.
 

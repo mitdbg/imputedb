@@ -3,7 +3,7 @@ For our experiments we plan and execute queries for three separate survey-based 
 We show that \ProjectName{} performs an order of magnitude better than traditional
 base-table imputation and produces results of comparable quality.
 
-\subsection{Data sets}\label{subsec:datasets}
+\subsection{Data Sets}\label{subsec:datasets}
 We collect three data sets for our experiments.
 For all data sets, we selected a subset of the original attributes.
 We also transform all data values to an integer representation by enumerating strings and transforming floating-point values into an appropriate range.
@@ -234,7 +234,7 @@ For every imputation inserted into the query plan, a new statistical model is in
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
 
-\subsubsection{Planning times}
+\subsubsection{Planning Times}
 \begin{table}
 \centering
 \input{tables/planning_summary_exact_pareto.tex}
