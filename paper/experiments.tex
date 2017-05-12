@@ -119,23 +119,17 @@ provide performance figures relevant to practitioners using similar datasets.
 
 \subsection{Results}\label{sec:results}
 
-For each query, we evaluate \todo{update: three different configurations}: \ProjectName{} optimizing for
-quality ($\alpha=0$), \ProjectName{} optimizing for performance ($\alpha=1$), and imputing
-at the base tables followed by executing the query traditionally. 
+For each query, we evaluate \todo{update: three different configurations}: \ProjectName{} optimizing for quality ($\alpha=0$) and \ProjectName{} optimizing for performance ($\alpha=1$) and as a baseline, we fully impute the tables used by each query then run the query on the imputed tables, simulating the process that an analyst would follow to apply existing imputation techniques.
 
 \Cref{fig:runtimes} shows a summary of the performance results. The quality-optimized
-queries are an \todo{update/validate: order-of-magnitude faster than imputing on the base tables. We get another order-of-magnitude speedup when optimizing for performance}. This performance
+queries are an \todo{update/validate: order-of-magnitude faster than the baseline. We get another order-of-magnitude speedup when optimizing for performance}. This performance
 differential means it is feasible
 to explore multiple imputation operations (including more expensive operators) when using
-\ProjectName{}, in contrast to the traditional approach of base table imputation.
+\ProjectName{}, in contrast to the traditional approach of fully imputing the dataset.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
-\caption{Query runtimes with imputation on base tables, \ProjectName{}
-    optimizing for quality ($\alpha=0$), and \ProjectName{} optimizing for
-    performance ($\alpha=1$). Quality-optimized, on-the-fly imputation provides an order of
-    magnitude speedup over imputing on base tables. Efficiency-optimized on-the-fly
-    imputation can provide another order-of-magnitude speedup at the expense of quality.}
+\caption{Runtimes for the queries in~\Cref{tbl:queries}. $\alpha=0$ (resp. $\alpha=1$) is \ProjectName{} run at the highest (resp. lowest) quality setting. Baseline is full table imputation followed by running the query.}
 \todo{update with new figure}   
 \label{fig:runtimes}
 \end{figure}
@@ -159,30 +153,23 @@ Each query and each value of $\alpha$ was run 200 times, after discarding a warm
 %\end{figure}
 \subsubsection{Accuracy vs. Base-table Imputation}
 
-\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error
-(SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results when compared to
-imputing on the base tables and executing the query on this cleaned base data.
-This measure indicates how much error is introduced by on-the-fly imputation compared to
-imputation on the base tables. This comparison is the relevant one in practice --- an
-analyst would only be considering the trade-offs in imputation quality and time in the first
-place for dirty input data, for which ground truth is unavailable.
+\Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results compared to the baseline.
+This measures the error introduced by on-the-fly imputation as compared to full imputation on the base tables.
+This comparison is the relevant one in practice --- an analyst would only be considering the trade-offs in imputation quality and time in the first place for dirty input data, for which ground truth is unavailable.
 
-In our case, the relevant comparison is against traditional
-imputation on the base table, given the unavailability of ground truth.
+In our case, the relevant comparison is against traditional imputation on the base table, given the unavailability of ground truth.
 
 \todo{Distinguish between underlying imputation methods}
 For $\alpha=0$ and $\alpha=1$, we pair up tuples and compute SMAPE for all queries. That is,
 we compute tuple-wise absolute percentage deviations within each iteration of a query, and
 we report this value averaged over all iterations.  We
 can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
-to the base-imputation approach is low---\todo{update: between \lowsmapealphazero{} and
-\highsmapealphaoneexacs{} percent}---indicating that on-the-fly imputation produces similar
-results to imputation at the base tables. Notably, the results with largest error correspond
+to the baseline is low---\todo{update: between \lowsmapealphazero{} and
+\highsmapealphaoneexacs{} percent}---indicating that on-the-fly imputation produces results similar to the baseline. Notably, the results with largest error correspond
 most closely to one existing approach of dropping all \nullv{}s.
 
 We also calculate the number of tuples used to produce each aggregate output.
-The count fraction columns in \Cref{table:smape} show the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ as a fraction of the number of tuples
-used when running the query on the imputed base table.
+The count fraction columns in \Cref{table:smape} show the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ as a fraction of the number of tuples used when running the query on the imputed base table.
 This shows that when optimizing for performance, not quality, many tuples are dropped.
 Even in cases where the SMAPE reduction between $\alpha = 1$ and $\alpha = 0$ is small (\Cref{q2}, \Cref{q6}) the tuple count is significantly different.
 In these cases, the aggregate value is not significantly impacted by the missing data. In particular, if values are missing uniformly at random,
@@ -195,16 +182,16 @@ By using \ProjectName{} this cost can be lowered significantly.
 and encapsulate the possible tradeoffs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
 can be exposed to the user to help in guiding their workflow.
 
-\begin{table}
-\centering
-\input{tables/perf_summary.tex}
-\caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$
-    parameterizations. To calculate SMAPE, \ProjectName{} results are compared to query results returned
-    from executions with base table imputation. Queries optimized
+Queries optimized
     for quality ($\alpha=0$) generally achieve lower error than queries optimized for
     efficiency ($\alpha=1$). The count fraction column shows the number of tuples used in calculating each aggregate
      as a fraction of the number of tuples used when running the same query after imputing on the base table.
-    A lower count share reflects more potential for errors.}
+    A lower count share reflects more potential for errors.
+
+\begin{table}
+\centering
+\input{tables/perf_summary.tex}
+\caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$ parameterizations, as compared to the baseline.}
 \todo{update with new figure}
 \label{table:smape}
 \end{table}
@@ -213,24 +200,26 @@ can be exposed to the user to help in guiding their workflow.
 \centering
 \includegraphics[scale=0.4]{figures/pareto_frontiers_plot.png}
 \caption{\ProjectName{}'s final Pareto frontier for \Cref{q1} and \Cref{q6}. 
-For clarity, we have removed from the plot plans that provide nearly indistinguishable tradeoffs in either dimension. }
+For clarity, we have removed from the plot plans that provide nearly indistinguishable tradeoffs in either dimension.}
 \label{fig:pareto-frontiers}
 \end{figure}
 
-\subsubsection{Runtime of Base-table Imputation}
-In many real-world cases, applying the imputation step at the base table is prohibitively
-expensive.
-To illustrate the increasing difficulty of such an approach as datasets scale, we run the following query over the ACS dataset:
-\begin{lstlisting}[breaklines]
-SELECT AVG(c0) FROM acs_dirty;
-\end{lstlisting}
-Applying the imputation operation to the base table is extremely expensive, as it imputes over all attributes in all rows, in our case
-completing in \acsbaseresultminutes{}. In contrast, \ProjectName{} executes a quality-optimized version
-in \acsimputedbzeroresult{} and a runtime-optimized version in \acsimputedboneresult{}. This highlights the potential
-benefit of using our system for early data exploration. Note that the performance differential relative to base table imputation
-would likely widen further if selection predicates were added to the query.
+\subsubsection{Baseline Runtime}
+In many real-world cases, applying imputation to an entire dataset is prohibitively expensive.
+For example, if we run CART imputation on the full ACS dataset, it completes in \acsbaseresultminutes{}.
 
-For every imputation inserted into the query plan, a new statistical model is instantiated and trained before being used for imputation.
+In contrast, \ProjectName{} executes the following query:
+\begin{lstlisting}[breaklines]
+SELECT AVG(c0) FROM acs;
+\end{lstlisting}
+over the ACS dataset (also using CART imputation) in \acsimputedbzeroresult{} when optimizing for quality and \acsimputedboneresult{} when optimizing for runtime.
+The performance difference comes from the fact that \ProjectName{} only needs to perform imputation on the single column required by the query.
+Adding selection predicates would further reduce the query runtime by reducing the amount of required imputation.
+An analyst could do the same, but tracking the required imputations would get increasingly complicated as the queries became more complex.
+This highlights the benefit of using our system for early data exploration.
+
+\todo{Should this be here?}
+For every imputation operator inserted into the query plan, a new statistical model is instantiated and trained before being used for imputation.
 Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
 
@@ -238,8 +227,7 @@ this is not desirable because the specific rows of data, set of complete attribu
 \begin{figure}
 \centering
 \includegraphics[scale=0.4]{figures/planning_times_plot.png}
-\caption{Planning times are sub-second for up to 5 joins. For more joins, we implement an approximation to Pareto sets.
-This reduces planning time linearly with respect to the reduction in the final frontier size. Users can increase the level of
+\caption{Planning times are sub-second for up to 5 joins. For more joins, we implement an approximation to Pareto sets. Users can increase the level of
 approximation for more aggressive planning reductions.
 }
 \label{fig:planning-times}
@@ -250,9 +238,9 @@ In all cases, the optimizer returned a query plan within \planningmaxtime{} ms.}
 The choice of $\alpha$ has no impact on planning times, because query selection is done after collecting the Pareto frontier.
 
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
-\Cref{fig:planning-times} shows the average planning time on a log scale for queries of the CDC data with an increasing number of joins. As the number of tables requiring imputation grows,
-so does the search space and corresponding planning time. Planning time for queries involving 1--5 joins are sub-second. While a useful subset of exploratory queries can be expressed
-with a smaller number of joins, we extended \ProjectName{} to support an approximation of Pareto sets to improve planning times for queries with 6 or more joins. Approximate Pareto sets
+We explored the limits of our planning algorithm by constructing a series of queries with increasing number of joins over the CDC tables.
+Planning times (~\Cref{fig:planning-times}) for queries involving 1--5 joins---a practical value for a practical subset of real world exploratory queries---are less than 1 second.
+We extended \ProjectName{} to support an approximation of Pareto sets to improve planning times for queries with 6 or more joins. Approximate Pareto sets
 displayed a reduction in planning time linear with respect to the reduction in size of the final frontier. Users can increase the level of approximation to reduce planning times further.
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
