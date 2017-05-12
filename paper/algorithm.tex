@@ -101,6 +101,7 @@ If $\alpha=0.0$, then the optimal query should lose as little information as pos
 the expense of performance). If $\alpha = 1.0$, then the optimal query should have the
 lowest runtime (at the expense of quality).
 
+\review{
 \subsubsection{Cardinality estimation}
 \label{sec:cardinal}
 The computation of $\textsc{Penalty}(q)$ and $\textsc{Time}(q)$ relies on accurate cardinality estimates for the plan $q$ and its sub-plans.
@@ -291,6 +292,7 @@ We use the same $P$ as for mean value imputation, but we modify $T$ to account f
     P(q) &= \sum_{A \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(A)}{\textsc{Card}(q)}
 \end{aligned}
 \end{equation*}
+}
 
 \subsection{Query Planning}
 \label{sec:planning}
