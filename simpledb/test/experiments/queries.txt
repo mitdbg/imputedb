@@ -34,7 +34,7 @@ AND weight >= 10000;
 
 SELECT AVG(commutetime)
 FROM fcc
-WHERE gender = 178 AND countrycitizen = 158;
+WHERE gender = 290 AND countrycitizen = 251;
 
 SELECT schooldegree, AVG(studentdebtowe)
 FROM fcc
