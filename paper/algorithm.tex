@@ -145,15 +145,17 @@ $\textsc{Penalty}_{P}(q)$ aggregates penalties from individual imputations to pr
 For imputation on a subplan $q'$, a penalty $P(q')$ in $(0,1]$ is assigned to $\mu(q')$
 and a penalty of $1$ is assigned to $\delta(q')$.
 The function $\textsc{L}_{P}(q')$ is then defined recursively to aggregate these penalties for the entire plan. 
-The result is normalized by $\textsc{L}_{P_\delta}(q')$, which is the total penalty for always dropping tuples with \nullv{} values and equates to the count of imputation operators considered.
+The result is normalized by $\textsc{L}_{P_\delta}(q')$, which is the total penalty for always dropping tuples with \nullv{} values and is equal to the number of imputation operators in the plan.
 
 \noindent{\textbf{Constructing $P$}}: The form of $P$ is chosen to reflect the properties of the imputation method being used.
 A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the set of plan histograms.
-From these, $P$ can obtain the number of clean and dirty attributes in its input, their cardinalities, and approximations to distribution statistics such as mean and variance.
+From these, $P$ can obtain the number of clean and dirty attributes in its input, their cardinalities, and approximations of distribution statistics such as mean and variance.
 Intuitively, imputation quality \textit{increases} when more complete attributes and complete tuples are available; correspondingly, $P(q')$ \textit{decreases} as the number of values increases.
-The heuristic penalty should also reflect the intuition that the number of training observations has diminishing returns by decreasing more slowly as the number of values increases. Finally, the heuristic penalty may increase as amount of noise or spread in the data increases, as this makes it more difficult to obtain precise imputations.
+The penalty should also reflect the intuition that the number of training observations has diminishing returns by decreasing more slowly as the number of values increases.
+Finally, the penalty may increase as amount of noise or spread in the data increases, as this makes it more difficult to obtain precise imputations.
 
-Imputation quality $P(q')=0$ is unachievable, as this suggests the values of missing elements are known exactly. On the other hand, $P(q')=1$ occurs when all tuples with missing values are dropped, as this represents the worst case in terms of recovering information from these tuples.
+Imputation quality $P(q')=0$ is unattainable, as this suggests the values of missing elements are known exactly.
+On the other hand, $P(q')=1$ occurs when all tuples with missing values are dropped, as this represents the worst case in terms of recovering information from these tuples.
 In Section~\ref{sec:imputation}, we discuss choices for $P$ for several common imputation methods.
 
 \subsubsection{Query runtime}
@@ -177,26 +179,21 @@ Scan costs are estimated based on the number of tuples, page size, and a unit-le
 We assume that I/O costs dominate CPU costs for relational operators. 
 A database implementation for which this assumption is not true, e.g. an in-memory database, will need a different cost model.
 Join costs are estimated as a function of the two relations joined, any blocking operations, and repeated fetching of tuples (if required).
-Filtering, projecting, and aggregating are all done in memory and have low computational overhead so we assume negligible time costs for those operations. 
+Filtering, projecting, and aggregating never require repeated tuple fetches and have low computational overhead so we assume that they take negligible time.
 
 We extend these heuristics to account for the new operators: \textit{Drop} and \textit{Impute}.
 \textit{Drop} is a special case of a filter, so its time complexity is correspondingly negligible. 
 
-\noindent{\textbf{Constructing $T$}}: As with $\textsc{Penalty}$, the time computation for \textit{Impute} depends on
-the properties of the underlying algorithm via a function $T$. If we assume
-that the \textit{Impute} routine is CPU-bound, then we adjust
-\textsc{Time} by some constant factor $f$, thereby scaling the result to be
-comparable with IO-bound routines.
+\noindent{\textbf{Constructing $T$}}:
+As with $\textsc{Penalty}$, the time computation for \textit{Impute} depends on the properties of the underlying algorithm via a function $T$.
+If we assume that the \textit{Impute} routine is CPU-bound, then we adjust $T$ by some constant factor $f$, thereby scaling the result to be comparable with IO-bound routines.
 
-The form of $T$ depends on the specific imputation method, but there are various
-principles useful in capturing the intuition of a practical choice.
-$T$ should \emph{increase}
-as the number of tuples and complete and dirty attributes passed to the
-imputation function increases and it should be take into account the complexity
-of the imputation algorithm. Analysis of the time complexity of different
-imputation algorithms, especially with in-database execution, is beyond the
-scope of this paper. As with $P$, it is the ordering between queries
-generated by $T$ that is more important than the precision of estimates.
+The form of $T$ depends on the specific imputation method, but there are several considerations in choosing $T$.
+In particular, $T$ should \emph{increase} as the number of tuples and complete and dirty attributes passed to the imputation function increases and it should be take into account the complexity of the imputation algorithm.
+Analysis of the time complexity of different imputation algorithms, especially with in-database execution, is beyond the scope of this paper.
+As with $P$, it is the ordering between queries generated by $T$ that is more important than the precision of estimates.
+
+We discuss several values of $T$ for different imputation methods in \Cref{sec:imputation}.
 
 % In the implementation of our system,
 % we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
