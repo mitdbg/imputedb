@@ -14,10 +14,10 @@ queries_default       = "queries.txt"
 
 def run_large05_experiment():
 
-    iters     = 1
+    iters     = 220
     min_alpha = 0.00
     max_alpha = 1.00
-    step      = 1.00
+    step      = 0.499999
 
     queries = queries_default
 
@@ -26,15 +26,15 @@ def run_large05_experiment():
             queries, executable = executable_longimpute, imputationMethod =
             "REGRESSION_TREE")
 
-    # this_output_dir = os.path.join(output_dir, "mean")
-    # run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
-    #         queries, executable = executable_longimpute, imputationMethod =
-    #         "MEAN")
+    this_output_dir = os.path.join(output_dir, "mean")
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute, imputationMethod =
+            "MEAN")
 
-    # this_output_dir = os.path.join(output_dir, "hot_deck")
-    # run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
-    #         queries, executable = executable_longimpute, imputationMethod =
-    #         "HOTDECK")
+    this_output_dir = os.path.join(output_dir, "hot_deck")
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute, imputationMethod =
+            "HOTDECK")
 
 def run_acs_experiment():
     catalog = catalog_default
@@ -118,12 +118,13 @@ def run_experiment(this_output_dir, iters, min_alpha, max_alpha, step,
     else:
         imputationMethodOpt = []
 
+    planOnlyOpt = ["--planOnly={}".format(plan_only)]
+
     # Timing using ImputeDB
     subprocess.call(executable +
         ["experiment", catalog, queries, this_output_dir,
-         str(iters), str(min_alpha), str(max_alpha), str(step),
-         "--planOnly={}".format(plan_only)] + imputationMethodOpt
-        )
+         str(iters), str(min_alpha), str(max_alpha), str(step)] + planOnlyOpt +
+        imputationMethodOpt)
 
     # Timing using impute on base table
     if not plan_only:

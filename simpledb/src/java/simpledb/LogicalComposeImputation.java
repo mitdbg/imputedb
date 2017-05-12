@@ -65,6 +65,7 @@ public class LogicalComposeImputation extends ImputedPlan {
 		case MAXIMAL:
 		case MINIMAL: 
 			Impute imputeOp = ImputeFactory.newImpute(toNames(impute), subplan.getPlan());
+			// Impute imputeOp = new ImputeRegressionTree(toNames(impute), subplan.getPlan());
 			final double penalty = imputeOp.getEstimatedPenalty(subplan);
 			final double time = imputeOp.getEstimatedTime(subplan);
 			final TableStats adjustedTableStats = subplanTableStats.adjustForImpute(MAXIMAL, imputeIndices);

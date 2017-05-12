@@ -36,8 +36,9 @@ public class ExperimentRunner {
     private FileWriter plansFileWriter;
     private String[] queries;
 
-    private ExperimentRunner(boolean imputeAtBase, double minAlpha, double maxAlpha, double step, int iters,
-        String catalog, String queries, String outputBaseDir, boolean planOnly, String imputationMethod)
+    private ExperimentRunner(boolean imputeAtBase, double minAlpha, double
+            maxAlpha, double step, int iters, String catalog, String queries,
+            String outputBaseDir, boolean planOnly, String imputationMethod)
             throws IOException {
         this.imputeAtBase = imputeAtBase;
         this.minAlpha = minAlpha;
@@ -56,15 +57,21 @@ public class ExperimentRunner {
        	ImputeFactory.setImputationMethod(this.imputationMethod);
     }
 
-    public ExperimentRunner(int iters, String catalog, String queries, String outputDir)
+    // constructor for invocation of experiments with --base
+    public ExperimentRunner(int iters, String catalog, String queries, String
+            outputDir, String imputationMethod)
             throws IOException {
-        this(true, 0.0, 0.0, 1.0, iters, catalog, queries, outputDir, false, ImputeFactory.DEFAULT_IMPUTATION_METHOD);
+        this(true, 0.0, 0.0, 1.0, iters, catalog, queries, outputDir, false,
+                imputationMethod);
     }
 
-    public ExperimentRunner(double minAlpha, double maxAlpha, double step, int iters, String catalog, String queries,
-        String outputDir, boolean planOnly, String imputationMethod)
+    // constructor for other invocation of experiments
+    public ExperimentRunner(double minAlpha, double maxAlpha, double step, int
+            iters, String catalog, String queries, String outputDir, boolean
+            planOnly, String imputationMethod)
             throws IOException {
-        this(false, minAlpha, maxAlpha, step, iters, catalog, queries, outputDir, planOnly, imputationMethod);
+        this(false, minAlpha, maxAlpha, step, iters, catalog, queries,
+                outputDir, planOnly, imputationMethod);
     }
 
     private void init() throws IOException {
@@ -73,8 +80,10 @@ public class ExperimentRunner {
         TableStats.computeStatistics();
     }
 
-    private static DbIterator planQuery(String query, Function<Void, LogicalPlan> planFactory)
-            throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
+    private static DbIterator planQuery(String query, Function<Void,
+            LogicalPlan> planFactory)
+            throws ParseException, TransactionAbortedException, DbException,
+                              IOException, ParsingException {
         ZqlParser p = new ZqlParser(new ByteArrayInputStream(query.getBytes("UTF-8")));
         ZStatement s = p.readStatement();
         Parser pp = new Parser(planFactory);
@@ -125,7 +134,7 @@ public class ExperimentRunner {
     private void run(int q, double alpha, int iter)
             throws ParseException, TransactionAbortedException, DbException, IOException, ParsingException {
 
-    String query = queries[q] + ";";
+        String query = queries[q] + ";";
 
         // time planning
         Instant planStart = Instant.now();
@@ -182,7 +191,8 @@ public class ExperimentRunner {
                 openTimeWriter(q, alpha);
                 for (int i = 0; i < this.iters; i++) {
                     openOtherWriters(q, alpha, i);
-                    System.out.println("Running query " + q + ", alpha " + alpha + ", iter " + i);
+                    System.out.println("Running query " + q + ", alpha " + alpha
+                            + ", iter " + i + " (impute " + this.imputationMethod + ")");
                     run(q, alpha, i);
                     closeOtherWriters();
                 }

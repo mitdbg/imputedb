@@ -51,20 +51,20 @@ public class ImputeMean extends Impute {
 
     @Override
     protected Tuple fetchNext() throws DbException, TransactionAbortedException {
-	if (this.tableStats == null){
-		throw new DbException("TableStats not loaded.");
-	}
+        if (this.tableStats == null){
+            throw new DbException("TableStats not loaded.");
+        }
 
-	if (child.hasNext()){
-		Tuple t = child.next();
-		if (t.hasMissingFields()){
-			return impute(child.next());
-		} else {
-			return t;
-		}
-	} else {
-		return null;
-	}
+        if (child.hasNext()){
+            Tuple t = child.next();
+            if (t.hasMissingFields()){
+                return impute(t);
+            } else {
+                return t;
+            }
+        } else {
+            return null;
+        }
     }
 
     private Tuple impute(Tuple t) throws DbException {

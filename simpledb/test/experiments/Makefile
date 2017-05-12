@@ -43,7 +43,8 @@ run:
 		   --user root \
 		   imputedb \
 		   python run_experiments.py $(SIZE)
-	docker logs --follow imputedb-run-$(SIZE) | sudo tee output/$(SIZE)/log
+	touch output/$(SIZE).log
+	docker logs --follow imputedb-run-$(SIZE) | sudo tee output/$(SIZE).log
 
 bash:
 	docker run -it --rm \

@@ -294,20 +294,12 @@ public class TableStats {
     	return ret;
     }
     
-    public double estimateMean(int field){
-    	return this.intStats[field].mean();
-    }
-    
     public double estimateVariance(int field){
     	return this.intStats[field].variance();
     }
 
     public double estimateMean(int field){
-	return this.intStats[field].mean();
-    }
-
-    public double estimateVariance(int field){
-	return this.intStats[field].variance();
+        return this.intStats[field].mean();
     }
 
     /**

@@ -225,7 +225,7 @@ public class ImputeRegressionTree extends Impute {
 		// Iterate creation of trees for each missing column. This is the
 		// meat of the chained-equation regression trees method.
 		for (int j=0; j<numImputationEpochs; j++){
-            System.err.println("Training epoch " + j + "...");
+            // System.err.println("Training epoch " + j + "...");
 			for (int imputationColumn : dropFieldsIndices2){
 				train.setClassIndex(imputationColumn);
 			
@@ -254,7 +254,7 @@ public class ImputeRegressionTree extends Impute {
 					}
 				}
 			}
-            System.err.println("Training epoch " + j + "...done.");
+            // System.err.println("Training epoch " + j + "...done.");
 		}
 		
 		this.imputedInstances = train;
