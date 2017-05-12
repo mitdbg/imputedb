@@ -235,30 +235,25 @@ Although it is tempting to further optimize query execution in \ProjectName{} by
 this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
 
 \subsubsection{Planning Times}
-\begin{table}
+\begin{figure}
 \centering
-\input{tables/planning_summary_exact_pareto.tex}
-\caption{Planning times are sub-second for up to 4 joins. For 5+  joins planning times rise. Many practical queries
-can be formulated with a smaller number of joins, but to support more complex queries \ProjectName{} provides an
-optimization that maintains approximate Pareto sets for queries with many joins. This reduces the 29 second
-planning time shown for 7 joins by approximately 45\%, on average.
-\todo{update with new table and values}
+\includegraphics[scale=0.4]{figures/planning_times_plot.png}
+\caption{Planning times are sub-second for up to 5 joins. For more joins, we implement an approximation to Pareto sets.
+This reduces planning time linearly with respect to the reduction in the final frontier size. Users can increase the level of
+approximation for more aggressive planning reductions.
 }
-\label{table:planning-times}
-\end{table}
+\label{fig:planning-times}
+\end{figure}
 
-\todo{Update: Planning times are reasonable, with a median planning time of \planningmediantime{} ms. over the benchmark queries, constituting \planningruntimepercent{}\% of total runtime.
+\todo{Update: Planning times for our benchmark queries are reasonable, with a median planning time of \planningmediantime{} ms. over the benchmark queries, constituting \planningruntimepercent{}\% of total runtime.
 In all cases, the optimizer returned a query plan within \planningmaxtime{} ms.}
 The choice of $\alpha$ has no impact on planning times, because query selection is done after collecting the Pareto frontier.
 
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
-We explored the limits our planning algorithm by constructing a series of queries with increasing number of joins.
-We used the CDC tables and evaluated increasing number of joins across tables.
-Planning times for queries involving 1--5 joins, which is a practical value for real world exploratory queries, take less than a second.
-\todo{update: For queries with 7 joins, planning time increases substantially to 29 seconds, on average. We introduced an optimization that reduces
-the plan space by maintaining only approximations of the Pareto set for queries involving a large number of joins.
-With this optimization, the same set of queries have an average planning time of 16 seconds (2 seconds SE).}
-
+\Cref{fig:planning-times} shows the average planning time on a log scale for queries of the CDC data with an increasing number of joins. As the number of tables requiring imputation grows,
+so does the search space and corresponding planning time. Planning time for queries involving 1--5 joins are sub-second. While a useful subset of exploratory queries can be expressed
+with a smaller number of joins, we extended \ProjectName{} to support an approximation of Pareto sets to improve planning times for queries with 6 or more joins. Approximate Pareto sets
+displayed a reduction in planning time linear with respect to the reduction in size of the final frontier. Users can increase the level of approximation to reduce planning times further.
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
 %%% Local Variables:
