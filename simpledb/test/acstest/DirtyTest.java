@@ -160,7 +160,7 @@ public class DirtyTest {
 			final double aa = a;
 			imputedDirty = planQuery(query, x -> { return new ImputedLogicalPlan(aa); });
 			imputedDirty.open();
-			if (imputedDirty.contains(ImputeRandom.class) || imputedDirty.contains(ImputeRegressionTree.class)) {
+			if (imputedDirty.contains(ImputeHotDeck.class) || imputedDirty.contains(ImputeRegressionTree.class)) {
 				System.err.format("Switched from drop to impute at alpha %f.\n", aa);
 				return;
 			}

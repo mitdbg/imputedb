@@ -293,6 +293,14 @@ public class TableStats {
     	}
     	return ret;
     }
+    
+    public double estimateVariance(int field){
+    	return this.intStats[field].variance();
+    }
+
+    public double estimateMean(int field){
+        return this.intStats[field].mean();
+    }
 
     /**
      * return the total number of tuples in this table

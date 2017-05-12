@@ -81,7 +81,7 @@ public class ImputeTest extends SimpleDbTestBase {
         getTupleDescDriver(new ImputeTotallyRandom(dropFields1, scan1));
     }
     @Test public void getTupleDescRandom() {
-        getTupleDescDriver(new ImputeRandom(dropFields1, scan1));
+        getTupleDescDriver(new ImputeHotDeck(dropFields1, scan1));
     }
     @Test public void getTupleDescRegressionTree() {
         getTupleDescDriver(new ImputeRegressionTree(dropFields1, scan1));
@@ -104,7 +104,7 @@ public class ImputeTest extends SimpleDbTestBase {
         rewindDriver(new ImputeTotallyRandom(dropFields1, scan1));
     }
     @Test public void rewindRandom() throws Exception {
-        rewindDriver(new ImputeRandom(dropFields1, scan1));
+        rewindDriver(new ImputeHotDeck(dropFields1, scan1));
     }
     @Test public void rewindRegressionTree() throws Exception {
         rewindDriver0(new ImputeRegressionTree(dropFields1, scan1));
@@ -147,8 +147,8 @@ public class ImputeTest extends SimpleDbTestBase {
     }
     @Test public void imputeRandom() throws Exception {
         System.out.println("Random test");
-        doImpute1(new ImputeRandom(dropFields1, scan1));
-        doImpute2(new ImputeRandom(dropFields2, scan2), scan2copy);
+        doImpute1(new ImputeHotDeck(dropFields1, scan1));
+        doImpute2(new ImputeHotDeck(dropFields2, scan2), scan2copy);
     }
     @Test public void imputeRegressionTree() throws Exception {
         System.out.println("Regression tree test");
