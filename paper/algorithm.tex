@@ -208,15 +208,10 @@ We discuss several values of $T$ for different imputation methods in \Cref{sec:i
 \subsection{Imputation strategies and their API}
 \label{sec:imputation}
 
-\ProjectName{} is designed so that any imputation strategy
-can be plugged in with minimal effort and without changes to the optimizer, simply by supplying
-penalty ($P$) and time ($T$) functions (\Cref{sec:cost-model}) pertinent to the algorithm.
-These can then be queried by the optimizer during planning.  The flexibility of
-this approach aligns with the spirit of query optimization, which aims to
-reconcile performance with a declarative interface to data manipulation. To
-motivate this API, we describe how an analyst would specify the form of these
-functions for a general-purpose imputation algorithm, as well as two simpler
-methods.
+\ProjectName{} is designed so that any imputation strategy can be plugged in with minimal effort and without changes to the optimizer, by supplying penalty ($P$) and time ($T$) functions (\Cref{sec:cost-model}) pertinent to the algorithm.
+These cost functions are then used by the optimizer during planning.
+The flexibility of this approach is in the spirit of query optimization, which aims to reconcile performance with a declarative interface to data manipulation.
+To motivate this API, we describe how a developer would specify these functions for a general-purpose imputation algorithm, as well as for two simpler imputation methods.
 
 \subsubsection{Decision trees}
 
@@ -227,7 +222,7 @@ methods~\cite{vanbuuren2011mice} (sometimes called \textit{iterative
 regression}~\cite{gelman2006data}) impute multiple missing attributes by
 iteratively fitting a predictive model of one missing attribute, conditional on
 all complete attributes and all other missing attributes. Chained-equation
-decision trees algorithms are found to be effective~\cite{akande2015empirical}
+decision trees algorithms are effective~\cite{akande2015empirical}
 and are widely used in epidemiological domains~\cite{burgette2010multiple}.
 
 % Jose: I think this is a bit out of place. So trimmed for space
@@ -238,9 +233,8 @@ and are widely used in epidemiological domains~\cite{burgette2010multiple}.
 %multiple imputation could be incorporated as another avenue of assessing imputation confidence.
 
 The chained-equation algorithm proceeds by
-iteratively fitting decision trees for the target imputation attributes. In
-each iteration, the missing values of a separate attribute are replaced with
-newly imputed values.  Values in a single column can be updated over multiple
+iteratively fitting decision trees for the target attributes. 
+In each iteration, the missing values of a single attribute are replaced with newly imputed values.  Values in a single column can be updated over multiple
 iterations of the algorithm. With more iterations, the quality of the
 imputation improves as values progressively reflect more accurate relationships
 between attributes. The algorithm terminates after a fixed number of
@@ -261,7 +255,7 @@ $k * |\textsc{Dirty}(q)|$ trees, we have
 
 Separately, we specify a heuristic penalty that takes into account the
 improvement in imputation quality from more tuples and attributes as well as
-the diminishing returns to more data.
+the diminishing returns from more data.
 
 \[
     P(q) = \frac{|\textsc{Dirty}(q)|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
@@ -269,14 +263,11 @@ the diminishing returns to more data.
 
 \subsubsection{Mean}
 
-At the other end of the spectrum of complexity, an analyst could use a simple
-method that replaces a missing value with the mean over available values
-in that attribute, a common choice in exploratory data analysis known
-as mean value imputation. 
+At the other end of the complexity spectrum, mean value imputation is a common choice for exploratory data analysis.
+Mean value imputation replaces missing values in a column with the mean of the available values in the column.
 
-We can take advantage of the histograms maintained by \ProjectName{}
-to estimate the mean and construct a non-blocking impute operator.
-Applying the heuristics from \ref{sec:quality} and \ref{sec:query-runtime}, we
+We can take advantage of the histograms maintained by \ProjectName{} to estimate the mean and construct a non-blocking impute operator.
+Applying the heuristics from~\Cref{sec:quality} and~\Cref{sec:query-runtime}, we
 have
 
 \begin{equation*}
@@ -286,13 +277,13 @@ have
 \end{aligned}
 \end{equation*}
 
+Note that $P$ increases with the variance of the columns and decreases with their cardinality, reflecting the intuition that the quality of the mean is lower with high variance and higher with more data.
+
 \subsubsection{Hot-deck}
 
-Hot-deck imputation is a nonparametric method in which missing values are
-replaced with randomly selected complete values. This method preserves the
-distribution of the complete values. The heuristic $P$ remains the same, 
-but we modify $T$ to account for the fact that hot-deck is blocking in our
-implementation.
+Hot-deck imputation is a nonparametric method in which missing values are replaced with randomly selected complete values.
+This method preserves the distribution of the complete values.
+We use the same $P$ as for mean value imputation, but we modify $T$ to account for the fact that hot-deck is blocking in our implementation.
 
 \begin{equation*}
 \begin{aligned}
@@ -300,10 +291,6 @@ implementation.
     P(q) &= \sum_{A \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(A)}{\textsc{Card}(q)}
 \end{aligned}
 \end{equation*}
-
-%\begin{algorithm}
-%    \input{algorithms/cart.tex}
-%\end{algorithm}
 
 \subsection{Query planning}
 \label{sec:planning}
