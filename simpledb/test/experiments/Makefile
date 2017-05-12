@@ -17,8 +17,8 @@ clean: clean_files clean_containers
 clean_force: clean_files clean_containers_force
 
 clean_files:
-	sudo rm -rf ./output
-	sudo rm -rf ./query_plans
+	sudo rm -rf ./output/*
+	sudo rm -rf ./query_plans/*
 	sudo rm -rf ./__pycache__
 
 clean_containers:
@@ -45,6 +45,13 @@ run:
 		   python run_experiments.py $(SIZE)
 	docker logs --follow imputedb-run-$(SIZE) | sudo tee output/$(SIZE)/log
 
+bash:
+	docker run -it --rm \
+		   --name=imputedb-run-$(SIZE) \
+		   -v "$(shell pwd):/src/test/experiments" \
+		   --user root \
+		   imputedb \
+		   bash
 
 analysis:
 	docker run -it --rm \

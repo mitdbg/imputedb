@@ -1,14 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 
 import pandas as pd
 import numpy as np
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-plt.ioff()
 
 import os
 import glob
@@ -223,7 +218,7 @@ def write_perf_summary(experiments_dir, output_dir):
     perf_summary_latex.to_latex(os.path.join(output_dir, 'perf_summary.tex'),
             float_format='%.2f', index=False)
 
-<<<<<<< HEAD
+    return perf
 
 def analyze_join_planning(experiment_dir, output_dir):
   if not os.path.isdir(output_dir):
@@ -240,11 +235,6 @@ def analyze_join_planning(experiment_dir, output_dir):
   planning_summary_latex = planning_summary_latex.rename(columns={'njoins': '# of Joins', 'mean': 'Avg (ms)', 'std': 'SE'})
   planning_summary_latex.to_latex(os.path.join(output_dir, 'plan_summary.tex'), index=False, float_format='%.2f')
 
-
-
-||||||| merged common ancestors
-=======
-    return perf
 
 def write_counts_summary(experiments_dir, output_dir):
     if not os.path.isdir(experiments_dir):
@@ -316,7 +306,6 @@ def main(experiments_dir, output_dir):
     collapse_results(experiments_dir, output_dir, base=True)
     write_perf_summary(experiments_dir, output_dir)
 
->>>>>>> experiments
 if __name__ == "__main__":
     def print_usage_and_exit():
         print("usage: python analyze_experiments.py <experiment-output-dir> [--joins]")
