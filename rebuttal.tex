@@ -75,10 +75,11 @@
 
     \resp{Though we do not show this explicitly, we repeat all of the queries using COUNT
       aggregates in order to compute the ``Count Fraction''. The timing results are
-      clearly identical in this case and the number of tuples returned can be seen
+      identical in this case and the number of tuples returned can be seen
       directly in Table 4.}
 
-    \todo{For SUM queries, that may depend more directly on the number of rows returned than the
+    \todo{Do we need to address this?:
+    For SUM queries, that may depend more directly on the number of rows returned than the
       quality of imputations for any individual row, the effect of different COUNT results
       dominates the computation AVG*COUNT. How do we handle this?}
 
@@ -114,7 +115,7 @@
 
     \resp{
       We compare our planning technique for on-the-fly imputation to imputation performed on the full dataset, using the same imputation algorithm in both cases.
-      We are not aware of another database technology which offers on-the-fly imputation, so there is no direct comparison for the planning algorithm.
+      We are not aware of another database technology which offers on-the-fly imputation optimization, so there is no direct comparison for the planning algorithm.
       % Our evaluation compares our technique to an imputation of the full dataset. We use the same imputation algorithm for our on-the-fly imputation as for the full dataset imputation. Cleaning the full dataset is the standard method of handling missing values.
     }
 
@@ -126,7 +127,7 @@
 
     \resp{
       We have added two new imputation methods to the experiments, to show that the planning algorithm can be used successfully with different imputation methods.
-      We have also added a subsection to the algorithm section explaining how we chose the cost functions for each imputation method that we test and giving rules for choosing cost functions for a new imputation method.
+      We have also added a subsection to the algorithm section explaining how we chose the cost functions for each imputation method that we test and giving guidelines for choosing cost functions for a new imputation method.
     }
   \end{itemize}
 
@@ -146,7 +147,7 @@
     -- Algorithms 1 and 2 could probably be presented in an easier to grasp way.
     
     \resp{
-    We've broken up this section and consolidated algoirthm notation. The cardinality estimation section provides more detail about the algorithm. We also
+    We've broken up this section and consolidated algorithm notation. The cardinality estimation section provides more detail about the algorithm. We also
     added intuition for how the heuristic Penalty (a renaming of Loss, for clarity) and Time should be designed. We walk through these definitions for three different
     impute operators.
     }
@@ -157,7 +158,8 @@
     -- It would be great (but not necessary of course) to add your techniques in an existing DBMS, such as Postgres to see the impact on a real system in your experiments.
 
     \resp{
-      Existing systems have very complex formulas for estimating query costs. We felt that the overhead of reimplementing an existing cost model would not be worth the benefit.
+    \todo{this is a bad response...}
+      We felt that the overhead of reimplementing an existing cost model would not be worth the benefit.
       However, we added a new section that discusses in detail the main components for \ProjectName{}, so that developers of existing systems can use this as a roadmap
       for implementation.
 
@@ -185,17 +187,23 @@
 
   \item D6. During plan enumeration, can you safely prune plans at some point, similar to what a traditional optimizer would do?
 
-    \resp{We maintain the set of pareto optimal plans at each point in the optimization. This set is significantly smaller than the set of all plans, so it represents some pruning. We found that the size of these pareto sets is small enough that we did not need to prune further.
+    \resp{We maintain the set of Pareto optimal plans at each point in the optimization. This set is significantly smaller than the set of all plans, so it represents some pruning. We found that the size of these Pareto sets is small enough that we did not need to prune further.
 
-      If necessary, it is possible to sample from the pareto optimal plans during the plan enumeration. The final selected plan may not be pareto optimal, but this is a potential way to control the number of plans.}
-    \todo{Talk about pareto set approximation here.}
+      If necessary, it is possible to sample from the Pareto optimal plans during the plan enumeration. The final selected plan may not be Pareto optimal, but this is a potential way to control the number of plans.
+      To perform this approximation, we only add plans to the frontier that are non-dominated and are sufficiently different from existing plans in the frontier. The plan already in the frontier should
+      provide similar tradeoffs and reduces the search space explored. \ProjectName{} only employs this optimization when a large number of tables requiring imputation are involved in the query.
+      }
 
   \item D7. When defining the cost of impute operator, how do you know a priori the number of iterations for the algorithm (given it has to converge)?
-    \todo{Micah: what do we actually do here?}
+  For the iterative regression impute operatore, we set a predefined number of iterations as an upper bound on its execution. If the imputation converges,
+  we can return immediately, otherwise we return after this upper bound is reached. This is a common approach used in iterative optimization techniques, such
+  as gradient descent.
 
   \item D8. Are there impute implementation that are non-blocking? Or do they always have to perform multiple passes over the data?
 
-    \resp{Yes. For example, in time series data, it is reasonable to fill the most recent non-null value forward. This kind of imputation isn't useful for survey data, so we didn't consider it for our experiments. We have also extended the experiments section to consider a simple imputation method which fills missing values with the mean of the column, which only needs one pass over the data.}
+    \resp{Yes. For example, in time series data, it is reasonable to fill the most recent non-null value forward. This kind of imputation isn't useful for survey data, so we didn't consider it for our experiments. We have extended the experiments section to consider a simple non-block imputation method relevant to our dataset: mean value imputation. This is a common technique, which fills in  missing values
+    with the average observed value. In our case, we implement a non-blocking variant that estimates the mean from the plan's histograms, avoiding the need to perform a full pass over
+    the data before imputing.}
 
   \item D9. Additional experiments I suggest to include:
     -- Consider a scenario where the user submits multiple similar queries. Show after how many such queries your approach has no longer a competitive advantage compared to performing imputation on the data.
