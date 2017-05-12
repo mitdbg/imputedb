@@ -116,6 +116,12 @@
     \resp{
       We compare our planning technique for on-the-fly imputation to imputation performed on the full dataset, using the same imputation algorithm in both cases.
       We are not aware of another database technology which offers on-the-fly imputation optimization, so there is no direct comparison for the planning algorithm.
+      However, we ran a simple experiment using BayesDB to compare possible imputation times. In order to make the comparison as fair as possible in terms of running
+      time, we reduced the number of models that BayesDB instantiates to a single model per base table. We fit each model with 100 iterations, in an optimized setting.
+      The fitting times on the CDC tables ranged between 119 and 320 seconds (per table). The FCC model fitting took 237 seconds. The user would then still need to use these models to
+      perform imputation.  The underlying modeling technique for BayesDB is quite sophisticated, so the high running time is not a surprise, but should provide some context
+      for the challenges faced by users trying to explore new datasets. In a real world scenario, the user would instantiate more than a single model, increasing these running
+      times further.
       % Our evaluation compares our technique to an imputation of the full dataset. We use the same imputation algorithm for our on-the-fly imputation as for the full dataset imputation. Cleaning the full dataset is the standard method of handling missing values.
     }
 
