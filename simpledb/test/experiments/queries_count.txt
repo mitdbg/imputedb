@@ -1,0 +1,46 @@
+SELECT income, COUNT(cuff_size)
+FROM demo, exams
+WHERE demo.id = exams.id
+AND height >= 15000
+GROUP BY income;
+
+SELECT income, COUNT(creatine)
+FROM demo, exams, labs
+WHERE demo.id = exams.id AND exams.id = labs.id AND
+income >= 13 AND income <= 15 AND weight >= 6300
+GROUP BY income;
+
+SELECT COUNT(blood_lead)
+FROM demo, exams, labs
+WHERE demo.id = labs.id AND labs.id = exams.id AND age_yrs <= 6;
+
+SELECT gender, COUNT(blood_pressure_systolic)
+FROM demo, labs, exams
+WHERE demo.id = labs.id AND labs.id = exams.id AND
+      body_mass_index >= 3000
+GROUP BY gender;
+
+SELECT COUNT(waist_circumference)
+FROM demo, exams
+WHERE demo.id = exams.id 
+AND height >= 15000
+AND weight >= 10000;
+
+SELECT attendedbootcamp, COUNT(income)
+FROM fcc
+WHERE income >= 50000
+GROUP BY attendedbootcamp;
+
+SELECT COUNT(commutetime)
+FROM fcc
+WHERE gender = 290 AND countrycitizen = 251;
+
+SELECT schooldegree, COUNT(studentdebtowe)
+FROM fcc
+WHERE studentdebtowe > 0
+GROUP BY schooldegree;
+
+SELECT attendedbootcamp, COUNT(gdp_per_capita)
+FROM fcc, gdp
+WHERE fcc.countrycitizen = gdp.country and age >= 18
+GROUP BY attendedbootcamp;

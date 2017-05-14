@@ -246,7 +246,7 @@ def write_counts_summary(experiments_dir, output_dir=""):
         raise FileNotFoundError
 
     if not output_dir:
-        output_dir = os.path.join(experiments_dir)
+        output_dir = os.path.join(experiments_dir, "analysis")
 
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
@@ -289,25 +289,26 @@ def write_counts_summary(experiments_dir, output_dir=""):
     # Write to file
     df = df1.append(df2).sort_values(["query"])
 
-    print("Writing means...")
+    print("Writing means...", end='')
     dfmean = df.pivot(index="query",columns="alpha",values="mean") 
     dfmean.to_latex(os.path.join(output_dir, 'counts_mean.tex'),
             float_format='%.2f')
+    print("done")
 
-    print("Writing stds...")
+    print("Writing stds...", end='')
     dfstd = df.pivot(index="query",columns="alpha",values="std")
     dfstd.to_latex(os.path.join(output_dir, 'counts_std.tex'),
             float_format='%.2f')
+    print("done")
 
     dfmean["0.0 pct"] = dfmean[0.0]/dfmean[-1.0]
     dfmean["1.0 pct"] = dfmean[1.0]/dfmean[-1.0]
 
-    print("Writing means (pct)...")
+    print("Writing means (pct)...", end='')
     dfmean[["0.0 pct","1.0 pct"]].to_latex(
         os.path.join(output_dir, 'counts_mean_pct.tex'), float_format='%.2f'
     )
-
-    return df
+    print("done")
 
 def main(experiments_dir, output_dir=""):
     if not output_dir:

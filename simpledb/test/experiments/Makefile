@@ -32,6 +32,7 @@ clean_containers_force:
 		|| echo "No containers found."
 
 build:
+	docker build . -t scipy-notebook-fire -f Dockerfile-analysis
 	{ cd ../..; docker build -t imputedb .; }
 
 run_and_analysis: run analysis
@@ -56,17 +57,26 @@ bash:
 
 analysis:
 	docker run -it --rm \
+		   -v "$(shell pwd)/output_avg:/data" \
+		   -v "$(shell pwd):/home/jovyan/work" \
+		   --user root \
+	           scipy-notebook-fire \
+		   python analyze_experiments.py analyze /data/$(SIZE)
+
+analysis_count:
+	docker run -it --rm \
 		   -v "$(shell pwd)/output:/data" \
 		   -v "$(shell pwd):/home/jovyan/work" \
 		   --user root \
-	           jupyter/datascience-notebook \
-		   python analyze_experiments.py analyze /data/$(SIZE)
+	           scipy-notebook-fire \
+		   ipython analyze_experiments.py analyze-counts /data/$(SIZE)
 
 explore:
 	docker run -it --rm \
 		   -v "$(shell pwd)/output:/data" \
 		   -v "$(shell pwd):/home/jovyan/work" \
 		   --user root \
-	           jupyter/datascience-notebook python
+	           scipy-notebook-fire \
+		   ipython
 
-.PHONY: help clean clean_force clean_files clean_containers clean_containers_force build run_and_analysis run analysis explore
+.PHONY: help clean clean_force clean_files clean_containers clean_containers_force build run_and_analysis run analysis_count explore

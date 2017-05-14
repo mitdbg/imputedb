@@ -36,6 +36,30 @@ def run_large05_experiment():
             queries, executable = executable_longimpute, imputationMethod =
             "HOTDECK")
 
+def run_large05_experiment_count():
+
+    iters     = 220
+    min_alpha = 0.00
+    max_alpha = 1.00
+    step      = 0.499999
+
+    queries = "queries_count.txt"
+
+    this_output_dir = os.path.join(output_dir, "regression_tree")
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute, imputationMethod =
+            "REGRESSION_TREE")
+
+    this_output_dir = os.path.join(output_dir, "mean")
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute, imputationMethod =
+            "MEAN")
+
+    this_output_dir = os.path.join(output_dir, "hot_deck")
+    run_experiment(this_output_dir, iters, min_alpha, max_alpha, step, queries =
+            queries, executable = executable_longimpute, imputationMethod =
+            "HOTDECK")
+
 def run_acs_experiment():
     catalog = catalog_default
     executable = executable_default
@@ -136,6 +160,7 @@ if __name__ == "__main__":
     import fire
     fire.Fire({
         "large05" : run_large05_experiment,
+        "large05_count" : run_large05_experiment_count,
         "acs" : run_acs_experiment,
         "joins" : run_join_experiments,
     })
