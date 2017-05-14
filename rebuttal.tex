@@ -26,10 +26,19 @@ In our draft, new text is highlighted in {\color{blue}blue} and changed text is 
   \item W2. The paper completely obscures the ML technique being used: (1) It would be nice to have some discussion of the complete API for implementing an ML technique, as well as how one might implement a cost-estimator for one or two examples. (2) It would be helpful to see the impact of a few different approaches (e.g., Tree-based, Interpolation, Regression, FD-based) on performance and accuracy. (3) Given that the ML time estimator is being treated as a black box, it would be useful to see how sensitive the plan selector is to inaccurate estimates.
   
   \resp{
-  We extended our evaluation to include two commonly used imputation methods: mean value imputation and hot-deck imputation. We also added
- details on how to pick the heuristic functions that define the API for impute operators. We provide details on how these functions are defined
- for all the methods used in our evaluation. 
-  } 
+    We extended our evaluation to include two commonly used imputation methods: mean value imputation and hot-deck imputation.
+    These methods are in addition to the original imputation method (CART), which is based on regression trees.
+    The regression tree model incorporates correlations between attributes, so should be able to take advantage of any functional dependencies to make better predictions.
+    Interpolation based imputation is useful for data where the ordering of tuples is significant, like time series, but is not well suited for survey data where the ordering of tuples is arbitrary.
+    
+    We also added details on how to pick the cost functions that define the API for impute operators.
+    We provide details on how these functions are defined for all the methods used in our evaluation.
+
+    Our optimizer (like any query optimizer) is sensitive to the quality of its estimates.
+    We believe that the cost functions we have chosen lead to good results overall, but there may be cases where our estimates lead to bad outcomes.
+    It is an interesting and difficult problem to accurately estimate the quality of a regression model before running the model.
+    Any work in this area could be used immediately to improve our algorithm.
+  }
 
   \item W3. Reducing runtime to ~10s is excellent, but comes at a very serious accuracy cost (3-5x worse SMAPE). Worse still, there's no way for the user to differentiate between the cases of Q4 and Q8 at runtime. 24\% error relative to direct imputation is huge.
     
