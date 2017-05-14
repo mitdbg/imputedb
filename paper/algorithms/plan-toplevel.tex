@@ -1,6 +1,7 @@
 \newcommand{\InlineIte}[3]{#2\ \textbf{if}\ #1\ \textbf{else}\ #3}
 \renewcommand{\algorithmicindent}{1em}
 
+\review{
 \begin{algorithmic}[1]
     \Require{
     \Statex
@@ -62,9 +63,9 @@
   \State $B \gets \bigcup_{q \in B} \{\pi_P(q') ~|~ q' \in \Call{Impute}{q,\ P,\ P}\}$ \Comment{Add projections.}
   \State \Return $p \in B$ s.t. $p$ is $\alpha$-bound optimal.
   \EndFunction
-  
 \end{algorithmic}
-\caption{A query planner with imputations.}
+}
+\caption{\review{A query planner with imputations.}}
 \label{algo:top-level-planner}
 
 %%% Local Variables:

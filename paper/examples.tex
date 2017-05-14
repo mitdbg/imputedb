@@ -107,10 +107,12 @@ the dataset using SQL. She begins by choosing a value for $\alpha$ and can adjus
 down until she is satisfied with her query runtime. This iterative approach gives her 
 immediate feedback.
 
+\review{
 An alternative strategy involves starting with $\alpha=1$ and iterating to lower values, as long as execution
 of the query completes within some user-defined time bound. \ProjectName{}'s planning
 algorithm can expose the final set of plans that tradeoff execution time and imputation quality, which allows
 the user to adjust their choice of $\alpha$ to uniquely select amongst these plans.
+}
 
 Tens of queries later, our epidemiologist has a holistic view of the data and she has the information that she needs to construct a tailored imputation model for her queries of interest.
 Knowing that there may be a need to explore this data set further, she can easily incorporate her imputation model into ImputeDB for future use.

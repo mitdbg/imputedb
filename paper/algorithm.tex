@@ -436,10 +436,12 @@ Recall that the planner maintains different plans for different dirty sets, keep
 So in many cases we can drop some of the intermediate plans generated at each operator.
 The worst case complexity only occurs if the dirty sets tracked are distinct through the entire planning phase.
 
+\review{
 In order to support a large number of joins, with lower planning times, \ProjectName{} can maintain approximations of the Pareto sets.
 A non-dominated plan can be approximated by an existing plan in the set, if the distance between them is smaller than some predefined bound.
 Approximated plans are not added to the frontier, pruning the search space further. 
 Planning times across both exact and approximate Pareto frontiers are discussed further in \Cref{sec:results}.
+}
 
 %%% Local Variables:
 %%% mode: latex
