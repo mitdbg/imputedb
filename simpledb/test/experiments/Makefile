@@ -60,7 +60,7 @@ analysis:
 		   -v "$(shell pwd):/home/jovyan/work" \
 		   --user root \
 	           jupyter/datascience-notebook \
-		   python analyze_experiments.py /data/$(SIZE)
+		   python analyze_experiments.py analyze /data/$(SIZE)
 
 explore:
 	docker run -it --rm \

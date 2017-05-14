@@ -9,6 +9,8 @@ import os
 import glob
 import sys
 
+import fire
+
 from collections import defaultdict
 
 try:
@@ -220,25 +222,31 @@ def write_perf_summary(experiments_dir, output_dir):
 
     return perf
 
-def analyze_join_planning(experiment_dir, output_dir):
-  if not os.path.isdir(output_dir):
-      os.makedirs(output_dir)
-  # time data
-  data = get_timing_results(experiment_dir, joins=True)
-  # drop warmup iterations
-  data = drop_warmup(data, ['njoins', 'query', 'alpha'], drop=10)
-  # average planning time and se by number of joins
-  # alpha doesn't have a real impact on the planning time (as we would expect), so don't aggregate with it
-  planning_summary = data.groupby('njoins')['plan_time'].agg({'mean': np.mean, 'std': np.std}).reset_index()
-  planning_summary_latex = planning_summary.copy()
-  planning_summary_latex = planning_summary_latex[['njoins', 'mean', 'std']]
-  planning_summary_latex = planning_summary_latex.rename(columns={'njoins': '# of Joins', 'mean': 'Avg (ms)', 'std': 'SE'})
-  planning_summary_latex.to_latex(os.path.join(output_dir, 'plan_summary.tex'), index=False, float_format='%.2f')
+def analyze_join_planning(experiment_dir, output_dir=""):
+    if not output_dir:
+        output_dir = os.path.join(experiment_dir, "analysis")
+
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+    # time data
+    data = get_timing_results(experiment_dir, joins=True)
+    # drop warmup iterations
+    data = drop_warmup(data, ['njoins', 'query', 'alpha'], drop=10)
+    # average planning time and se by number of joins
+    # alpha doesn't have a real impact on the planning time (as we would expect), so don't aggregate with it
+    planning_summary = data.groupby('njoins')['plan_time'].agg({'mean': np.mean, 'std': np.std}).reset_index()
+    planning_summary_latex = planning_summary.copy()
+    planning_summary_latex = planning_summary_latex[['njoins', 'mean', 'std']]
+    planning_summary_latex = planning_summary_latex.rename(columns={'njoins': '# of Joins', 'mean': 'Avg (ms)', 'std': 'SE'})
+    planning_summary_latex.to_latex(os.path.join(output_dir, 'plan_summary.tex'), index=False, float_format='%.2f')
 
 
-def write_counts_summary(experiments_dir, output_dir):
+def write_counts_summary(experiments_dir, output_dir=""):
     if not os.path.isdir(experiments_dir):
         raise FileNotFoundError
+
+    if not output_dir:
+        output_dir = os.path.join(experiments_dir)
 
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
@@ -301,21 +309,16 @@ def write_counts_summary(experiments_dir, output_dir):
 
     return df
 
-def main(experiments_dir, output_dir):
+def main(experiments_dir, output_dir=""):
+    if not output_dir:
+        output_dir = os.path.join(experiment_dir, "analysis")
     collapse_results(experiments_dir, output_dir)
     collapse_results(experiments_dir, output_dir, base=True)
     write_perf_summary(experiments_dir, output_dir)
 
 if __name__ == "__main__":
-    def print_usage_and_exit():
-        print("usage: python analyze_experiments.py <experiment-output-dir> [--joins]")
-        sys.exit(1)
-
-    if len(sys.argv) == 2:
-        experiment_dir = sys.argv[1]
-        main(experiment_dir, os.path.join(experiment_dir, "analysis"))
-    elif len(sys.argv) == 3 and sys.argv[2] == '--joins':
-        experiment_dir = sys.argv[1]
-        analyze_join_planning(experiment_dir, os.path.join(experiment_dir, "analysis"))
-    else:
-        print_usage_and_exit()
+    fire.Fire({
+        "analyze" : main,
+        "analyze-joins" : analyze_join_planning,
+        "analyze-counts" : write_counts_summary,
+    })
