@@ -1,7 +1,9 @@
-\begin{tabular}{rcccc}
+{
+  \setlength{\tabcolsep}{1.4em} % for the horizontal padding
+\begin{tabular}{cSSSS}
 \toprule
       & \multicolumn{2}{c}{SMAPE}   & \multicolumn{2}{c}{Count Fraction} \\
-Query & $\alpha = 0$ & $\alpha = 1$ & $\alpha = 0$ & $\alpha = 1$    \\
+Query & {$\alpha = 0$} & {$\alpha = 1$} & {$\alpha = 0$} & {$\alpha = 1$}    \\
 \midrule
     1 & 0.39         & 1.24         & 1.00         & 0.88            \\
     2 & 1.49         & 2.41         & 1.00         & 0.33            \\
@@ -14,3 +16,9 @@ Query & $\alpha = 0$ & $\alpha = 1$ & $\alpha = 0$ & $\alpha = 1$    \\
     9 & 2.03         & 2.49         & 1.00         & 0.84            \\
 \bottomrule
 \end{tabular}
+}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:
