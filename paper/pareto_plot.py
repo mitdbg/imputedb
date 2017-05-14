@@ -4,7 +4,15 @@ import numpy as np
 import sys
 ANNOTATE = False
 
+
 def plot_frontier():
+  # setup latex rendering to use \textsc below
+  from matplotlib import rc
+  rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+  ## for Palatino and other serif fonts use:
+  #rc('font',**{'family':'serif','serif':['Palatino']})
+  rc('text', usetex=True)
+  
   df = pd.read_csv('tables/pareto_frontiers.csv')
   df['norm_time'] = df.groupby('query')['time'].apply(lambda x: x / x.max())
   df['id'] = range(0, df.shape[0])
@@ -26,9 +34,9 @@ def plot_frontier():
     ax.set_ylabel('')
 
     plt.subplots_adjust(bottom=0.2)
-    fig.suptitle('Pareto Frontiers', size=16)
-    fig.text(0.5, 0.04, 'Time estimate/Max(Time estimate)', ha='center')
-    fig.text(0.04, 0.5, 'Penalty Estimate', va='center', rotation='vertical')
+    fig.suptitle('Planner Pareto Frontiers', size=14)
+    fig.text(0.5, 0.04, r'$\textsc{Time}/\textsc{Max}(\textsc{Time})$', ha='center')
+    fig.text(0.04, 0.5, r'$\textsc{Penalty}$', va='center', rotation='vertical')
     fig.savefig('figures/pareto_frontiers_plot.png')
 
 
