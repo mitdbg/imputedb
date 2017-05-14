@@ -55,9 +55,11 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     }
 
   \item Although it doesn't consider cost or the drop operator, a similar technique appears in Yang et. al. "Lenses: An On-Demand Approach to ETL." A comparison would be nice.
+    
    \resp{
-   Yang's work is definitely related, and we've added it to our related work section. However, it is worth noting that their decision process for application of lenses is at the tuple-level,
-   rather than with respect to the query plan.
+     Yang's work is definitely related, and we've added it to our related work section.
+   Their system helps an analyst prioritize cleaning tasks for a particular query.
+   It uses pretrained regression models as one of a number of repair strategies for missing data rather than creating a query plan which incorporates the training and running of such models.
    }
 
  \item S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach between 0 and 24 percent" 24 percent error is pretty bad.
@@ -94,6 +96,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     \resp{Agreed. Our database stores tables in files, so our plans are I/O bound, but a database which uses an in-memory representation will need a different Time() function. We have clarified this in the paper.}
 
   \item S3.4.4: "Drop is a special case of a sequential scan, and its time complexity can be expressed as a function of the number of heap pages read and the I/O cost per page." seems to suggest that drop is implemented as a blocking operator. Why not just take the same approach as selection and treat it as having negligible cost?
+    
     \resp{We mistakenly suggest in S3 that we treat \textit{Drop} as a blocking operator. In
       our implementation, it has $0$ cost, and we have updated the text to reflect that.}
 
@@ -226,10 +229,12 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
       provide similar tradeoffs and reduces the search space explored. \ProjectName{} only employs this optimization when a large number of tables requiring imputation are involved in the query.
       }
 
-  \item D7. When defining the cost of impute operator, how do you know a priori the number of iterations for the algorithm (given it has to converge)?
-  For the iterative regression impute operatore, we set a predefined number of iterations as an upper bound on its execution. If the imputation converges,
+    \item D7. When defining the cost of impute operator, how do you know a priori the number of iterations for the algorithm (given it has to converge)?
+      
+  \resp{For the iterative regression impute operator, we set a predefined number of iterations as an upper bound on its execution. If the imputation converges,
   we can return immediately, otherwise we return after this upper bound is reached. This is a common approach used in iterative optimization techniques, such
   as gradient descent.
+}
 
   \item D8. Are there impute implementation that are non-blocking? Or do they always have to perform multiple passes over the data?
 
@@ -266,14 +271,14 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
     \resp{The subset of SQL that we consider does not allow filtering on the results of joins (see Section 3.2). Extending the planner to cover this case is not complex. Before adding filters, it must add imputations on the required attributes.}
 
-  \item -- Given you optimize for both performance and quality, Tummer's and Koch's work on multi-objective QO is related.
+  \item Given you optimize for both performance and quality, Tummer's and Koch's work on multi-objective QO is related.
 
     \resp{Yes, Tummer \& Koch is definitely related.
       However, much of the complexity of their method is in dealing with cost functions which are not well behaved.
       Our cost functions are monotonic, which allows us to use a simpler optimizer than what Tummer \& Koch propose.
     We have added a discussion of their work to the related works section.}
 
-\item -- Could be interesting for the optimizer to pick imputation strategy based on the type of the query.
+\item Could be interesting for the optimizer to pick imputation strategy based on the type of the query.
   \end{itemize}
 \end{document}
 %%% Local Variables:
