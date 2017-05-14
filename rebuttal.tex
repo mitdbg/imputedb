@@ -9,11 +9,10 @@
 \begin{document}
 \section{Introduction}
 The authors would like to thank the reviewers for their helpful and insightful comments.
-We have taken steps to address each comment and we believe that the paper is significantly improved.
-In this document, we give a point-by-point response to the comments from each reviewer.
+We have taken steps to address each comment and we believe that the paper is significantly improved
+as a result. In this document, we give a point-by-point response to the comments from each reviewer.
 
 In the rebuttal, the reviewer's original comments are in black and our responses are in \resp{blue}.
-
 In our draft, new or significantly changed text is highlighted in {\color{blue}blue}.
 
 \section{Overall changes}
@@ -54,6 +53,9 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
       The outsized error in Q8 is due to a drop operator placed very early on in the plan (a result of optimizing for performance). This produced significantly smaller sample sizes for various
       groups, which skewed the average calculation for each group significantly. For example, the average student debt for subjects with no high school degree was almost 83\% off from the estimate
       using the base table imputation, but if we look at the underlying population the former was calculated with 6 people, while the latter was with 258 people.
+      
+      We can trivially extend \ProjectName{} to warn users when the query chosen for execution has a high $\textsc{Penalty}$ estimate, along with the number of tuples that have
+      been dropped (after execution), so that situations such as those observed in Q8 can be identified by the user.
     }
 
   \item Although it doesn't consider cost or the drop operator, a similar technique appears in Yang et. al. "Lenses: An On-Demand Approach to ETL." A comparison would be nice.
@@ -81,15 +83,14 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
   \item S3.4.1, Definition 2: On my first read-through, I was puzzled about why there was no plan with zero-loss. It would help to clarify that Loss is not about tuple loss, but rather a heuristic penalty function.
 
-    \resp{We have clarified this in the paper by emphasizing that \textit{Loss} is not a loss in the statistical sense or in the tuple loss sense and by renaming it to \textit{Penalty}.}
+    \resp{We have clarified this in the paper by emphasizing that \textit{Loss} is not a loss in the statistical sense or in the tuple loss sense and by renaming it to $\textsc{Penalty}$.}
 
   \item S3.4.3: An extremely nice emergent property from the L-value function for the imputation operator seems to be that the operator will be moved to a position in the plan where it has access to the maximum training data. I am slightly concerned that by focusing entirely on size, this might lead to skew in the training set. For example, consider a one-to-many join \verb/µ(R) |X| S/. Your optimization algorithm would likely wish to move imputation up: \verb/µ(R |X| S)/. Yes, there is more training data, but if the fanout for each tuple is skewed, some tuples in R will become over-represented in the join result. A similar observation holds for selection. For example take your Q8, where the conditions "studentdebtowe $>$ 0 AND schooldegree $\geq$ 0" presumably indicate invalid data that should not be used for training. (is this perhaps why you have so much error for full imputation on Q8?)
 
-    \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the query requires the construction a large, skewed data set. The problem seems to be particular to queries which generate large intermediate tables. In some cases, as when joining two datasets, the intermediate table is a good target for training because it exposes correlations which would be hidden in the separate tables. In other cases, this intermediate table is large and skewed, which causes problems for imputation. Avoiding this case requires us to estimate the skew in these intermediate tables.
-
-     To clarify the point about Q8, we've removed the predicate condition $schooldegree \geq 0$. 
-      We originally enumerated strings with positive integers and replaced missing values strings with 0, rather than perform imputation on them, so every enumerated value
-      satisfied this predicate trivially. We have changed our evaluation to impute string enumerations as well and dropped this predicate.
+    \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the query requires the construction a large, skewed data set. The problem seems to be particular to queries which generate large intermediate tables. In some cases, as when joining two datasets, the intermediate table is a good target for training because it exposes correlations which would be hidden in the separate tables. In other cases, this intermediate table is large and skewed, which causes problems for imputation. 
+    
+    Avoiding this case requires us to estimate the skew in these intermediate tables, which would be in itself an interesting and challenging research problem. If we had improved intermediate
+    estimates, we could incorporate those to improve our system.
       }
     %\todo{Need a better explanation here.}
 
@@ -107,12 +108,9 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     \resp{Though we do not show this explicitly, we repeat all of the queries using COUNT
       aggregates in order to compute the ``Count Fraction''. The timing results are
       identical in this case and the number of tuples returned can be seen
-      directly in Table 4.}
-
-    \todo{Do we need to address this?:
-    For SUM queries, that may depend more directly on the number of rows returned than the
-      quality of imputations for any individual row, the effect of different COUNT results
-      dominates the computation AVG*COUNT. How do we handle this?}
+      directly in Table 4. We would expect benchmark queries that use aggregates such as SUM 
+      to work well in our system, with errors proportional to the fraction of relevant tuples retrieved
+      and the AVG value estimated.}
 
   \item S4.4.1: Imputation over the raw data is being used as ground truth. Is there any reason to suspect that this is the correct thing to do? Perhaps joining multiple tables together exposes new attributes that makes imputation *more* reliable? At the very least, it would be useful to understand why there is so much error in $\alpha=0$ on Q2 and Q8.
 
@@ -123,7 +121,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
       scenario, and moreover, finding ground truth for use even in an empirical evaluation
       of imputation methods can be challenging because artificially dirtying the data
       often does not capture the complex reasons for missingness in real world datasets.
-      We update the discussion in S4.4.1 to emphasize this point.}
+      We updated the discussion in S4.4.1 to emphasize this point.}
 
   \item There are a number of opportunities for trimming in the figures, tables, and algorithms: Algorithms 1-3 could be compacted a bunch, Table 1 is full of whitespace (e.g., make it a 3-column {figure*}), Tables 1-2 could also be summarized as CDFs, Figure 6 is full of whitespace, Table 3 could be put queries on a single row (e.g., Q1 would easily fit on 1 line), and the references have a lot of redundant information (URLs, for example).
 
@@ -147,12 +145,12 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     \resp{
       We compare our planning technique for on-the-fly imputation to imputation performed on the full dataset, using the same imputation algorithm in both cases.
       We are not aware of another database technology which offers on-the-fly imputation optimization, so there is no direct comparison for the planning algorithm.
-      However, we ran a simple experiment using BayesDB to compare possible imputation times. In order to make the comparison as fair as possible in terms of running
-      time, we reduced the number of models that BayesDB instantiates to a single model per base table. We fit each model with 100 iterations, in an optimized setting.
-      The fitting times on the CDC tables ranged between 119 and 320 seconds (per table). The FCC model fitting took 237 seconds. The user would then still need to use these models to
-      perform imputation.  The underlying modeling technique for BayesDB is quite sophisticated, so the high running time is not a surprise, but should provide some context
-      for the challenges faced by users trying to explore new datasets. In a real world scenario, the user would instantiate more than a single model, increasing these running
-      times further.
+%      However, we ran a simple experiment using BayesDB to compare possible imputation times. In order to make the comparison as fair as possible in terms of running
+%      time, we reduced the number of models that BayesDB instantiates to a single model per base table. We fit each model with 100 iterations, in an optimized setting.
+%      The fitting times on the CDC tables ranged between 119 and 320 seconds (per table). The FCC model fitting took 237 seconds. The user would then still need to use these models to
+%      perform imputation.  The underlying modeling technique for BayesDB is quite sophisticated, so the high running time is not a surprise, but should provide some context
+%      for the challenges faced by users trying to explore new datasets. In a real world scenario, the user would instantiate more than a single model, increasing these running
+%      times further.
       % Our evaluation compares our technique to an imputation of the full dataset. We use the same imputation algorithm for our on-the-fly imputation as for the full dataset imputation. Cleaning the full dataset is the standard method of handling missing values.
     }
 
@@ -194,25 +192,27 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     -- Why use simplified cost formulas for the traditional relational operators and not existing systems' formulas?
     -- It would be great (but not necessary of course) to add your techniques in an existing DBMS, such as Postgres to see the impact on a real system in your experiments.
 
-    \resp{
-    \todo{this is a bad response...}
-      We felt that the overhead of reimplementing an existing cost model would not be worth the benefit.
-      However, we added a new section that discusses in detail the main components for \ProjectName{}, so that developers of existing systems can use this as a roadmap
-      for implementation.
+   \resp{
+   We've added a section that describes in detail the components that need to be added to an existing database system to implement our technique. 
+   The details come directly from our implementation of \ProjectName{} on top of SimpleDB, a popular teaching database used at MIT, University of Washington, and Northwestern University, 
+   amongst others. These extensions could further exploit any existing sophistication in the underlying system for tasks such as execution cost estimates.
+   
+   Extending a rule-based optimizer to perform dynamic imputation would certainly be an interesting idea. However, the planning algorithm presented benefits from the tight
+   interaction between traditional query planning and imputation operator placement. The latter can influence aspects such as join ordering and cardinality estimates for subplans.
+   Incorporating these into a rule-based system would be possible, but we believe the plan selected through this approach will be suboptimal, compared to that chosen through
+   our integrated planning approach.
+   }
 
-      \todo{More sophisticated cost formulas from exiting systems could further improve our time estimates for traditional operators. In this case, we focused on developing the heuristics
-        relevant for the new operators, at the expense of simplifying implementation of common formulas, as we felt that was core to our contribution.}
-    }
 
   \item D3. Is there any way for the user to know what error to expect based on the $\alpha$ value? Moreover, is its value somehow proportional to the error (e.g., $\alpha=0.5$ would give roughly double the error of $\alpha=0.25$)? Or should the user simply try multiple execution with different values of $\alpha$ until the desired results are given?
 
     \resp{In our intended usage, the user starts by running with $\alpha = 0$ and increases $\alpha$ if the query takes too long to complete.
-      \todo{
-        We agree that having a way of providing an estimate on error would be interesting. Since error in this case relates to the imputation values
-        generated by the whole-table imputation (as there is no ground truth), this would likely need to be on a case-by-case basis for distinct
-        instantiations of the impute operator. 
-      }
-    }
+     
+     We agree that having a way of providing an estimate on error, based on $\alpha$, would be both useful and interesting to develop.
+     Providing error estimates further requires a reasonable notion of ground-truth. For evaluation, we've used the values imputed on the 
+     tables when applying whole-table imputation. Based on our evaluation, higher values of $\alpha$ correctly identify increased error
+     within a query, however, extending that to be predictive is not something we implemented in the current system.
+     }
 
   \item D4. How would a two-step approach that first finds the optimal plan (w/o imputation) and then adds the imputation operators perform?
 
@@ -220,7 +220,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
   \item D5. Can you have plans with a mix of drop and impute operators?
     
-    \resp{Yes.}
+    \resp{Yes, we have now highlighted this for clarity in the paper as well.}
 
   \item D6. During plan enumeration, can you safely prune plans at some point, similar to what a traditional optimizer would do?
 
@@ -240,7 +240,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
   \item D8. Are there impute implementation that are non-blocking? Or do they always have to perform multiple passes over the data?
 
-    \resp{Yes. For example, in time series data, it is reasonable to fill the most recent non-null value forward. This kind of imputation isn't useful for survey data, so we didn't consider it for our experiments. We have extended the experiments section to consider a simple non-block imputation method relevant to our dataset: mean value imputation. This is a common technique, which fills in  missing values
+    \resp{Yes. For example, in time series data, it is reasonable to fill the most recent non-null value forward. This kind of imputation isn't useful for survey data, so we didn't consider it for our experiments. We have extended the experiments section to consider a simple non-blocking imputation method relevant to our dataset: mean value imputation. This is a common technique, which fills in  missing values
     with the average observed value. In our case, we implement a non-blocking variant that estimates the mean from the plan's histograms, avoiding the need to perform a full pass over
     the data before imputing.}
 
@@ -254,7 +254,8 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
       a lot of the same plans for execution. In lieu of this, we extended the results section to include a subsection that presents the final frontiers for
       two queries, one from each dataset used during evaluation. This frontier can be exposed to the user to help in their workflow.
       \\
-      We explored the planning times for queries with increasing number of joins. The standard algorithm presented in the original version submitted handles
+      We explored the planning times for queries with increasing number of joins by running additional experiments with up to 8 joins. 
+      The standard algorithm presented in the original version submitted handles
       up to 5 joins, with columns requiring imputation in all tables, with planning time of approximately one second or less. We added a small optimization to help reduce
       planning times for a larger number of joins. We maintain an approximation of the Pareto sets, rather than the exact set, by only adding non-dominated plans that
       are sufficiently different. This optimization reduces planning time linearly with respect to the reduction in the size of the final frontier. Users can increase
