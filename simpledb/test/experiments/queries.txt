@@ -37,7 +37,7 @@ WHERE gender = 290 AND countrycitizen = 251;
 
 SELECT schooldegree, AVG(studentdebtowe)
 FROM fcc
-WHERE studentdebtowe > 0
+WHERE studentdebtowe > 0 and schooldegree >= 0
 GROUP BY schooldegree;
 
 SELECT attendedbootcamp, AVG(gdp_per_capita)
