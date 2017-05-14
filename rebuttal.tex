@@ -60,7 +60,9 @@ In our draft, new text is highlighted in {\color{blue}blue} and changed text is 
    rather than with respect to the query plan.
    }
 
-  \item S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach between 0 and 24 percent" 24 percent error is pretty bad.
+ \item S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach between 0 and 24 percent" 24 percent error is pretty bad.
+
+   \resp{See the response to W3 for discussion of Q8.}
 
   \item S2: The drop operator appears to be a weaker form of SQL's null-value / 3-valued Boolean semantics. The latter might actually be more useful. For example, consider the case of a predicate (A $>$ 5 OR B $<$ 10). If A $>$ 5, then the condition is independent of B, and the tuple can still be salvaged. If A $\leq$ 5, then the expression evaluates to UNKNOWN and the tuple is dropped anyway. For aggregates there is a greater need, as one might have different aggregates computed over different subsets of the data, but even here it's not clear that this is any less informative than just throwing data away.
 
