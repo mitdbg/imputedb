@@ -115,16 +115,21 @@
 \newcommand{\acsbaseresulthours}{just under 6 hours}
 \newcommand{\acsimputedbzeroresult}{4 seconds}
 \newcommand{\acsimputedboneresult}{1 second}
-\newcommand{\lowxalphazero}{10}
-\newcommand{\lowsmapealphazero}{0}
-\newcommand{\highxalphazeroexacs}{200}
-\newcommand{\highxalphaoneexacs}{1000}
-\newcommand{\highsmapealphaoneexacs}{24}
-\newcommand{\highxalphaone}{16000}
+\newcommand{\lowxalphazero}{10} % the smallest speed up, comparing a=0 to base table imputation
+\newcommand{\highxalphazeroexacs}{140} % the largest speed up, comparing a=0 to base table imputation 
+\newcommand{\highxalphaoneexacs}{1400} % the largest speed up, comparing a=0 OR a=1 to base table imputation 
+\newcommand{\lowsmapealphazero}{0} % the smallest SMAPE difference, comparing a=0 to base table imputation
+\newcommand{\highsmapealphazero}{6} % the largest SMAPE difference, comparing a=0 to base table imputation
+\newcommand{\highsmapealphaoneexacs}{20} % the largest SMAPE difference, comparing a=1 to base table imputation
+%\newcommand{\highxalphaone}{16000}
 \newcommand{\nullv}{NULL}
-\newcommand{\planningruntimepercent}{1.8}
-\newcommand{\planningmediantime}{1.5}
-\newcommand{\planningmaxtime}{34}
+
+\newcommand{\planninglowtime}{0.7}
+\newcommand{\planninglowtimepct}{0}
+\newcommand{\planninghightime}{2.8}
+\newcommand{\planninghightimepct}{14}
+
+\newcommand{\planningmaxtime}{34} % TODO
 
 \begin{document}
 
@@ -139,10 +144,10 @@
   % We incorporate the imputation operators into the relational algebra, allowing for traditional optimizations to take place.
   We evaluate this approach on three real-world survey-based datasets.
   % from the \textit{Center for Disease Control and Prevention} and \textit{freeCodeCamp}.
-  Our experiments show that our query plans execute between \todo{update: \lowxalphazero{} and \highxalphazeroexacs{}} times faster than first imputing the base tables.
+  Our experiments show that our query plans execute between \lowxalphazero{} and \highxalphazeroexacs{} times faster than first imputing the base tables.
   Furthermore, we show that the query results from on-the-fly imputation differ from the
   traditional base-table imputation approach by \lowsmapealphazero{}--\highsmapealphaoneexacs{}\%, in one error measure.
-  Finally, we show that while dropping tuples with missing values that fail query constraints \todo{update: discards 3--88\% of the data, on-the-fly imputation loses only 0--10\%}.
+  Finally, we show that while dropping tuples with missing values that fail query constraints discards 6--78\% of the data, on-the-fly imputation loses only 0--21\%.
 \end{abstract}
 
 \input{introduction}

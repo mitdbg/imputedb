@@ -134,7 +134,6 @@ to explore multiple imputation operations (including more expensive operators) w
     \ProjectName{} run at the highest (resp. lowest) quality setting. Baseline
     is full table imputation followed by running the query. Each query and each
     value of $\alpha$ was run 200 times.}
-\todo{update with new figure}   
 \label{fig:runtimes}
 \end{figure}
 
@@ -189,7 +188,6 @@ Queries optimized
     efficiency ($\alpha=1$). The count fraction column shows the number of tuples used in calculating each aggregate
      as a fraction of the number of tuples used when running the same query after imputing on the base table.
     A lower count share reflects more potential for errors.}
-\todo{update with new figure}
 \label{table:smape}
 \end{table}
 
@@ -203,13 +201,13 @@ For clarity, we have removed from the plot plans that provide nearly indistingui
 
 \subsubsection{Baseline Runtime}
 In many real-world cases, applying imputation to an entire dataset is prohibitively expensive.
-For example, if we run CART imputation on the full ACS dataset, it completes in \acsbaseresultminutes{}.
+For example, if we run chained-equation decision trees imputation on the full ACS dataset, it completes in \acsbaseresultminutes{}.
 
 In contrast, \ProjectName{} executes the following query:
 \begin{lstlisting}[breaklines]
 SELECT AVG(c0) FROM acs;
 \end{lstlisting}
-over the ACS dataset (also using CART imputation) in \acsimputedbzeroresult{} when optimizing for quality and \acsimputedboneresult{} when optimizing for runtime.
+over the ACS dataset (also using chained-equation decision trees imputation) in \acsimputedbzeroresult{} when optimizing for quality and \acsimputedboneresult{} when optimizing for runtime.
 The performance difference comes from the fact that \ProjectName{} only needs to perform imputation on the single column required by the query.
 Adding selection predicates would further reduce the query runtime by reducing the amount of required imputation.
 An analyst could do the same, but tracking the required imputations would get increasingly complicated as the queries became more complex.
@@ -230,9 +228,14 @@ this is not desirable because the specific rows of data, set of complete attribu
 %\label{fig:planning-times}
 %\end{figure}
 
-\todo{Update: Planning times for our benchmark queries are reasonable, with a median planning time of \planningmediantime{} ms. over the benchmark queries, constituting \planningruntimepercent{}\% of total runtime.
-In all cases, the optimizer returned a query plan within \planningmaxtime{} ms.}
-The choice of $\alpha$ has no impact on planning times, because query selection is done after collecting the Pareto frontier.
+\todo{Update: Planning times for our benchmark queries are reasonable, with mean planning
+times across the benchmark queries ranging from \planninglowtime{} ms to
+\planninghightime{} ms, constituting \planninglowtimepct{} to \planninghightimepct{} of
+total runtime, respectively.
+
+In all cases, the optimizer returned a query
+plan within \planningmaxtime{} ms.} The choice of $\alpha$ has no impact on planning times,
+because query selection is done after collecting the Pareto frontier.
 
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
 We explored the limits of our planning algorithm by constructing a series of queries with increasing number of joins over the CDC tables.
