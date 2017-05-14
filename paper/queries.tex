@@ -58,7 +58,7 @@ SELECT AVG(commutetime) FROM fcc WHERE gender = "female" AND countrycitizen = "U
   8 & 
       \begin{minipage}{6in}
 \begin{lstlisting}[breaklines]
-SELECT schooldegree, AVG(studentdebtowe) FROM fcc WHERE studentdebtowe > 0 GROUP BY schooldegree;
+SELECT schooldegree, AVG(studentdebtowe) FROM fcc WHERE studentdebtowe > 0 and schooldegree >= 0 GROUP BY schooldegree;
 \end{lstlisting}
       \end{minipage}\refstepcounter{queryno} \label[query]{q8}\\[-1.5ex]
   9 & 
