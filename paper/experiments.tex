@@ -148,6 +148,7 @@ queries are an order-of-magnitude faster than the baseline. We get another order
 %\caption{Planning times for each query}
 %\label{fig:plantimes}
 %\end{figure}
+
 \textbf{Accuracy vs. Base-table Imputation (AVG)}\quad \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results compared to the baseline, using the reference chained-equation decision trees model.
 This measures the error introduced by on-the-fly imputation as compared to full imputation on the base tables.
 This comparison is the relevant one in practice --- an analyst would only be considering the trade-offs in imputation quality and time in the first place for dirty input data, for which ground truth is unavailable.
@@ -181,25 +182,26 @@ By using \ProjectName{} this cost can be lowered significantly. We can also triv
 $\textsc{Penalty}$ estimate, along with the number of tuples that have been dropped (after execution), so that situations with high potential for skewed results can be identified by the user.
 
 \textbf{Alternate Imputation Methods}\quad
-We also experiment with mean-value imputation and hot
-deck imputation (\Cref{sec:imputation}). In our implementation of mean-value imputation,
-to facilitate non-blocking operation within the iterator
-model, we estimate the column mean from base table histograms. Therefore,
-imputations are identical no matter where the operator is placed in the query
-plan. Moreover, runtimes are essentially identical regardless of the value of
-$\alpha$ because the time cost of the imputation is relatively low independent of
-how many tuples need to be imputed. In hot deck imputation, runtimes are also
-similar across $\alpha$, because the cost of buffering
-tuples and sampling at random is negligible compared to the rest of query
-execution. \todo{be quantitative: In terms of accuracy, relative errors using hot deck are close to
-zero; since the baseline, in this case, is hot deck imputation on the base
-table, only skew in the distributions arising from filters and joins would lead
-to larger errors. In some cases, skew does arise, and errors are on the same
-magnitude as in the decision trees case. Indeed, \ProjectName{} yields larger
-benefit when using relatively sophisticated, higher quality imputation
-algorithms as opposed to simpler strategies that would even be quick to
-implement on the base table.
-}
+We also experiment with mean-value imputation and hot deck imputation
+(\Cref{sec:imputation}). In our implementation of mean-value imputation, to facilitate
+non-blocking operation within the iterator model, we estimate the column mean from base
+table histograms. Therefore, imputed values are identical no matter where the operator is
+placed in the query plan (relative errors are $0$). Runtimes are in the range of
+\runtimemeanlow{} to \runtimemeanhigh{} for queries using \ProjectName{}, as compared to
+\runtimemeanlowbase{} to \runtimemeanhighbase{} when imputing on the base table.  Here, the
+time cost of the imputation is relatively low no matter how many tuples need to be imputed.  
+
+In hot deck imputation, runtimes are also similar across $\alpha$, ranging from
+\runtimehotdecklow{} to \runtimehotdeckhigh{} using dynamic imputation, as compared to
+\runtimehotdecklowbase{} to \runtimehotdeckhighbase{} when imputing on the base table. In
+this case, the cost of buffering tuples and sampling at random is negligible compared to the
+rest of query execution. Relative errors using hot deck are close to zero, ranging from
+\smapehotdecklow{}--\smapehotdeckhigh{}\%. (The exception is \Cref{q8} with $\alpha=1$, which has error
+of \smapehotdeckhighoutlier{}\% and exhibits significant skew.) Since the baseline, in these
+cases, is hot deck imputation on the base table, it is skew in the distributions arising from
+filters and joins that often leads to larger errors. Indeed, \ProjectName{} yields
+larger benefit when using relatively sophisticated, higher quality imputation algorithms as
+opposed to simpler strategies that would even be quick to implement on the base table.
 
 \textbf{Pareto Frontiers}\quad
 \Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced by the planner for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm
@@ -237,7 +239,7 @@ cases, the optimizer returned a query plan within \planningtimepninetynine{}. Th
 $\alpha$ has no impact on planning times, because query selection is done after collecting
 the Pareto frontier.
 
-  \textbf{Approximate Pareto Sets}\quad
+\textbf{Approximate Pareto Sets}\quad
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
 We explored the limits of our planning algorithm by constructing a series of queries with increasing number of joins over the CDC tables.
 Planning times for queries involving 1--5 joins---a practical value for  real world exploratory queries---are less than 1 second.

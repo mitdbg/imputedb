@@ -35,8 +35,10 @@ To keep the query plan search space tractable, only plans that fit the following
 \item Projections are placed at the root of the query tree.
 \end{itemize}
   
-The space of query plans is similar to that considered in a canonical cost-based optimizer~\cite{blasgen1981system}, with the addition of imputation operators.
-\Cref{fig:query-schematic} shows a plan schematic for a query involving three tables, absent any imputation operators.
+The space of query plans is similar to that considered in a canonical
+cost-based optimizer~\cite{blasgen1981system}, with the addition of imputation operators.
+\Cref{fig:query-schematic} shows a plan schematic for a query involving three tables, absent any imputation operators. Plans produced by \ProjectName{} can mix both \textit{Impute} and \textit{Drop}
+operators.
 
 \begin{figure}
   \begin{minipage}[c]{0.5\columnwidth}
@@ -74,7 +76,7 @@ $\textsc{Penalty}(q) \in (0,1]$ is a heuristic that quantifies the amount of inf
 $\textsc{Time}(q) \in (0, \infty)$ is an estimate of the runtime of a query $q$ derived from table statistics, selectivity estimation of the query predicates, and the complexity of the
 impute operation. 
 
-\subsubsection{Pareto-optimal plans}
+\subsubsection{Pareto-optimal plans}\label{subsubsec:pareto}
 Given a query, \ProjectName{} produces a final set of query plans $Q$ by only keeping plans that are not dominated by others in the search space. So for a search space $S$, \[Q= \{ q ~|~ \not\exists q' \in S.\ q \neq q' \land \doms{q'}{q} \}.\]
 
 \begin{definition}
@@ -218,7 +220,7 @@ These cost functions are then used by the optimizer during planning.
 The flexibility of this approach is in the spirit of query optimization, which aims to reconcile performance with a declarative interface to data manipulation.
 To motivate this API, we describe how a developer might specify these functions for a general-purpose imputation algorithm, as well as for two simpler imputation methods.
 
-\subsubsection{Decision trees}
+\subsubsection{Decision trees}\label{subsubsec:decision-trees}
 
 As a reference implementation,
 \ProjectName{} uses a general-purpose imputation strategy based on
@@ -266,7 +268,7 @@ the diminishing returns from more data.
     P(q) = \frac{|\textsc{Dirty}(q)|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
 \]
 
-\subsubsection{Mean}
+\subsubsection{Mean}\label{subsubsec:mean}
 
 At the other end of the complexity spectrum, mean value imputation is a common choice for exploratory data analysis.
 Mean value imputation replaces missing values in a column with the mean of the available values in that column.
