@@ -1,11 +1,12 @@
 \section{Conclusion}
-Our evaluation of \ProjectName{} shows that imputation of missing values can be successfully integrated into the relational algebra and
+Our implementation of \ProjectName{} and experiments show that imputation of missing values can be successfully integrated into the relational algebra and
 existing cost-based plan optimization frameworks. We implement imputation actions, such as dropping or imputing values with a machine
-learning technique, as operators in the algebra and use a simple yet effective cost model to consider trade-offs in 
+learning technique, as operators in the algebra and use a simple, yet effective, cost model to consider trade-offs in 
 imputation quality and runtime. We show that different values for the trade-off parameter can yield substantially
 different plans, allowing the user to express their preferences for performance on a per-query basis.
 Our experiments with the CDC NHANES, freeCodeCamp and ACS datasets
-show that \ProjectName{} can be used successfully with real-world data to run standard SQL queries over data with missing values. 
+show that \ProjectName{} can be used successfully with real-world data, running standard SQL
+queries over tuples with missing values. 
 We craft a series of realistic queries, meant to resemble the kind of questions an analyst might ask during
 the data exploration phase. The plans selected for each query execute an order-of-magnitude faster than
  the standard approach of imputing on the entire base tables and
