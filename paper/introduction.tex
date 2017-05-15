@@ -2,14 +2,16 @@
 
 Many databases have large numbers of missing or \nullv{} values;  these can arise for a
 variety of reasons, including missing source data,
-missing columns during data integration, de-normalized databases, or as a result of outlier detection and cleaning where \nullv{} values are substituted for
-bad values~\cite{kim2003}.  Such \nullv{} values can lead to incorrect or ill-defined query results~\cite{rubin1976}, and as such removing these values from data
+missing columns during data integration, de-normalized databases, or outlier detection and
+cleaning~\cite{kim2003}.  Such \nullv{} values can lead to incorrect or ill-defined query results~\cite{rubin1976}, and as such removing these values from data
 before processing is often desirable.
 
 % Solution
 One common approach is to manually replace missing values using a statistical or predictive model based on other values in the table and record.
 This process is called \emph{imputation}.
-In this paper, we introduce \ProjectName{}, a new system designed to selectively apply imputation to a subset of records, on-the-fly, during query execution.  \emph{The key insight behind \ProjectName{} is that imputation
+In this paper, we introduce new methods and theory to selectively applying
+imputation to a subset of records, dynamically, during query execution.
+We instantiate these ideas in a new system, \ProjectName{}.  \emph{The key insight behind \ProjectName{} is that imputation
 only needs to be performed on the data relevant to a particular query and
 that this subset is generally much smaller than the entire database.}  
 % Background
