@@ -5,43 +5,40 @@ There is related work in three primary areas: statistics, database research, and
 \subsection{Missing Values and Statistics}
 
 Imputation of missing values is widely studied in the statistics and machine
-learning communities. As highlighted in~\cite{gelman2006data}, missing data
-can appear for a variety of reasons.
+learning communities. Missing data
+can appear for a variety of reasons~\cite{gelman2006data}.
 It can be missing uniformly at random or conditioned on
 existing values (observed and missing). Methods in the statistical community
 focus on correctly modeling relationships between attributes to account for different forms
-of missingness. For example, \cite{burgette2010multiple} discuss the
-usage of iterative decision trees for imputing missing data.
+of missingness.
+For example, \textcite*{burgette2010multiple} use iterative decision trees for imputing missing data.
 
-\cite{akande2015empirical} analyzes the performance of various
-multiple imputation techniques on the American Community Survey dataset. 
 The computational difficulties of imputing on large base
-tables are well-known and can limit approaches. For example, \cite{akande2015empirical} finds that
-one approach (MI-GLM) is prohibitively expensive when attempting to impute on data that
-includes variables with potentially large domains (ten categories in their case).
+tables are well-known and can limit approaches. % \citeauthor{akande2015empirical} analyze the performance of various
+% multiple imputation techniques on the American Community Survey dataset~\cite{akande2015empirical}.
+For example, \textcite*{akande2015empirical} find that one approach (MI-GLM) is prohibitively expensive when attempting to impute on the American Community Survey dataset.
+In this case, the complexity comes from the large domains of the variables in the ACS data (up to ten categories in their case).
 In contrast, \ProjectName{} allows users to specify a trade-off between
 imputation quality and runtime performance, allowing users to perform queries
-directly on the entire dataset. Furthermore,
+directly on datasets which are too large to fully impute quickly. Furthermore,
 the query planner's imputation is guided by the requirements of each specific
 query's operators, rather than requiring broad assumptions about query
 workloads.  
 
 \subsection{Missing Values and Databases}
 There is a long history in the database community surrounding the
-treatment of \nullv{}. As early as 1973,~\cite{codd1973understanding}
-provided a treatment of the semantics of \nullv{}. Multiple
-papers have described various (at times conflicting) treatments
-of \nullv{}s~\cite{grant1977null}. \ProjectName's main design invariant---no relational operator
+treatment of \nullv{}.
+Multiple papers have described various (at times conflicting) treatments of \nullv{}s~\cite{codd1973understanding,grant1977null}.
+\ProjectName's main design invariant---no relational operator
 sees missing values for attributes it must operate on nor do users see
 missing data---eliminates
 the need to handle \nullv{} value semantics, while guaranteeing query evaluation soundness.
 
 Database system developers and others have worked on techniques to automatically
 detect dirty values, whether missing or otherwise, and rectify the errors if
-possible. A survey of methods and systems is provided in~\cite{hellerstein2008quantitative}.
+possible. \textcite*{hellerstein2008quantitative} surveys the methods and systems related to missing value detection and correction.
 
-In~\cite{wolf2007query}, queries over databases with missing values are
-processed directly using a statistical approach, taking advantage of correlations between
+\textcite*{wolf2007query} treat queries over databases with missing values directly using a statistical approach, taking advantage of correlations between
 attributes. The tuples that match the original query as well as a ranking of
 tuples with incomplete data that may match are returned. Our work differs in
 that we allow any well-formed statistical technique to be used for imputation
@@ -50,7 +47,7 @@ complete.
 
 Designers of data stream processing systems frequently confront missing values
 and consider them carefully in query processing. Often, if sensor error is the
-cause of missing values, values can be imputed with high confidence. In~\cite{fernandez2009inter}, feedback punctuation is used to dynamically
+cause of missing values, values can be imputed with high confidence. \todo{What does this mean?} \textcite*{fernandez2009inter} use feedback punctuation to dynamically
 reconfigure the query plan for state-dependent
 optimizations as data continues to arrive. One of the applications of this framework is to avoid
 expensive imputations as real-time conditions change. 
@@ -75,13 +72,13 @@ contrast, aims to remain squarely in the database realm, while allowing
 users to directly express queries on a potentially larger subset of their data.
 
 \review{
-\cite{yang2015lenses} develops an incremental approach to ETL data cleaning, through the use
+\textcite*{yang2015lenses} develops an incremental approach to ETL data cleaning, through the use
 of probabilistic compositional repair operators, called Lenses. These can be used
 to repair missing values by imposing data constraints such as \texttt{NOT NULL}. 
 Similarly to \ProjectName{}, they provide a way to balance between the quality of the cleaning 
 performed (expressed by the confidence of their output) and the cost of those operations. However, their 
 repairs take place on a per-tuple basis, with the non-deterministic layer of their system replacing place-holder
-variables with inferred values. Meanwhile, \ProjectName{} optimizes imputation at the plan-level and
+variables with inferred values. In contrast, \ProjectName{} optimizes imputation at the plan-level and
 provides the same impute technique for all tuples streaming through a given operator.
 }
 
@@ -92,34 +89,34 @@ uses histogram transformations to account for the way relational and imputation 
 tuple distributions.
 
 \review{
-The planning algorithm that we present has similarities to the multi-objective query optimizer in~\cite{trummer2014}.
+The planning algorithm that we present has similarities to work on multi-objective query optimization~\cite{trummer2014}.
 Both algorithms handle plans which have multiple cost functions by maintaining sets of Pareto optimal plans and pruning plans which become dominated.
 In \ProjectName{}, costs are expected to grow monotonically as the size of the plan increases, which simplifies the optimization problem significantly.
-\cite{trummer2014} handles the more complex case of cost functions which are piecewise linear, but not necessarily monotonic.
+\textcite*{trummer2014} handle the more complex case of cost functions which are piecewise linear, but not necessarily monotonic.
 }
 
 \subsection{Forecasting and Databases}
-\cite{parisi2011embedding} introduce the idea of incorporating time-series forecast operators into
+\textcite*{parisi2011embedding} introduces the idea of incorporating time-series forecast operators into
 databases, along with the necessary relational algebra extensions. Their work explores the theoretical
 properties of forecast operators and generalizes them into a family of operators, distinguished by
 the type of predictions returned. They highlight the use of forecasting for replacing missing values.
-In their follow on work~\cite{parisi2013temporal}, they identify various equivalence and containment
+In subsequent work~\cite{parisi2013temporal}, they identify various equivalence and containment
 relationships when using forecast operators, which could be used to perform query plan transformations that guarantee the same result. They
 explore forecast-first and forecast-last plans, which perform forecasting operations before and after executing all traditional
 relational operators, respectively. 
 
-\cite{fischer2013towards} describe the architecture of a DBMS with integrated forecasting operations for time-series, detailing
+\textcite*{fischer2013towards} describe the architecture of a DBMS with integrated forecasting operations for time-series, detailing
 the abstractions necessary to do so.
 
-In contrast to this work, \ProjectName{} is targeted at generic value imputation, not necessarily tailored to 
-time-series. The optimizer is not based on equivalence transformations, nor are there guarantees of equal
+In contrast to this work, \ProjectName{} is targeted at generic value imputation, and is not tailored to time-series.
+The optimizer is not based on equivalence transformations, nor are there guarantees of equal
 results under different conditions. Instead, the optimizer allows users to pick their trade-off between
 runtime cost and imputation quality. The search space considered by our optimizer is broader, not just
 forecast-first/forecast-last plans, but rather imputation operators can be placed anywhere in the query plan
 (with some restrictions). The novelty of our contribution lies in the successful incorporation of
 imputation operations in non-trivial query plans with cost-based optimization.
 
-\cite{duan2007processing} describes the Fa system and its declarative language for time-series forecasting. Their
+\textcite*{duan2007processing} describe the Fa system and its declarative language for time-series forecasting. Their
 system automatically searches the space of attribute combinations/transformations and statistical models
 to produce forecasts within a given accuracy threshold. Accuracy estimates are determined using
 standard techniques, such as cross-validation. 
