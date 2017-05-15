@@ -240,7 +240,7 @@ because query selection is done after collecting the Pareto frontier.
 \review{
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
 We explored the limits of our planning algorithm by constructing a series of queries with increasing number of joins over the CDC tables.
-Planning times (~\Cref{fig:planning-times}) for queries involving 1--5 joins---a practical value for  real world exploratory queries---are less than 1 second.
+Planning times for queries involving 1--5 joins---a practical value for  real world exploratory queries---are less than 1 second.
 We extended \ProjectName{} to support an approximation of Pareto sets to improve planning times for queries with 6 or more joins. Approximate Pareto sets
 displayed a reduction in planning time linear with respect to the reduction in size of the final frontier. For queries with 6--8 joins, approximate sets achieved a reduction
 in planning time between 14\% and 23\%, on average. Users can increase the level of approximation to reduce planning times further.
