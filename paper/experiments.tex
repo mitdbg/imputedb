@@ -1,7 +1,7 @@
 \section{Experiments}\label{sec:experiments}
-For our experiments we plan and execute queries for three separate survey-based data sets, showing that our system is well suited for early dataset exploration.
+For our experiments we plan and execute queries for three separate survey-based data sets.
 We show that \ProjectName{} performs an order of magnitude better than traditional
-base-table imputation and produces results of comparable quality.
+base-table imputation and produces results of comparable quality, showing that our system is well suited for early dataset exploration.
 
 \subsection{Data Sets}\label{subsec:datasets}
 We collect three data sets for our experiments.
@@ -14,12 +14,12 @@ U.S. Centers for Disease Control and Prevention (CDC). We
 experiment on a set of tables collected as part of the 2013--2014 National
 Health and Nutrition Examination Survey (NHANES), a series of studies
 conducted by the CDC on a national sample of several thousand individuals~\cite{cdc-data}.
-The data consists on survey responses, physical examinations, and laboratory
-results, amongst others.
+The data consists of survey responses, physical examinations, and laboratory
+results, among others.
 
 There are 6 tables in the NHANES data set. We use three tables for our experiments: demographic information of subjects (\texttt{demo}), physical exam results (\texttt{exams}), and laboratory exam results (\texttt{labs}).
 
-The original tables have a large number of attributes, in some cases providing more granular tests results or alternative metrics.
+The original tables have a large number of attributes, in some cases providing more granular test results or alternative metrics.
 We focus on a subset of the attributes for each table to simplify the presentation and exploration of queries.
 \Cref{table:nhanes-description} shows the attributes selected, along with the percentage of \nullv{} values for each attribute.
 For readability, we have replaced the NHANES attribute names with self-explanatory attribute names.
@@ -44,7 +44,7 @@ For readability, we have replaced the NHANES attribute names with self-explanato
 
 \subsubsection{freeCodeCamp 2016 New Coder Survey}
 For our second set of experiments, we use data collected by freeCodeCamp, an open-source
-community for learning to code, as a part of a survey of new software
+community for learning to code, as part of a survey of new software
 developers~\cite{fcc-data}.  The \textit{2016 New Coder Survey} consists of responses by
 over 15,000 people to 48 different demographic and programming-related questions.  The
 survey targeted users who were related to coding organizations.
@@ -69,8 +69,7 @@ with the percentage of missing values.
 For our final experiment, we run a simple aggregate query over data from the American
 Community Survey (ACS), a comprehensive survey conducted by the U.S.
 Census Bureau. We use a cleaned version of the 2012 Public Use Microdata Sample (PUMS)
-data kindly provided by \citeauthor*{akande2015empirical}. Given that the data had
-been cleaned, we artificially dirtied it by replacing 40\% of the values uniformly at random with \nullv{} values.
+data, which we then artificially dirty by replacing 40\% of the values uniformly at random with \nullv{} values.
 The final dataset consists of 671,153 rows and 37 integer columns.
 
 \subsection{Queries}
@@ -162,14 +161,14 @@ Relative errors of query results, when optimizing for quality
 results similar to the baseline. When optimizing for performance ($\alpha=1$),
 relative errors can be modestly higher --- up to \highsmapealphaone{}\% in the
 worst case, as this approach most closely corresponds to dropping all
-\nullv{}s. Thus, it is important to recognize the tradeoffs between quality and
+\nullv{}s. Thus, it is important to recognize the trade-offs between quality and
 performance for a specific use case.
 
 \review{
 We also experiment with mean-value imputation and hot
-deck imputation (\Cref{sec:imputation}). One approach to
-mean-value imputation, to facilitate non-blocking operation within the iterator
-model, is to estimate the column mean from base table histograms. In this case,
+deck imputation (\Cref{sec:imputation}). In our implementation of mean-value imputation,
+to facilitate non-blocking operation within the iterator
+model, we estimate the column mean from base table histograms. Therefore,
 imputations are identical no matter where the operator is placed in the query
 plan. Moreover, runtimes are essentially identical regardless of the value of
 $\alpha$ because the time cost of the imputation is relatively low no matter
@@ -189,9 +188,12 @@ implement on the base table.
 
 We also calculate the number of tuples used to produce each aggregate output.
 The count fraction columns in \Cref{table:smape} show the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ as a fraction of the number of tuples used when running the query on the imputed base table.
-This shows that when optimizing for performance, not quality, many tuples are dropped.
-Even in cases where the SMAPE reduction between $\alpha = 1$ and $\alpha = 0$ is small (\Cref{q2}, \Cref{q6}) the tuple count is significantly different.
-In these cases, the aggregate value is not significantly impacted by the missing data. In particular, if values are missing uniformly at random,
+This shows that when optimizing for performance, not quality, many tuples are dropped due to
+insertion of $\lambda$ operators.
+Even in cases where the SMAPE reduction from $\alpha = 1$ and $\alpha = 0$ is small
+(\Cref{q2} and \Cref{q6}) the tuple count is significantly different.
+In these cases, the aggregate value is not significantly impacted by the missing data. In
+particular, if values are missing completely at random,
 the aggregate should not be affected.
 However, if the missing data is biased then the aggregate will have a significant error.
 This highlights a challenge for a user handling data imputation traditionally: it is unclear if the missing data will have a large or small negative impact on their analysis until they have paid the cost of running it.
@@ -199,7 +201,7 @@ This highlights a challenge for a user handling data imputation traditionally: i
 By using \ProjectName{} this cost can be lowered significantly. We can also trivially extend \ProjectName{} to warn users when the query chosen for execution has a high
 $\textsc{Penalty}$ estimate, along with the number of tuples that have been dropped (after execution), so that situations with high potential for skewed results can be identified by the user.
 
-\Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced by the planner for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm.
+\Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced by the planner for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm
 and encapsulate the possible trade-offs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
 can be exposed to the user to help in guiding their workflow.
 }
@@ -227,6 +229,22 @@ Queries optimized
 }
 \end{figure}
 
+Planning times for our benchmark queries are reasonable, with mean planning times across the
+benchmark queries ranging from \planningtimelow{} to \planningtimehigh{}, and ranging from
+\planningtimelowpct{} to \planningtimehighpct{}\% of total runtime. In 99\% of individual
+cases, the optimizer returned a query plan within \planningtimepninetynine{}. The choice of
+$\alpha$ has no impact on planning times, because query selection is done after collecting
+the Pareto frontier.
+
+\review{
+However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
+We explored the limits of our planning algorithm by constructing a series of queries with increasing number of joins over the CDC tables.
+Planning times for queries involving 1--5 joins---a practical value for  real world exploratory queries---are less than 1 second.
+We extended \ProjectName{} to support an approximation of Pareto sets to improve planning times for queries with 6 or more joins. Approximate Pareto sets
+displayed a reduction in planning time linear with respect to the reduction in size of the final frontier. For queries with 6--8 joins, approximate sets achieved a reduction
+in planning time between 14\% and 23\%, on average. Users can increase the level of approximation to reduce planning times further.
+}
+
 \subsubsection{Baseline Runtime}
 In many real-world cases, applying imputation to an entire dataset is prohibitively expensive.
 For example, if we run chained-equation decision trees imputation on the full ACS dataset, it completes in \acsbaseresultminutes{}.
@@ -248,22 +266,6 @@ This highlights the benefit of using our system for early data exploration.}
 %}
 %\label{fig:planning-times}
 %\end{figure}
-
-Planning times for our benchmark queries are reasonable, with mean planning times across the
-benchmark queries ranging from \planningtimelow{} to \planningtimehigh{}, and ranging from
-\planningtimelowpct{} to \planningtimehighpct{}\% of total runtime. In 99\% of individual
-cases, the optimizer returned a query plan within \planningtimepninetynine{}. The choice of
-$\alpha$ has no impact on planning times, because query selection is done after collecting
-the Pareto frontier.
-
-\review{
-However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
-We explored the limits of our planning algorithm by constructing a series of queries with increasing number of joins over the CDC tables.
-Planning times for queries involving 1--5 joins---a practical value for  real world exploratory queries---are less than 1 second.
-We extended \ProjectName{} to support an approximation of Pareto sets to improve planning times for queries with 6 or more joins. Approximate Pareto sets
-displayed a reduction in planning time linear with respect to the reduction in size of the final frontier. For queries with 6--8 joins, approximate sets achieved a reduction
-in planning time between 14\% and 23\%, on average. Users can increase the level of approximation to reduce planning times further.
-}
 %\todobox{Jose: I'm not a fan of this line, I would remove}{Furthermore, at that point, it may make more sense to specify a coherent model over the entire base table instead.}
 
 %%% Local Variables:

@@ -1,6 +1,7 @@
 \section{Introduction}
 
-Many databases have large numbers of missing or \nullv{} values;  these can arise for a variety of reasons, including missing source data (e.g., unknown facts),
+Many databases have large numbers of missing or \nullv{} values;  these can arise for a
+variety of reasons, including missing source data,
 missing columns during data integration, de-normalized databases, or as a result of outlier detection and cleaning where \nullv{} values are substituted for
 bad values~\cite{kim2003}.  Such \nullv{} values can lead to incorrect or ill-defined query results~\cite{rubin1976}, and as such removing these values from data
 before processing is often desirable.
@@ -17,10 +18,10 @@ values, running a sophisticated imputation algorithm over a large data set can b
 expensive: our experiments show that even a relatively simple decision tree algorithm takes \acsbaseresulthours{} to train and run
 on a 600K row database.
 
-A simpler approach might drop all rows with missing values, which can not only introduce
+A simpler approach might drop all rows with any missing values, which can not only introduce
 bias into the results, but also result in discarding much of the data.
 In contrast to existing systems~\cite{burgette2010multiple,akande2015empirical}, \ProjectName{} avoids imputing over the entire data set. Specifically, \ProjectName{}
-carefully plans the placement of imputation/row-drop operations inside the query plan, resulting in a 
+carefully plans the placement of imputation or row-drop operations inside the query plan, resulting in a 
 significant speedup in query execution while reducing the number of dropped rows. Unlike previous work, the focus of our work is not on the imputation algorithms themselves (we can employ almost any such algorithm), but rather on placing imputation operations
 optimally in query plans.   Specifically, our optimization algorithms generate the
 Pareto-optimal frontier of plans that trade imputation cost for result quality,
@@ -42,7 +43,8 @@ and allow the analyst to specify their desired plan from this frontier.
 % Implications
 Our approach enables an exploratory analysis workflow in which the analyst can issue
 standard SQL queries over a data set, even if that data has missing values.
-These queries execute between \lowxalphazero{} and \highxalphazero{} times as fast as it takes to impute all missing values and then run queries (the traditional approach). Furthermore, the results obtained with this approach
+These queries execute between \lowxalphazero{} and \highxalphazero{} times faster than
+imputing all missing values and then running queries (the traditional approach). Furthermore, the results obtained with this approach
 are similar in quality to those obtained with the traditional imputation approach
 --- between \lowsmapealphazero{} and \highsmapealphaone{}
 percent, in one error measure --- in our empirical results over real-world data sets (see~\Cref{sec:experiments}

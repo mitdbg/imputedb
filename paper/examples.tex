@@ -82,7 +82,8 @@ GROUP BY demo.income
 \end{figure}
 
 \subsection{Planning with \ProjectName{}}
-The search space contains plans of varying performance and quality of results, as a product of the multiple possible locations for imputation.
+The search space contains plans with varying performance and imputation quality
+characteristics, as a product of the multiple possible locations for imputation.
 The user can influence the final plan selected by \ProjectName{}
 through a trade-off parameter $\alpha \in [0, 1]$, where low $\alpha$ 
 prioritizes the quality of the query results and high $\alpha$ prioritizes performance.
@@ -91,7 +92,7 @@ For the query in~\Cref{fig:example-query}, \ProjectName{} generates
 the plans in~\Cref{fig:quality-plan} and~\Cref{fig:fast-plan}, when 
 optimizing for quality and performance, respectively.
 
-\Cref{fig:quality-plan} shows a quality-optimized plan that uses the impute operation $\mu$,
+\Cref{fig:quality-plan} shows a quality-optimized plan that uses the impute operator $\mu$,
 which employs a reference imputation strategy to fill in missing values rather than dropping tuples.
 It waits to impute \verb|demo.income| until after the final join has taken place, though other imputations take place earlier on in the plan, some before filtering and join operations.
 Imputations are placed to maximize ImputeDB's estimate of the quality of the overall results.
@@ -108,12 +109,15 @@ down until she is satisfied with her query runtime. This iterative approach give
 immediate feedback.
 
 \review{
-As an alternative strategy, the analyst can start by executing their query with $\alpha=1$ and incrementally reducing $\alpha$, as long as execution of the query completes within some user-defined time bound.
-\ProjectName{}'s planning algorithm can expose the final set of plans with optimal time-quality trade-offs, which allows the user to adjust their choice of $\alpha$ to select from these plans.
+As an alternative strategy, the analyst can start by executing her query with $\alpha=1$ and
+incrementally reducing $\alpha$, as long as execution of the query completes within some
+acceptable time bound.
+\ProjectName{}'s planning algorithm can expose the final set of plans with optimal
+time-quality trade-offs, which allows the user to adjust her choice of $\alpha$ to select from these plans.
 }
 
 Tens of queries later, our epidemiologist has a holistic view of the data and she has the information that she needs to construct a tailored imputation model for her queries of interest.
-Knowing that there may be a need to explore this data set further, she can easily incorporate her imputation model into ImputeDB for future use.
+Knowing that there may be a need to explore this data set further, she can also incorporate her imputation model into ImputeDB for future use.
 
 %This approach allows her to maximize the query result quality, while
 %maintaining an acceptable runtime.
