@@ -251,10 +251,11 @@ explored planning times for more complex queries.}
 
   \item D6. During plan enumeration, can you safely prune plans at some point, similar to what a traditional optimizer would do?
 
-    \resp{We maintain the set of Pareto optimal plans at each point in the optimization. This set is significantly smaller than the set of all plans, so it represents some pruning (a point we have
+    \resp{We maintain the set of Pareto-optimal plans at each point in the optimization. This set is significantly smaller than the set of all plans, so it represents some pruning (a point we have
     now clarified in the paper in \Cref{subsubsec:pareto}). We found that the size of these Pareto sets is small enough that we did not need to prune further.
 
-      If necessary, it is possible to sample from the Pareto optimal plans during the plan enumeration. The final selected plan may not be Pareto optimal, but this is a potential way to control the number of plans.
+      If necessary, it is possible to sample from the Pareto-optimal plans during the plan
+      enumeration. The final selected plan may not be Pareto-optimal, but this is a potential way to control the number of plans.
       To perform this approximation, we only add plans to the frontier that are non-dominated and are sufficiently different from existing plans in the frontier. The plan already in the frontier should
       provide similar tradeoffs and reduces the search space explored. \ProjectName{} only employs this optimization when a large number of tables requiring imputation are involved in the query.
       }
