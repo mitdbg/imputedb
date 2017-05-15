@@ -57,10 +57,10 @@
   \State $B \gets Q[T]$ \Comment{Get the best plans for all tables.}
   \If{$G \neq \emptyset$} \Comment{Add optional group \& aggregate.}~\label{lst:line:group}
   \State $C_l \gets G \cup \Call{Attrs}{A}$
-  \State $B \gets \bigcup_{q \in B} \{g(q', G, A) ~|~ q' \in \Call{Impute}{q, C_l,\ C_g}\}$
+  \State $B \gets \bigcup_{q \in B} \{g(q', G, A) ~|~ q' \in \Call{Impute}{q, C_l,\ C_g}\}$~\label{lst:line:proj}
   \EndIf
   
-  \State $B \gets \bigcup_{q \in B} \{\pi_P(q') ~|~ q' \in \Call{Impute}{q,\ P,\ P}\}$ \Comment{Add projections.}
+  \State $B \gets \bigcup_{q \in B} \{\pi_P(q') ~|~ q' \in \Call{Impute}{q,\ P,\ P}\}$
   \State \Return $p \in B$ s.t. $p$ is $\alpha$-bound optimal.
   \EndFunction
 \end{algorithmic}
