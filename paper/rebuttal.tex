@@ -38,10 +38,13 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
 \item \resp{We extended the original paper with two additional popular imputation techniques: mean value imputation and hot-deck imputation.
 
+    \begin{sloppypar}
 We added a section discussing how to construct the imputation-related functions used by our cost model, which represent the API for a new imputation operator,
-for these two new techniques and the reference technique used in the original submission (\Cref{sec:imputation}). }
+for these two new techniques and the reference technique used in the original submission (\Cref{sec:imputation}).
+\end{sloppypar}
+}
 
-\item \resp{We extended experiments to include the new operators and provide more details on results for $\alpha$ (\Cref{sec:results}). We also added the Pareto frontiers for various plans (\Cref{fig:pareto-frontiers} ) and
+\item \resp{We extended experiments to include the new operators and provide more details on results for $\alpha$ (\Cref{sec:results}). We also added the Pareto frontiers for various plans (\Cref{fig:pareto-frontiers}) and
 explored planning times for more complex queries.}
 
 
@@ -52,12 +55,14 @@ explored planning times for more complex queries.}
   \begin{itemize}[leftmargin=*]
   \item W2. The paper completely obscures the ML technique being used: (1) It would be nice to have some discussion of the complete API for implementing an ML technique, as well as how one might implement a cost-estimator for one or two examples. (2) It would be helpful to see the impact of a few different approaches (e.g., Tree-based, Interpolation, Regression, FD-based) on performance and accuracy. (3) Given that the ML time estimator is being treated as a black box, it would be useful to see how sensitive the plan selector is to inaccurate estimates.
   
-  \resp{
+    \resp{
+      \begin{sloppypar}
     We extended our evaluation to include two commonly used imputation methods: mean value imputation and hot-deck imputation.
     These methods are in addition to the original imputation method which is based on decision trees.
     The decision tree model incorporates correlations between attributes, so should be able to take advantage of any functional dependencies to make better predictions.
     Interpolation-based imputation is useful for data where the ordering of tuples is significant, like time series, but is not well suited for survey data where the ordering of tuples is arbitrary.
-    
+  \end{sloppypar}
+  
     We also added details on how to pick the cost functions that define the API for impute operators.
     We provide details on how these functions are defined for all the methods used in our evaluation.
 
@@ -232,8 +237,7 @@ explored planning times for more complex queries.}
      
      We agree that having a way of providing an estimate of error, based on $\alpha$, would be both useful and interesting to develop.
      Providing error estimates further requires a reasonable notion of ground-truth. For evaluation, we've used the values imputed on the 
-     tables when applying whole-table imputation. Based on our evaluation, higher values of $\alpha$ correctly identify increased error
-     within a query, however, extending that to be predictive is not something we implemented in the current system.
+     tables when applying whole-table imputation. Based on our evaluation, higher values of $\alpha$ correspond to increased error, however, extending $\alpha$ to be predictive is not something we implemented in the current system.
      }
 
   \item D4. How would a two-step approach that first finds the optimal plan (w/o imputation) and then adds the imputation operators perform?
@@ -275,7 +279,7 @@ explored planning times for more complex queries.}
 
     \resp{
       It is straightforward to compute the number of queries before we lose our advantage.
-      For example, performing full imputation on the ACS dataset takes 355 minutes (Sec. 5.3.2) and we can run a simple query in 4 seconds, so we can run approximately $5,000$ queries before taking more time than full imputation. We've made this point explicit in the ACS experiment section now.
+      For example, performing full imputation on the ACS dataset takes 355 minutes (Sec. 5.3.2) and we can run a simple query in 4 seconds, so we can run approximately $5,000$ queries before taking more time than full imputation. We've made this point explicit in the ACS experiment section.
       
       The sensitivity to different values of $\alpha$ depends on the query itself. Performing a scan of values of $\alpha$ with small step sizes can return
       a lot of the same plans for execution. We did run experiments with a range of $\alpha$ values, but instead of presenting a figure with each value of $\alpha$,
