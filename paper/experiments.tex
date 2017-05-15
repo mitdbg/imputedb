@@ -123,14 +123,16 @@ We evaluate \ProjectName{} optimizing for quality ($\alpha=0$), optimizing for p
 used by each query and then run the query on the imputed tables, simulating the process that
 an analyst would follow to apply existing imputation techniques.
 
+\begin{sloppypar}
 \textbf{Runtime vs. Base-table Imputation}\quad \Cref{fig:runtimes} summarizes the performance results. The quality-optimized
 queries, with runtimes ranging from \runtimetreelowzero{} to \runtimetreehighzero{}, are an
 order-of-magnitude faster than the baseline, with runtimes ranging from
 \runtimetreelowbase{} to \runtimetreehighbase{}. We get another order-of-magnitude speedup when
 optimizing for performance, achieving runtimes as low as \runtimetreelowone{} to
-\runtimetreehighone{}. These speedups, ranging widely from \lowxalphazero{}x to 
+\runtimetreehighone{}. These speedups, ranging from \lowxalphazero{}x to 
 \highxalphaone{}x, depending on $\alpha$ and query, constitute significant workflow improvements
 for the analyst.
+\end{sloppypar}
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
@@ -154,9 +156,11 @@ for the analyst.
 %\label{fig:plantimes}
 %\end{figure}
 
-\textbf{Accuracy vs. Base-table Imputation (AVG)}\quad \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) \cite{Makridakis2000451} for \ProjectName{}'s query results compared to the baseline, using the reference chained-equation decision trees model.
-This measures the error introduced by dynamic imputation as compared to full imputation on the base tables.
-This comparison is the relevant one in practice --- an analyst would only be considering the trade-offs in imputation quality and time in the first place for dirty input data, for which ground truth is unavailable.
+\begin{sloppypar}
+\textbf{Accuracy vs. Base-table Imputation (AVG)}\quad \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results compared to the baseline, using the chained-equation decision trees model.
+This measures the error introduced by on-the-fly imputation as compared to full imputation on the base tables.
+This comparison is the relevant one in practice --- an analyst would only be considering the trade-offs in imputation quality and time for dirty input data when the ground truth is unavailable.
+\end{sloppypar}
 
 To calculate SMAPE for each $\alpha$,
 we compute tuple-wise absolute percentage deviations within each iteration of each query, and
@@ -238,13 +242,15 @@ Queries optimized
 }
 \end{figure}
 
+\begin{sloppypar}
 \textbf{Planning Times}\quad
 Planning times for our benchmark queries are reasonable, with mean planning times across the
 benchmark queries ranging from \planningtimelow{} to \planningtimehigh{}, and ranging from
 \planningtimelowpct{} to \planningtimehighpct{}\% of total runtime. In 99\% of individual
 cases, the optimizer returned a query plan within \planningtimepninetynine{}. The choice of
-$\alpha$ has no impact on planning times, because query selection is done after collecting
+$\alpha$ has no impact on planning times, because query selection is performed after collecting
 the Pareto frontier.
+\end{sloppypar}
 
 \textbf{Approximate Pareto Sets}\quad
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
