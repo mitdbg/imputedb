@@ -120,11 +120,11 @@ provide performance figures relevant to practitioners using similar datasets.
 \subsection{Results}\label{sec:results}
 
 We evaluate \ProjectName{} optimizing for quality ($\alpha=0$), optimizing for performance
-($\alpha=1$), and targeting a balance of each. As a baseline, we fully impute the tables
+($\alpha=1$), and targeting a balance of each ($\alpha = 0.5$). As a baseline, we fully impute the tables
 used by each query and then run the query on the imputed tables, simulating the process that
 an analyst would follow to apply existing imputation techniques.
 
-\Cref{fig:runtimes} shows a summary of the performance results. The quality-optimized
+\Cref{fig:runtimes} summarizes the performance results. The quality-optimized
 queries are an order-of-magnitude faster than the baseline. We get another order-of-magnitude speedup when optimizing for performance. This performance
 differential means it is feasible
 to explore multiple imputation operations (including more expensive operators) when using
@@ -172,7 +172,7 @@ performance for a specific use case.
 
 \review{
 We also experiment with mean-value imputation and hot
-deck imputation, as outlined in \Cref{sec:imputation}. One approach to
+deck imputation (\Cref{sec:imputation}). One approach to
 mean-value imputation, to facilitate non-blocking operation within the iterator
 model, is to estimate the column mean from base table histograms. In this case,
 imputations are identical no matter where the operator is placed in the query
@@ -259,7 +259,7 @@ This highlights the benefit of using our system for early data exploration.
 Planning times for our benchmark queries are reasonable, with mean planning times across the
 benchmark queries ranging from \planningtimelow{} to \planningtimehigh{}, and ranging from
 \planningtimelowpct{} to \planningtimehighpct{}\% of total runtime. In 99\% of individual
-cases, the optimizer returned a query plan with \planningtimepninetynine{}. The choice of
+cases, the optimizer returned a query plan within \planningtimepninetynine{}. The choice of
 $\alpha$ has no impact on planning times, because query selection is done after collecting
 the Pareto frontier.
 
