@@ -220,7 +220,9 @@ can be exposed to the user to guide their workflow.
 \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$ parameterizations, as compared to the baseline.
 Queries optimized
     for quality ($\alpha=0$) generally achieve lower error than queries optimized for
-    efficiency ($\alpha=1$). The count fraction column shows the number of tuples used in calculating each aggregate
+    efficiency ($\alpha=1$). With ($\alpha=0.5$), an intermediate plan may be chosen if
+    available.
+    The count fraction column shows the number of tuples used in calculating each aggregate
      as a fraction of the number of tuples used when running the same query after imputing on the base table.
     A lower count share reflects more potential for errors.}
 \label{table:smape}
