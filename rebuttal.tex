@@ -2,6 +2,7 @@
 \usepackage[activate={true,nocompatibility},final,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10]{microtype}
 \usepackage[subtle]{savetrees}
 \usepackage{xcolor}
+\usepackage{enumitem}
 \newcommand{\resp}[1]{{\color{blue}{#1}}}
 \newcommand{\todo}[1]{{\color{red}{\textit{#1}}}}
 \newcommand{\ProjectName}[0]{ImputeDB}
@@ -16,7 +17,7 @@ In the rebuttal, the reviewer's original comments are in black and our responses
 In our draft, new or significantly changed text is highlighted in {\color{blue}blue}.
 
 \section{Overall changes}
-\begin{itemize}
+\begin{itemize}[leftmargin=*]
 \item Redundant figures, excessive whitespace, formatting.
   
   \resp{Several reviewers commented on the amount of whitespace, so we've compressed many of the figures and removed whitespace to make room for additional material.}
@@ -29,7 +30,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 \end{itemize}
 
   \section{Reviewer 1}
-  \begin{itemize}
+  \begin{itemize}[leftmargin=*]
   \item W2. The paper completely obscures the ML technique being used: (1) It would be nice to have some discussion of the complete API for implementing an ML technique, as well as how one might implement a cost-estimator for one or two examples. (2) It would be helpful to see the impact of a few different approaches (e.g., Tree-based, Interpolation, Regression, FD-based) on performance and accuracy. (3) Given that the ML time estimator is being treated as a black box, it would be useful to see how sensitive the plan selector is to inaccurate estimates.
   
   \resp{
@@ -47,7 +48,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     Any work in this area could be used immediately to improve our algorithm.
   }
 
-  \item W3. Reducing runtime to ~10s is excellent, but comes at a very serious accuracy cost (3-5x worse SMAPE). Worse still, there's no way for the user to differentiate between the cases of Q4 and Q8 at runtime. 24\% error relative to direct imputation is huge.
+  \item W3. Reducing runtime to 10s is excellent, but comes at a very serious accuracy cost (3-5x worse SMAPE). Worse still, there's no way for the user to differentiate between the cases of Q4 and Q8 at runtime. 24\% error relative to direct imputation is huge.
     
     \resp{
       The outsized error in Q8 is due to a drop operator placed very early on in the plan (a result of optimizing for performance). This produced significantly smaller sample sizes for various
@@ -89,8 +90,8 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
     \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the query requires the construction a large, skewed data set. The problem seems to be particular to queries which generate large intermediate tables. In some cases, as when joining two datasets, the intermediate table is a good target for training because it exposes correlations which would be hidden in the separate tables. In other cases, this intermediate table is large and skewed, which causes problems for imputation. 
     
-    Avoiding this case requires us to estimate the skew in these intermediate tables, which would be in itself an interesting and challenging research problem. If we had improved intermediate
-    estimates, we could incorporate those to improve our system.
+      Avoiding this case requires us to estimate the skew in these intermediate tables, which is an area of active research.
+      However, if we had improved intermediate estimates, we could incorporate them to improve our system.
       }
     %\todo{Need a better explanation here.}
 
@@ -133,7 +134,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
   \end{itemize}
 
   \section{Reviewer 2}
-  \begin{itemize}
+  \begin{itemize}[leftmargin=*]
   \item 1) No new imputation method is presented. The model relies on external imputation techniques, and given it's done on-the-fly, presumably imputed values depend on qualifying query records.
 
     \resp{Our contribution is the planning algorithm which allows imputation to be interleaved into the query plan.
@@ -167,7 +168,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
   \end{itemize}
 
   \section{Reviewer 3}
-  \begin{itemize}
+  \begin{itemize}[leftmargin=*]
   \item W2. More work is required in the presentation: important parts are not explained in depth, while there are many details in other sections that can be omitted.
 
   \item W3. More experiments needed.
@@ -250,10 +251,13 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     -- Show runtime of enumeration algorithm as queries get more complex.
 
     \resp{
+      It is straightforward to compute the number of queries before we lose our advantage.
+      For example, performing full imputation on the ACS dataset takes 355 minutes (Sec. 5.3.2) and we can run a simple query in 4 seconds, so we can run approximately $5,000$ queries before taking more time than full imputation.
+      
       The sensitivity of different values of $\alpha$ depends on the query itself. Performing a scan of values of $\alpha$ with small step sizes can return
       a lot of the same plans for execution. In lieu of this, we extended the results section to include a subsection that presents the final frontiers for
       two queries, one from each dataset used during evaluation. This frontier can be exposed to the user to help in their workflow.
-      \\
+      
       We explored the planning times for queries with increasing number of joins by running additional experiments with up to 8 joins. 
       The standard algorithm presented in the original version submitted handles
       up to 5 joins, with columns requiring imputation in all tables, with planning time of approximately one second or less. We added a small optimization to help reduce
