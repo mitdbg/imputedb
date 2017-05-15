@@ -3,6 +3,11 @@
 \usepackage[subtle]{savetrees}
 \usepackage{xcolor}
 \usepackage{enumitem}
+\usepackage{cleveref}
+\usepackage{xr}
+\externaldocument{main}
+
+
 \newcommand{\resp}[1]{{\color{blue}{#1}}}
 \newcommand{\todo}[1]{{\color{red}{\textit{#1}}}}
 \newcommand{\ProjectName}[0]{ImputeDB}
@@ -28,15 +33,17 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     It improves the ability of the regression tree model to perform imputation by making these variables available to the model.
   }
 
-\item \resp{We extended the original paper two additional popular imputation techniques: mean value imputation and hot-deck imputation.}
+\item \resp{We extended the original paper two additional popular imputation techniques: mean value imputation and hot-deck imputation.
 
-\item \resp{We extended experiments to include the new operators and provide more details on results for $\alpha$. We also added the Pareto frontiers for various plans and
+We added a section discussing how to construct the imputation-related functions used by our cost model, which represent the API for a new imputation operator,
+for these two new techniques and the reference technique used in the original submission (\Cref{sec:imputation})
+}
+
+\item \resp{We extended experiments to include the new operators and provide more details on results for $\alpha$ (\Cref{sec:results}). We also added the Pareto frontiers for various plans (\Cref{fig:pareto-frontiers} ) and
 explored planning times for more complex queries.}
 
-\item \resp{We added a section discussing how to construct the imputation-related functions used by our cost model, which represent the API for a new imputation operator.}
-We provide details on the definition of these functions for all imputation methods used.
 
-\item \resp{We included a new section that provides a roadmap for implementing \ProjectName{} on top of an existing database.}
+\item \resp{We included a new section that provides a roadmap for implementing \ProjectName{} on top of an existing database. (\Cref{sec:implementation})}
 \end{itemize}
 
   \section{Reviewer 1}
@@ -67,7 +74,7 @@ We provide details on the definition of these functions for all imputation metho
       using the base table imputation, but if we look at the underlying population the former was calculated with 6 people, while the latter was with 258 people.
       
       We can trivially extend \ProjectName{} to warn users when the query chosen for execution has a high $\textsc{Penalty}$ estimate, along with the number of tuples that have
-      been dropped (after execution), so that situations such as those observed in Q8 can be identified by the user. We've added this detail to the paper.
+      been dropped (after execution), so that situations such as those observed in Q8 can be identified by the user. We've added this detail to the paper (\Cref{sec:results}).
     }
 
   \item Although it doesn't consider cost or the drop operator, a similar technique appears in Yang et. al. "Lenses: An On-Demand Approach to ETL." A comparison would be nice.
@@ -75,7 +82,7 @@ We provide details on the definition of these functions for all imputation metho
    \resp{
      Yang's work is definitely related, and we've added it to our related work section.
    Their system helps an analyst prioritize cleaning tasks for a particular query.
-   It uses pretrained regression models as one of a number of repair strategies for missing data rather than creating a query plan which incorporates the training and running of such models.
+   It uses pre-trained regression models as one of a number of repair strategies for missing data rather than creating a query plan which incorporates the training and running of such models. (\Cref{subsec:missing-value})
    }
 
  \item S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach between 0 and 24 percent" 24 percent error is pretty bad.
@@ -95,7 +102,7 @@ We provide details on the definition of these functions for all imputation metho
 
   \item S3.4.1, Definition 2: On my first read-through, I was puzzled about why there was no plan with zero-loss. It would help to clarify that Loss is not about tuple loss, but rather a heuristic penalty function.
 
-    \resp{We have clarified this in the paper by emphasizing that \textit{Loss} is not a loss in the statistical sense or in the tuple loss sense and by renaming it to $\textsc{Penalty}$.}
+    \resp{We have clarified this in the paper (\Cref{sec:cost-model}) by emphasizing that \textit{Loss} is not a loss in the statistical sense or in the tuple loss sense and by renaming it to $\textsc{Penalty}$.}
 
   \item S3.4.3: An extremely nice emergent property from the L-value function for the imputation operator seems to be that the operator will be moved to a position in the plan where it has access to the maximum training data. I am slightly concerned that by focusing entirely on size, this might lead to skew in the training set. For example, consider a one-to-many join \verb/µ(R) |X| S/. Your optimization algorithm would likely wish to move imputation up: \verb/µ(R |X| S)/. Yes, there is more training data, but if the fanout for each tuple is skewed, some tuples in R will become over-represented in the join result. A similar observation holds for selection. For example take your Q8, where the conditions "studentdebtowe $>$ 0 AND schooldegree $\geq$ 0" presumably indicate invalid data that should not be used for training. (is this perhaps why you have so much error for full imputation on Q8?)
 
@@ -108,7 +115,7 @@ We provide details on the definition of these functions for all imputation metho
 
   \item S3.4.4: It appears that Time() assumes that plans are IO-bound. This is a perfectly reasonable assumption, but should be stated explicitly, as datasets that fit in memory will require a different cost model.
 
-    \resp{Agreed. Our database stores tables in files, so our plans are I/O bound, but a database which uses an in-memory representation will need a different Time() function. We have clarified this in the paper.}
+    \resp{Agreed. Our database stores tables in files, so our plans are I/O bound, but a database which uses an in-memory representation will need a different Time() function. We have clarified this in the paper (\Cref{sec:query-runtime}).}
 
   \item S3.4.4: "Drop is a special case of a sequential scan, and its time complexity can be expressed as a function of the number of heap pages read and the I/O cost per page." seems to suggest that drop is implemented as a blocking operator. Why not just take the same approach as selection and treat it as having negligible cost?
     
@@ -122,7 +129,7 @@ We provide details on the definition of these functions for all imputation metho
       identical in this case and the number of tuples returned can be seen
       directly in Table 4. We would expect benchmark queries that use aggregates such as SUM 
       to work well in our system, with errors proportional to the fraction of relevant tuples retrieved
-      and the AVG value estimated. We have noted this in the experiments section now.}
+      and the AVG value estimated. We have noted this in the experiments section now (\Cref{sec:experiments}).}
 
   \item S4.4.1: Imputation over the raw data is being used as ground truth. Is there any reason to suspect that this is the correct thing to do? Perhaps joining multiple tables together exposes new attributes that makes imputation *more* reliable? At the very least, it would be useful to understand why there is so much error in $\alpha=0$ on Q2 and Q8.
 
@@ -133,7 +140,7 @@ We provide details on the definition of these functions for all imputation metho
       scenario, and moreover, finding ground truth for use even in an empirical evaluation
       of imputation methods can be challenging because artificially dirtying the data
       often does not capture the complex reasons for missingness in real world datasets.
-      We updated the discussion in S4.4.1 to emphasize this point.}
+      We updated the discussion in \Cref{sec:results} to emphasize this point.}
 
   \item There are a number of opportunities for trimming in the figures, tables, and algorithms: Algorithms 1-3 could be compacted a bunch, Table 1 is full of whitespace (e.g., make it a 3-column {figure*}), Tables 1-2 could also be summarized as CDFs, Figure 6 is full of whitespace, Table 3 could be put queries on a single row (e.g., Q1 would easily fit on 1 line), and the references have a lot of redundant information (URLs, for example).
 
@@ -175,8 +182,8 @@ We provide details on the definition of these functions for all imputation metho
   \item D2) The paper does not propose new imputation techniques but rely on existing statistical imputation algorithms. There is no comparative evaluation, nor samples of imputed values to show the goodness of the imputed values. It would be nice to see a comparative evaluation of different statistical imputation methods, and suggestions for extensions that can fit within the proposed imputation model.
 
     \resp{
-      We have added two new imputation methods to the experiments, to show that the planning algorithm can be used successfully with different imputation methods.
-      We have also added a subsection to the algorithm section explaining how we chose the cost functions for each imputation method that we test and giving guidelines for choosing cost functions for a new imputation method.
+      We have added two new imputation methods to the experiments (\Cref{sec:results}), to show that the planning algorithm can be used successfully with different imputation methods.
+      We have also added a subsection to the algorithm section explaining how we chose the cost functions for each imputation method that we test and giving guidelines for choosing cost functions for a new imputation method (\Cref{sec:quality} and \Cref{sec:query-runtime}).
     }
   \end{itemize}
 
@@ -207,7 +214,7 @@ We provide details on the definition of these functions for all imputation metho
     -- It would be great (but not necessary of course) to add your techniques in an existing DBMS, such as Postgres to see the impact on a real system in your experiments.
 
    \resp{
-   We've added a section that describes in detail the components that need to be added to an existing database system to implement our technique. 
+   We've added a section (\Cref{sec:implementation}) that describes in detail the components that need to be added to an existing database system to implement our technique. 
    The details come directly from our implementation of \ProjectName{} on top of SimpleDB, a popular teaching database used at MIT, University of Washington, and Northwestern University, 
    amongst others. These extensions could further exploit any existing sophistication in the underlying system for tasks such as execution cost estimates.
    
@@ -234,12 +241,13 @@ We provide details on the definition of these functions for all imputation metho
 
   \item D5. Can you have plans with a mix of drop and impute operators?
     
-    \resp{Yes, we have now highlighted this for clarity in the paper as well.\todo{add specific section}}
+    \resp{Yes, we have now highlighted this for clarity in the paper as well
+    (\Cref{fig:example-plans} and \Cref{sec:search-space})}
 
   \item D6. During plan enumeration, can you safely prune plans at some point, similar to what a traditional optimizer would do?
 
     \resp{We maintain the set of Pareto optimal plans at each point in the optimization. This set is significantly smaller than the set of all plans, so it represents some pruning (a point we have
-    now clarified in the paper). We found that the size of these Pareto sets is small enough that we did not need to prune further.
+    now clarified in the paper in \Cref{subsubsec:pareto}). We found that the size of these Pareto sets is small enough that we did not need to prune further.
 
       If necessary, it is possible to sample from the Pareto optimal plans during the plan enumeration. The final selected plan may not be Pareto optimal, but this is a potential way to control the number of plans.
       To perform this approximation, we only add plans to the frontier that are non-dominated and are sufficiently different from existing plans in the frontier. The plan already in the frontier should
@@ -250,14 +258,14 @@ We provide details on the definition of these functions for all imputation metho
       
   \resp{For the iterative regression impute operator, we set a predefined number of iterations as an upper bound on its execution. If the imputation converges,
   we can return immediately, otherwise we return after this upper bound is reached. This is a common approach used in iterative optimization techniques, such
-  as gradient descent. We've clarified this technique in the section discussing this imputation operation.
+  as gradient descent. We've clarified this technique in the section discussing this imputation operation (\Cref{subsubsec:decision-trees}).
 }
 
   \item D8. Are there impute implementation that are non-blocking? Or do they always have to perform multiple passes over the data?
 
     \resp{Yes. For example, in time series data, it is reasonable to fill the most recent non-null value forward. This kind of imputation isn't useful for survey data, so we didn't consider it for our experiments. We have extended the experiments section to consider a simple non-blocking imputation method relevant to our dataset: mean value imputation. This is a common technique, which fills in  missing values
     with the average observed value. In our case, we implement a non-blocking variant that estimates the mean from the plan's histograms, avoiding the need to perform a full pass over
-    the data before imputing.}
+    the data before imputing (\Cref{subsubsec:mean}).}
 
   \item D9. Additional experiments I suggest to include:
     -- Consider a scenario where the user submits multiple similar queries. Show after how many such queries your approach has no longer a competitive advantage compared to performing imputation on the data.
@@ -272,6 +280,8 @@ We provide details on the definition of these functions for all imputation metho
       a lot of the same plans for execution. We did run experiments with a range of $\alpha$ values, but instead of presenting a figure with each value of $\alpha$,
       which can result in many duplicate plans (since different $\alpha$ values may result in the same plan), we extended the results section to include a subsection that presents the final frontiers for
       two queries, one from each dataset used during evaluation. This frontier can be exposed to the user to help in their workflow.
+      
+     The current set of results have been extended to show an additional intermediate $\alpha$ value.
       
       We explored the planning times for queries with increasing number of joins by running additional experiments with up to 8 joins. 
       The standard algorithm presented in the original version submitted handles
@@ -298,7 +308,7 @@ We provide details on the definition of these functions for all imputation metho
     \resp{Yes, Tummer \& Koch is definitely related.
       However, much of the complexity of their method is in dealing with cost functions which are not well behaved.
       Our cost functions are monotonic, which allows us to use a simpler optimizer than what Tummer \& Koch propose.
-    We have added a discussion of their work to the related works section.}
+    We have added a discussion of their work to the related works section (\Cref{sec:relatedwork}).}
 
 \item Could be interesting for the optimizer to pick imputation strategy based on the type of the query.
   \end{itemize}

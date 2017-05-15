@@ -148,6 +148,7 @@ queries are an order-of-magnitude faster than the baseline. We get another order
 %\caption{Planning times for each query}
 %\label{fig:plantimes}
 %\end{figure}
+
 \textbf{Accuracy vs. Base-table Imputation (AVG)}\quad \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results compared to the baseline, using the reference chained-equation decision trees model.
 This measures the error introduced by on-the-fly imputation as compared to full imputation on the base tables.
 This comparison is the relevant one in practice --- an analyst would only be considering the trade-offs in imputation quality and time in the first place for dirty input data, for which ground truth is unavailable.
