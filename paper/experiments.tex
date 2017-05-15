@@ -166,7 +166,7 @@ to the baseline is low --- between \lowsmapealphazero{} and
 \highsmapealphaoneexacs{} percent --- indicating that on-the-fly imputation produces results similar to the baseline. Notably, the results with largest error correspond
 most closely to one existing approach of dropping all \nullv{}s.
 
-In \Cref{table:smape}, we report results using the reference chained-equation
+\review{In \Cref{table:smape}, we report results using the reference chained-equation
 decision trees model. We also experiment with mean-value imputation and hot
 deck imputation, as outlined in \Cref{sec:imputation}. One approach to
 mean-value imputation, to facilitate non-blocking operation within the iterator
@@ -177,14 +177,14 @@ $\alpha$ because the time cost of the imputation is relatively low no matter
 how many tuples need to be imputed. In hot deck imputation, runtimes are also
 similar across $\alpha$, because the cost of buffering
 tuples and sampling at random is negligible compared to the rest of query
-execution. In terms of accuracy, relative errors using hot deck are close to
+execution. \todo{be quantitative: In terms of accuracy, relative errors using hot deck are close to
 zero; since the baseline, in this case, is hot deck imputation on the base
 table, only skew in the distributions arising from filters and joins would lead
 to larger errors. In some cases, skew does arise, and errors are on the same
 magnitude as in the decision trees case. Indeed, \ProjectName{} yields larger
 benefit when using relatively sophisticated, higher quality imputation
 algorithms as opposed to simpler strategies that would even be quick to
-implement on the base table.
+implement on the base table.}
 
 We also calculate the number of tuples used to produce each aggregate output.
 The count fraction columns in \Cref{table:smape} show the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ as a fraction of the number of tuples used when running the query on the imputed base table.
@@ -194,9 +194,13 @@ In these cases, the aggregate value is not significantly impacted by the missing
 the aggregate should not be affected.
 However, if the missing data is biased then the aggregate will have a significant error.
 This highlights a challenge for a user handling data imputation traditionally: it is unclear if the missing data will have a large or small negative impact on their analysis until they have paid the cost of running it.
-By using \ProjectName{} this cost can be lowered significantly.
+By using \ProjectName{} this cost can be lowered significantly. We can also trivially extend \ProjectName{} to warn users when the query chosen for execution has a high
+$\textsc{Penalty}$ estimate, along with the number of tuples that have been dropped (after execution), so that situations with high potential for skewed results can be identified by the user.
 
-\review{
+Our benchmark queries performed well for both cases of \texttt{AVG} and \texttt{COUNT} aggregates, so we expect \ProjectName{} would provide similar performance for \texttt{SUM}, with 
+errors proportional to the fraction of relevant tuples retrieved and the \texttt{AVG} value estimated.
+
+
 \Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced by the planner for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm.
 and encapsulate the possible trade-offs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
 can be exposed to the user to help in guiding their workflow.
@@ -228,11 +232,12 @@ Queries optimized
 In many real-world cases, applying imputation to an entire dataset is prohibitively expensive.
 For example, if we run chained-equation decision trees imputation on the full ACS dataset, it completes in \acsbaseresultminutes{}.
 
-In contrast, \ProjectName{} executes the query \lstinline{SELECT AVG(c0) FROM acs} over the ACS dataset (also using chained-equation decision trees imputation) in \acsimputedbzeroresult{} when optimizing for quality and \acsimputedboneresult{} when optimizing for runtime.
+In contrast, \ProjectName{} executes the query \lstinline{SELECT AVG(c0) FROM acs} over the ACS dataset (also using chained-equation decision trees imputation) in \acsimputedbzeroresult{} when optimizing for quality and \acsimputedboneresult{} when optimizing for runtime. Given the runtime difference, we can run approximately 5,000 queries before taking more time than full imputation.
 The performance difference comes from the fact that \ProjectName{} only needs to perform imputation on the single column required by the query.
 Adding selection predicates would further reduce the query runtime by reducing the amount of required imputation.
 An analyst could do the same, but tracking the required imputations would get increasingly complicated as the queries became more complex.
 This highlights the benefit of using our system for early data exploration.
+
 
 %\subsubsection{Planning Times}
 %\begin{figure}

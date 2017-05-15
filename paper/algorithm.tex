@@ -82,7 +82,8 @@ Given a query, \ProjectName{} produces a final set of query plans $Q$ by only ke
 We say that a plan $q$ with cost $\langle l, t \rangle$ \emph{dominates} a plan $q'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(q) = \textsc{Dirty}(q') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{q}{q'}$. 
 \end{definition}
 
-This set $Q$ will be the Pareto frontier~\cite{pareto1964cours} of $S$, and it contains the best option for all feasible trade-offs of $\textsc{Time}$ and $\textsc{Penalty}$ for the current query.
+This set $Q$ will be the Pareto frontier~\cite{pareto1964cours} of $S$, and it contains the best option for all feasible trade-offs of $\textsc{Time}$ and $\textsc{Penalty}$ for the current query. This
+set of plans is significantly smaller than the set of all plans, which our algorithm prunes away.
 
 In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Penalty}$ value that the user is willing
 to tolerate relative to the minimum possible among the frontier plans.
