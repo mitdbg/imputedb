@@ -7,7 +7,7 @@ There is related work in three primary areas: statistics, database research, and
 Imputation of missing values is widely studied in the statistics and machine
 learning communities. Missing data
 can appear for a variety of reasons~\cite{gelman2006data}.
-It can be missing uniformly at random or conditioned on
+It can be missing completely at random or conditioned on
 existing values (observed and missing). Methods in the statistical community
 focus on correctly modeling relationships between attributes to account for different forms
 of missingness.
@@ -28,17 +28,15 @@ workloads.
 \subsection{Missing Values and Databases}
 There is a long history in the database community surrounding the
 treatment of \nullv{}.
-Multiple papers have described various (at times conflicting) treatments of \nullv{}s~\cite{codd1973understanding,grant1977null}.
-\ProjectName's main design invariant---no relational operator
-sees missing values for attributes it must operate on nor do users see
-missing data---eliminates
+Multiple papers have described various (and at times conflicting) treatments of \nullv{}s~\cite{codd1973understanding,grant1977null}.
+\ProjectName's design invariants eliminate
 the need to handle \nullv{} value semantics, while guaranteeing query evaluation soundness.
 
 Database system developers and others have worked on techniques to automatically
 detect dirty values, whether missing or otherwise, and rectify the errors if
 possible. \textcite*{hellerstein2008quantitative} surveys the methods and systems related to missing value detection and correction.
 
-\textcite*{wolf2007query} treat queries over databases with missing values directly using a statistical approach, taking advantage of correlations between
+\textcite*{wolf2007query} directly treat queries over databases with missing values using a statistical approach, taking advantage of correlations between
 attributes. The tuples that match the original query as well as a ranking of
 tuples with incomplete data that may match are returned. Our work differs in
 that we allow any well-formed statistical technique to be used for imputation
@@ -60,21 +58,19 @@ expensive imputations as real-time conditions change.
 Other work has looked at integrating statistical models into databases.
 For example, BayesDB~\cite{mansinghka2015bayesdb} provides users with a simple interface to leverage statistical inference techniques in a database. Non-experts
 can use a simple declarative language (an extension of SQL), to specify models
-which allow missing value imputation, amongst other broader functionality.
-Experts can further customize strategies and express domain knowledge to
+which allow missing value imputation, among other broader functionality.
+Experts can further customize strategies and incorporate domain knowledge to
 improve performance and accuracy.
-
 While BayesDB can be used for value imputation, this step is not framed
 within the context of query planning, but rather as an explicit statistical
 inference step within the query language, using the \verb|INFER| operation. 
-
 BayesDB provides a great alternative for bridging the gap between
 traditional databases and sophisticated modeling software. \ProjectName{}, in
 contrast, aims to remain squarely in the database realm, while allowing
 users to directly express queries on a potentially larger subset of their data.
 
 \review{
-\textcite*{yang2015lenses} develops an incremental approach to ETL data cleaning, through the use
+\textcite*{yang2015lenses} develop an incremental approach to ETL data cleaning, through the use
 of probabilistic compositional repair operators, called \emph{Lenses}, which balance quality of cleaning
 and cost of those operations. These operators can be used
 to repair missing values by imposing data constraints such as \texttt{NOT NULL}. However, the model
@@ -107,7 +103,6 @@ relational operators, respectively.
 
 \textcite*{fischer2013towards} describe the architecture of a DBMS with integrated forecasting operations for time-series, detailing
 the abstractions necessary to do so.
-
 In contrast to this work, \ProjectName{} is targeted at generic value imputation, and is not tailored to time-series.
 The optimizer is not based on equivalence transformations, nor are there guarantees of equal
 results under different conditions. Instead, the optimizer allows users to pick their trade-off between
@@ -120,7 +115,6 @@ imputation operations in non-trivial query plans with cost-based optimization.
 system automatically searches the space of attribute combinations/transformations and statistical models
 to produce forecasts within a given accuracy threshold. Accuracy estimates are determined using
 standard techniques, such as cross-validation. 
-
 As with Fa, \ProjectName{} provides a declarative language, as
 a subset of standard SQL.\@ \ProjectName{}, however, is not searching the space of possible
 imputation models, but rather the space of query plans that incorporate imputation operators. Another major point

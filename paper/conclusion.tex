@@ -1,5 +1,5 @@
 \section{Conclusion}
-Our evaluation of \ProjectName{} shows that missing values and their imputation can be successfully integrated into the relational algebra and
+Our evaluation of \ProjectName{} shows that imputation of missing values can be successfully integrated into the relational algebra and
 existing cost-based plan optimization frameworks. We implement imputation actions, such as dropping or imputing values with a machine
 learning technique, as operators in the algebra and use a simple yet effective cost model to consider trade-offs in 
 imputation quality and runtime. We show that different values for the trade-off parameter can yield substantially
@@ -20,7 +20,7 @@ used to impute but rather on the placement of imputation steps in the execution 
 we incorporate imputation into a cost-based optimizer and hide any details
 regarding missing values inside the system, allowing users to use traditional SQL as if the database were complete.
 While prior work has incorporated operations such as prediction into their databases, this has been domain-specific
-in some cases, and in others, they have not integrated these operations into the planner. The novelty
+in some cases, and in others, operations have not been integrated into the planner. The novelty
 of our contribution lies in the formalization of missing value imputation for query planning, which results in performance
 gains over traditional approaches. This approach acknowledges that different users performing different queries on the same
 dataset will likely have varying imputation needs and that execution plans should appropriately reflect that variation.

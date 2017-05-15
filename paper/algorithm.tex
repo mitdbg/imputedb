@@ -15,7 +15,7 @@ We introduce two new relational operators to perform imputation: \textit{Impute}
 \textit{Drop} ($\delta$). Each operator takes arguments $(C, R)$ where $C$ is a set of
 attributes and $R$ is a relation. \textit{Impute} uses a machine learning algorithm to
 replace all \nullv{} values with non-\nullv{} values for attributes $C$ in the relation $R$ (discussed in detail in~\Cref{sec:imputation}).
-In our experiments, we implement \textit{Impute} using a general-purpose chained-equation decision trees algorithm, but our system is agnostic to this choice.
+% In our experiments, we implement \textit{Impute} using a general-purpose chained-equation decision trees algorithm, but our system is agnostic to this choice.
 \textit{Drop} simply removes from $R$ all tuples which have a \nullv{} value for some attribute in $C$.
 Both operators guarantee that the resulting relation will contain no \nullv{} values for
 attributes in $C$.  
@@ -97,7 +97,6 @@ We say a plan $q^\alpha$ is $\alpha$-bound optimal if $\forall q' \in Q^\alpha. 
 Given $\alpha$ and $Q$, \ProjectName{} returns an $\alpha$-bound optimal plan in $Q$. In essence, $\alpha$ is a tunable parameter 
 that determines whether the optimizer focuses on quality or on performance, as plans that
 lose a lot of information through dropping are also the fastest. 
-
 If $\alpha=0.0$, then the optimal query should lose as little information as possible (at
 the expense of performance). If $\alpha = 1.0$, then the optimal query should have the
 lowest runtime (at the expense of quality).
@@ -149,7 +148,8 @@ and a penalty of $1$ is assigned to $\delta(q')$.
 The function $\textsc{L}_{P}(q')$ is then defined recursively to aggregate these penalties for the entire plan. 
 The result is normalized by $\textsc{L}_{P_\delta}(q')$, which is the total penalty for always dropping tuples with \nullv{} values and is equal to the number of imputation operators in the plan.
 
-\noindent{\textbf{Constructing $P$}}: The form of $P$ is chosen to reflect the properties of the imputation method being used.
+\textbf{Constructing $P$}:
+The form of $P$ is chosen to reflect the properties of the imputation method being used.
 A well-chosen $P$ should provide a reasonable estimate of the quality of imputation from the set of plan histograms.
 From these, $P$ can obtain the number of clean and dirty attributes in its input, their cardinalities, and approximations of distribution statistics such as mean and variance.
 Intuitively, imputation quality \textit{increases} when more complete attributes and complete tuples are available; correspondingly, $P(q')$ \textit{decreases} as the number of values increases.
@@ -186,7 +186,7 @@ Filtering, projecting, and aggregating never require repeated tuple fetches and 
 We extend these heuristics to account for the new operators: \textit{Drop} and \textit{Impute}.
 \textit{Drop} is a special case of a filter, so its time complexity is correspondingly negligible. 
 
-\noindent{\textbf{Constructing $T$}}:
+\textbf{Constructing $T$}:
 As with $\textsc{Penalty}$, the time computation for \textit{Impute} depends on the properties of the underlying algorithm via a function $T$.
 If we assume that the \textit{Impute} routine is CPU-bound, then we adjust $T$ by some constant factor $f$, thereby scaling the result to be comparable with I/O-bound routines.
 
@@ -200,9 +200,7 @@ statistical model is instantiated and trained. Though it is tempting to try to p
 imputation models while the analyst begins to make queries, the exact rows of data, set
 of complete attributes, and set of attributes to impute are unknown until runtime, making
 this strategy infeasible. Thus, if applicable, $T$ should take into account both
-imputation model training and application.
-
-We discuss several values of $T$ for different imputation methods in \Cref{sec:imputation}.
+training and application of the imputation model.
 
 % In the implementation of our system,
 % we use an iterative algorithm (see~\Cref{sec:imputation}), where the runtime cost
@@ -220,7 +218,7 @@ We discuss several values of $T$ for different imputation methods in \Cref{sec:i
 \ProjectName{} is designed so that any imputation strategy can be plugged in with minimal effort and without changes to the optimizer, by supplying penalty ($P$) and time ($T$) functions (\Cref{sec:cost-model}) pertinent to the algorithm.
 These cost functions are then used by the optimizer during planning.
 The flexibility of this approach is in the spirit of query optimization, which aims to reconcile performance with a declarative interface to data manipulation.
-To motivate this API, we describe how a developer would specify these functions for a general-purpose imputation algorithm, as well as for two simpler imputation methods.
+To motivate this API, we describe how a developer might specify these functions for a general-purpose imputation algorithm, as well as for two simpler imputation methods.
 
 \subsubsection{Decision trees}
 
@@ -249,7 +247,7 @@ imputation improves as values progressively reflect more accurate relationships
 between attributes. The algorithm terminates after a fixed number of
 iterations, or earlier if convergence is achieved, indicated by unchanged values in a 
 column in subsequent iterations. For our experiments, we use Weka's \texttt{REPTree}
-implementation~\cite{witten2016data}, a variant of the canonical \texttt{C4.5}
+decision tree implementation~\cite{witten2016data}, a variant of the canonical \texttt{C4.5}
 algorithm~\cite{quinlan1993}. Roughly, the time complexity of building one
 decision tree is $\mathcal{O}(nm \text{ } log(n))$, where $n$ is the number of tuples
 and $m$ is the number of dependent attributes~\cite{witten2016data}. Since we build
@@ -281,8 +279,8 @@ have
 
 \begin{equation*}
 \begin{aligned}
-    T(q) &\approx 0 \\
-    P(q) &= \sum_{A \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(A)}{\textsc{Card}(q)}
+    P(q) &= \sum_{c \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
+    T(q) &\approx 0
 \end{aligned}
 \end{equation*}
 
@@ -297,8 +295,8 @@ we modify $T$ to account for the fact that hot-deck is blocking in our implement
 
 \begin{equation*}
 \begin{aligned}
-    T(q) &= \textsc{Card}(q) \\
-    P(q) &= \sum_{A \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(A)}{\textsc{Card}(q)}
+    P(q) &= \sum_{c \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
+    T(q) &= \textsc{Card}(q)
 \end{aligned}
 \end{equation*}
 }
@@ -334,13 +332,15 @@ cost and imputation quality. The plan-cache semantics are shown in~\Cref{fig:sem
 
 The plan cache uses the partial order of plans defined by  $\langle \textsc{Dirty}, \textsc{Penalty}, \textsc{Time} \rangle$ to
 collect sound and complete Pareto frontiers. Plans with different $\textsc{Dirty}$ sets cannot be compared. The final
-Pareto frontier produced by the optimizer is the set of plans with the best imputation quality-execution time trade-offs.
+Pareto frontier produced by the optimizer is the set of plans with the best imputation
+quality and runtime trade-off.
 
 \subsubsection{Planning algorithm}
 The planner (\Cref{algo:top-level-planner}) operates as follows.
 First, it collects the set of attributes which are used by the operators in the plan or which are visible in the output of the plan (\Cref{lst:line:attr-start}--\Cref{lst:line:attr-end}).
 This set will be used to determine which attributes are imputed.
-Then, it constructs a plan cache. For each table used in the query, any available selections are pushed to the leaves and
+Then, it constructs a plan cache. For each table used in the query, any available selections
+are pushed to the leaves, and
 a search over imputation operations produces various possible plans, which are added to the cache (\Cref{lst:line:sel}). If no selections are available, a 
 simple scan is added to the plan cache (\Cref{lst:line:scan}). Join order is jointly optimized with imputation placements and a set of
 plans encompassing all necessary tables is produced (\Cref{lst:line:join}). This set is now extended for any necessary grouping and aggregation
@@ -437,7 +437,7 @@ This modification increases the complexity of our planning algorithm to $O(2^{4J
 
 To motivate the restriction of imputation types, we consider the implications of allowing arbitrary imputations.
 If we allow any arbitrary subset of attributes to be imputed, then we would need to consider $O(2^{|D|+1})$ different imputation operators before each relational operator where $D$ is the set of dirty attributes in all tables.
-This would increase the overall complexity of the algorithm drastically.
+This would increase the overall complexity of the algorithm dramatically.
 
 Finally, we note that for the queries we have examined, this exponential blowup does not affect the practical performance of our optimizer.
 Recall that the planner maintains different plans for different dirty sets, keeping only those plans that are not dominated by others.
