@@ -71,13 +71,11 @@ users to directly express queries on a potentially larger subset of their data.
 
 \review{
 \textcite*{yang2015lenses} develop an incremental approach to ETL data cleaning, through the use
-of probabilistic compositional repair operators called \textit{Lenses}. These can be used
-to repair missing values by imposing data constraints such as \texttt{NOT NULL}. 
-As with \ProjectName{}, they provide a way to balance the quality of the cleaning 
-performed (expressed by the confidence of their output) and the cost of those operations. However, their 
-repairs take place on a per-tuple basis, with the non-deterministic layer of their system replacing place-holder
-variables with inferred values. In contrast, \ProjectName{} optimizes imputation at the plan-level and
-provides the same impute technique for all tuples streaming through a given operator.
+of probabilistic compositional repair operators, called \emph{Lenses}, which balance quality of cleaning
+and cost of those operations. These operators can be used
+to repair missing values by imposing data constraints such as \texttt{NOT NULL}. However, the model
+used to impute missing values must be pre-trained and all repairs are done on a per-tuple basis
+rather than at the plan-level.
 }
 
 \ProjectName's cost-based query planner 

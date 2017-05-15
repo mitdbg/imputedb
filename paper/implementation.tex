@@ -32,7 +32,6 @@ In this section we discuss the changes required to implement dynamic imputation.
   We believe that it would be relatively simple to extend an existing query optimizer to insert imputations immediately after scanning the base tables.
   However, integrating the imputation placement rules into the optimizer allows us to explore a large space of query plans which contain imputations.
   In particular, this tight integration allows us to jointly choose the most effective join order and imputation placement.
-  Our goal of integrating imputation placement into the optimizer requires the other modifications that we have discussed.
 \end{itemize}
 }
 

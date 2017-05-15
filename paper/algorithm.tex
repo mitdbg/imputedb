@@ -82,8 +82,8 @@ Given a query, \ProjectName{} produces a final set of query plans $Q$ by only ke
 We say that a plan $q$ with cost $\langle l, t \rangle$ \emph{dominates} a plan $q'$ with cost $\langle l', t' \rangle$ if $\textsc{Dirty}(q) = \textsc{Dirty}(q') \land ((l \leq l' \land t < t') \lor (l < l' \land t \leq t'))$. We denote this as $\doms{q}{q'}$. 
 \end{definition}
 
-This set $Q$ will be the Pareto frontier~\cite{pareto1964cours} of $S$, and it contains the best option for all feasible trade-offs of $\textsc{Time}$ and $\textsc{Penalty}$ for the current query. This
-set of plans is significantly smaller than the set of all plans, which our algorithm prunes away.
+This set $Q$ will be the Pareto frontier~\cite{pareto1964cours} of $S$, and it contains the best option for all feasible trade-offs of $\textsc{Time}$ and $\textsc{Penalty}$ for the current query. \review{This
+set of plans is significantly smaller than the set of all plans, which our algorithm prunes away.}
 
 In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Penalty}$ value that the user is willing
 to tolerate relative to the minimum possible among the frontier plans.
@@ -129,7 +129,7 @@ Cardinality estimation for standard relational operators (\Crefrange{lst:std-sta
 \subsubsection{Imputation quality} 
 \label{sec:quality}
 Every instantiation of the impute-operator defines a custom penalty function $P$ for imputing \nullv{} fields.
-\ProjectName{} estimates the aggregate quality of the imputations in a plan $q$ using the heuristic measure $\text{Penalty}_{P}(q)$, computed as follows.
+\ProjectName{} estimates the aggregate quality of the imputations in a plan $q$ using the heuristic measure $\textsc{Penalty}_{P}(q)$, computed as follows.
 
 \begin{align*}
     &\textsc{L}_{P}(q) = \begin{cases}
@@ -188,7 +188,7 @@ We extend these heuristics to account for the new operators: \textit{Drop} and \
 
 \textbf{Constructing $T$}:
 As with $\textsc{Penalty}$, the time computation for \textit{Impute} depends on the properties of the underlying algorithm via a function $T$.
-If we assume that the \textit{Impute} routine is CPU-bound, then we adjust $T$ by some constant factor $f$, thereby scaling the result to be comparable with IO-bound routines.
+If we assume that the \textit{Impute} routine is CPU-bound, then we adjust $T$ by some constant factor $f$, thereby scaling the result to be comparable with I/O-bound routines.
 
 The form of $T$ depends on the specific imputation method, but there are several considerations in choosing $T$.
 In particular, $T$ should \emph{increase} as the number of tuples and complete and dirty attributes passed to the imputation function increases and it should take into account the complexity of the imputation algorithm.
@@ -261,7 +261,7 @@ $k * |\textsc{Dirty}(q)|$ trees, we have
 \end{equation*}
 
 Separately, we specify a heuristic penalty that takes into account the
-improvement in imputation quality from more tuples and attributes as well as
+improvement in imputation quality from more tuples and attributes, as well as
 the diminishing returns from more data.
 
 \[
@@ -271,7 +271,7 @@ the diminishing returns from more data.
 \subsubsection{Mean}
 
 At the other end of the complexity spectrum, mean value imputation is a common choice for exploratory data analysis.
-Mean value imputation replaces missing values in a column with the mean of the available values in the column.
+Mean value imputation replaces missing values in a column with the mean of the available values in that column.
 
 We can take advantage of the histograms maintained by \ProjectName{} to estimate the mean and construct a non-blocking impute operator.
 Applying the heuristics from~\Cref{sec:quality} and~\Cref{sec:query-runtime}, we
