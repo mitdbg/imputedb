@@ -46,8 +46,10 @@ and focus on returning results to the analyst as if the database had been
 complete.
 
 Designers of data stream processing systems frequently confront missing values
-and consider them carefully in query processing. Often, if sensor error is the
-cause of missing values, values can be imputed with high confidence. \todo{What does this mean?} \textcite*{fernandez2009inter} use feedback punctuation to dynamically
+and consider them carefully in query processing. Often, if a physical process
+like sensor error is the cause of missing values, values can be imputed with
+high confidence. \textcite*{fernandez2009inter} use feedback punctuation to
+dynamically
 reconfigure the query plan for state-dependent
 optimizations as data continues to arrive. One of the applications of this framework is to avoid
 expensive imputations as real-time conditions change. 

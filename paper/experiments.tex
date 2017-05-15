@@ -119,10 +119,13 @@ provide performance figures relevant to practitioners using similar datasets.
 
 \subsection{Results}\label{sec:results}
 
-For each query, we evaluate \todo{update: three different configurations}: \ProjectName{} optimizing for quality ($\alpha=0$) and \ProjectName{} optimizing for performance ($\alpha=1$) and as a baseline, we fully impute the tables used by each query then run the query on the imputed tables, simulating the process that an analyst would follow to apply existing imputation techniques.
+We evaluate \ProjectName{} optimizing for quality ($\alpha=0$), optimizing for performance
+($\alpha=1$), and targeting a balance of each. As a baseline, we fully impute the tables
+used by each query and then run the query on the imputed tables, simulating the process that
+an analyst would follow to apply existing imputation techniques.
 
 \Cref{fig:runtimes} shows a summary of the performance results. The quality-optimized
-queries are an \todo{update/validate: order-of-magnitude faster than the baseline. We get another order-of-magnitude speedup when optimizing for performance}. This performance
+queries are an order-of-magnitude faster than the baseline. We get another order-of-magnitude speedup when optimizing for performance. This performance
 differential means it is feasible
 to explore multiple imputation operations (including more expensive operators) when using
 \ProjectName{}, in contrast to the traditional approach of fully imputing the dataset.
@@ -130,10 +133,9 @@ to explore multiple imputation operations (including more expensive operators) w
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
 \caption{Runtimes for the queries in~\Cref{tbl:queries} using reference
-    chained-equation decision trees algorithm. $\alpha=0$ (resp. $\alpha=1$) is
-    \ProjectName{} run at the highest (resp. lowest) quality setting. Baseline
-    is full table imputation followed by running the query. Each query and each
-    value of $\alpha$ was run 200 times.}
+    chained-equation decision trees algorithm. Using $\alpha=0$, \ProjectName{}
+    is run at the highest quality setting, while with $\alpha=1$, performance
+    is prioritized. Each query and each value of $\alpha$ was run 200 times.}
 \label{fig:runtimes}
 \end{figure}
 
@@ -156,14 +158,33 @@ to explore multiple imputation operations (including more expensive operators) w
 This measures the error introduced by on-the-fly imputation as compared to full imputation on the base tables.
 This comparison is the relevant one in practice --- an analyst would only be considering the trade-offs in imputation quality and time in the first place for dirty input data, for which ground truth is unavailable.
 
-\todo{Distinguish between underlying imputation methods}
-For $\alpha=0$ and $\alpha=1$, we pair up tuples and compute SMAPE for all queries. That is,
-we compute tuple-wise absolute percentage deviations within each iteration of a query, and
-we report this value averaged over all iterations.  We
+To calculate SMAPE for $\alpha=0$, $\alpha=0.5$, and $\alpha=1$, 
+we compute tuple-wise absolute percentage deviations within each iteration of each query, and
+average this value over all iterations. We
 can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
-to the baseline is low---\todo{update: between \lowsmapealphazero{} and
-\highsmapealphaoneexacs{} percent}---indicating that on-the-fly imputation produces results similar to the baseline. Notably, the results with largest error correspond
+to the baseline is low --- between \lowsmapealphazero{} and
+\highsmapealphaoneexacs{} percent --- indicating that on-the-fly imputation produces results similar to the baseline. Notably, the results with largest error correspond
 most closely to one existing approach of dropping all \nullv{}s.
+
+In \Cref{table:smape}, we report results using the reference chained-equation
+decision trees model. We also experiment with mean-value imputation and hot
+deck imputation, as outlined in \Cref{sec:imputation}. One approach to
+mean-value imputation, to facilitate non-blocking operation within the iterator
+model, is to estimate the column mean from base table histograms. In this case,
+imputations are identical no matter where the operator is placed in the query
+plan. Moreover, runtimes are essentially identical regardless of the value of
+$\alpha$ because the time cost of the imputation is relatively low no matter
+how many tuples need to be imputed. In hot deck imputation, runtimes are also
+similar across $\alpha$, because the cost of buffering
+tuples and sampling at random is negligible compared to the rest of query
+execution. In terms of accuracy, relative errors using hot deck are close to
+zero; since the baseline, in this case, is hot deck imputation on the base
+table, only skew in the distributions arising from filters and joins would lead
+to larger errors. In some cases, skew does arise, and errors are on the same
+magnitude as in the decision trees case. Indeed, \ProjectName{} yields larger
+benefit when using relatively sophisticated, higher quality imputation
+algorithms as opposed to simpler strategies that would even be quick to
+implement on the base table.
 
 We also calculate the number of tuples used to produce each aggregate output.
 The count fraction columns in \Cref{table:smape} show the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ as a fraction of the number of tuples used when running the query on the imputed base table.
@@ -213,11 +234,6 @@ Adding selection predicates would further reduce the query runtime by reducing t
 An analyst could do the same, but tracking the required imputations would get increasingly complicated as the queries became more complex.
 This highlights the benefit of using our system for early data exploration.
 
-\todo{Should this be here?}
-For every imputation operator inserted into the query plan, a new statistical model is instantiated and trained before being used for imputation.
-Although it is tempting to further optimize query execution in \ProjectName{} by pre-training imputation models while the analyst begins to make queries,
-this is not desirable because the specific rows of data, set of complete attributes, and set of attributes to impute are unknown until runtime.
-
 %\subsubsection{Planning Times}
 %\begin{figure}
 %\centering
@@ -228,14 +244,13 @@ this is not desirable because the specific rows of data, set of complete attribu
 %\label{fig:planning-times}
 %\end{figure}
 
-\todo{Update: Planning times for our benchmark queries are reasonable, with mean planning
+Planning times for our benchmark queries are reasonable, with mean planning
 times across the benchmark queries ranging from \planninglowtime{} ms to
-\planninghightime{} ms, constituting \planninglowtimepct{} to \planninghightimepct{} of
-total runtime, respectively.
-
-In all cases, the optimizer returned a query
-plan within \planningmaxtime{} ms.} The choice of $\alpha$ has no impact on planning times,
-because query selection is done after collecting the Pareto frontier.
+\planninghightime{} ms, and ranging from \planninglowtimepct{} to
+\planninghightimepct{} as a share of total runtime.  In all cases, the
+optimizer returned a query plan within \planningmaxtime{} ms. The choice of
+$\alpha$ has no impact on planning times, because query selection is done after
+collecting the Pareto frontier.
 
 \review{
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
