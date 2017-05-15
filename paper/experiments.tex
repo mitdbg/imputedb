@@ -1,4 +1,4 @@
-\section{Experiments}\label{sec:experiments}
+usection{Experiments}\label{sec:experiments}
 For our experiments we plan and execute queries for three separate survey-based data sets.
 We show that \ProjectName{} performs an order of magnitude better than traditional
 base-table imputation and produces results of comparable quality, showing that our system is well suited for early dataset exploration.
@@ -135,9 +135,8 @@ for the analyst.
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
 \caption{Runtimes for the queries in~\Cref{tbl:queries} using reference
-    chained-equation decision trees algorithm. Using $\alpha=0$, \ProjectName{}
-    is run at the highest quality setting, while with $\alpha=1$, performance
-    is prioritized. Each query and each value of $\alpha$ was run 200 times.}
+    chained-equation decision trees algorithm, for various settings of $\alpha$.
+    Each query and each value of $\alpha$ was run 200 times.}
 \label{fig:runtimes}
 \end{figure}
 
@@ -155,8 +154,8 @@ for the analyst.
 %\label{fig:plantimes}
 %\end{figure}
 
-\textbf{Accuracy vs. Base-table Imputation (AVG)}\quad \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE)~\cite{Makridakis2000451} for \ProjectName{}'s query results compared to the baseline, using the reference chained-equation decision trees model.
-This measures the error introduced by on-the-fly imputation as compared to full imputation on the base tables.
+\textbf{Accuracy vs. Base-table Imputation (AVG)}\quad \Cref{table:smape} shows the Symmetric-Mean-Absolute-Percentage-Error (SMAPE) \cite{Makridakis2000451} for \ProjectName{}'s query results compared to the baseline, using the reference chained-equation decision trees model.
+This measures the error introduced by dynamic imputation as compared to full imputation on the base tables.
 This comparison is the relevant one in practice --- an analyst would only be considering the trade-offs in imputation quality and time in the first place for dirty input data, for which ground truth is unavailable.
 
 To calculate SMAPE for each $\alpha$,
