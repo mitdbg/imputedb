@@ -27,6 +27,16 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     This has a minor impact on the experimental results.
     It improves the ability of the regression tree model to perform imputation by making these variables available to the model.
   }
+
+\item \resp{We extended the original paper two additional popular imputation techniques: mean value imputation and hot-deck imputation.}
+
+\item \resp{We extended experiments to include the new operators and provide more details on results for $\alpha$. We also added the Pareto frontiers for various plans and
+explored planning times for more complex queries.}
+
+\item \resp{We added a section discussing how to construct the imputation-related functions used by our cost model, which represent the API for a new imputation operator.}
+We provide details on the definition of these functions for all imputation methods used.
+
+\item \resp{We included a new section that provides a roadmap for implementing \ProjectName{} on top of an existing database.}
 \end{itemize}
 
   \section{Reviewer 1}
@@ -51,12 +61,13 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
   \item W3. Reducing runtime to 10s is excellent, but comes at a very serious accuracy cost (3-5x worse SMAPE). Worse still, there's no way for the user to differentiate between the cases of Q4 and Q8 at runtime. 24\% error relative to direct imputation is huge.
     
     \resp{
-      The outsized error in Q8 is due to a drop operator placed very early on in the plan (a result of optimizing for performance). This produced significantly smaller sample sizes for various
+      The outsized error in Q8 is due to a drop operator placed very early on in the plan-- this is a result of optimizing for performance
+      and the fact that this data set has many missing values for relevant attributes (77.50\% for \texttt{studentdebtowe}). This produced significantly smaller sample sizes for various
       groups, which skewed the average calculation for each group significantly. For example, the average student debt for subjects with no high school degree was almost 83\% off from the estimate
       using the base table imputation, but if we look at the underlying population the former was calculated with 6 people, while the latter was with 258 people.
       
       We can trivially extend \ProjectName{} to warn users when the query chosen for execution has a high $\textsc{Penalty}$ estimate, along with the number of tuples that have
-      been dropped (after execution), so that situations such as those observed in Q8 can be identified by the user.
+      been dropped (after execution), so that situations such as those observed in Q8 can be identified by the user. We've added this detail to the paper.
     }
 
   \item Although it doesn't consider cost or the drop operator, a similar technique appears in Yang et. al. "Lenses: An On-Demand Approach to ETL." A comparison would be nice.
@@ -90,7 +101,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
     \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the query requires the construction a large, skewed data set. The problem seems to be particular to queries which generate large intermediate tables. In some cases, as when joining two datasets, the intermediate table is a good target for training because it exposes correlations which would be hidden in the separate tables. In other cases, this intermediate table is large and skewed, which causes problems for imputation. 
     
-      Avoiding this case requires us to estimate the skew in these intermediate tables, which is an area of active research.
+      Avoiding this case requires us to estimate the skew in these intermediate tables, which is an area that traditional query optimizers struggle with as well.
       However, if we had improved intermediate estimates, we could incorporate them to improve our system.
       }
     %\todo{Need a better explanation here.}
@@ -111,14 +122,14 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
       identical in this case and the number of tuples returned can be seen
       directly in Table 4. We would expect benchmark queries that use aggregates such as SUM 
       to work well in our system, with errors proportional to the fraction of relevant tuples retrieved
-      and the AVG value estimated.}
+      and the AVG value estimated. We have noted this in the experiments section now.}
 
   \item S4.4.1: Imputation over the raw data is being used as ground truth. Is there any reason to suspect that this is the correct thing to do? Perhaps joining multiple tables together exposes new attributes that makes imputation *more* reliable? At the very least, it would be useful to understand why there is so much error in $\alpha=0$ on Q2 and Q8.
 
     \resp{For our purposes, imputation over the raw data is a reasonable ground truth. This
       is because the analyst, in practice, should be considering the tradeoffs on quality
       and performance of using ImputeDB versus a production imputation system on the raw
-      data. Unfortunately, they would never have access to a real ground truth in such a
+      data. Unfortunately, they would never have access to real ground truth in such a
       scenario, and moreover, finding ground truth for use even in an empirical evaluation
       of imputation methods can be challenging because artificially dirtying the data
       often does not capture the complex reasons for missingness in real world datasets.
@@ -146,6 +157,8 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
     \resp{
       We compare our planning technique for on-the-fly imputation to imputation performed on the full dataset, using the same imputation algorithm in both cases.
       We are not aware of another database technology which offers on-the-fly imputation optimization, so there is no direct comparison for the planning algorithm.
+      Again, the point of this paper is not to evaluate different imputation techniques. However, we have added a new section describing how new imputation techniques can be integrated
+      into the paper, and also evaluated the effectiveness of these new algorithms in our experiments.
 %      However, we ran a simple experiment using BayesDB to compare possible imputation times. In order to make the comparison as fair as possible in terms of running
 %      time, we reduced the number of models that BayesDB instantiates to a single model per base table. We fit each model with 100 iterations, in an optimized setting.
 %      The fitting times on the CDC tables ranged between 119 and 320 seconds (per table). The FCC model fitting took 237 seconds. The user would then still need to use these models to
@@ -221,11 +234,12 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
   \item D5. Can you have plans with a mix of drop and impute operators?
     
-    \resp{Yes, we have now highlighted this for clarity in the paper as well.}
+    \resp{Yes, we have now highlighted this for clarity in the paper as well.\todo{add specific section}}
 
   \item D6. During plan enumeration, can you safely prune plans at some point, similar to what a traditional optimizer would do?
 
-    \resp{We maintain the set of Pareto optimal plans at each point in the optimization. This set is significantly smaller than the set of all plans, so it represents some pruning. We found that the size of these Pareto sets is small enough that we did not need to prune further.
+    \resp{We maintain the set of Pareto optimal plans at each point in the optimization. This set is significantly smaller than the set of all plans, so it represents some pruning (a point we have
+    now clarified in the paper). We found that the size of these Pareto sets is small enough that we did not need to prune further.
 
       If necessary, it is possible to sample from the Pareto optimal plans during the plan enumeration. The final selected plan may not be Pareto optimal, but this is a potential way to control the number of plans.
       To perform this approximation, we only add plans to the frontier that are non-dominated and are sufficiently different from existing plans in the frontier. The plan already in the frontier should
@@ -236,7 +250,7 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
       
   \resp{For the iterative regression impute operator, we set a predefined number of iterations as an upper bound on its execution. If the imputation converges,
   we can return immediately, otherwise we return after this upper bound is reached. This is a common approach used in iterative optimization techniques, such
-  as gradient descent.
+  as gradient descent. We've clarified this technique in the section discussing this imputation operation.
 }
 
   \item D8. Are there impute implementation that are non-blocking? Or do they always have to perform multiple passes over the data?
@@ -252,10 +266,11 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
     \resp{
       It is straightforward to compute the number of queries before we lose our advantage.
-      For example, performing full imputation on the ACS dataset takes 355 minutes (Sec. 5.3.2) and we can run a simple query in 4 seconds, so we can run approximately $5,000$ queries before taking more time than full imputation.
+      For example, performing full imputation on the ACS dataset takes 355 minutes (Sec. 5.3.2) and we can run a simple query in 4 seconds, so we can run approximately $5,000$ queries before taking more time than full imputation. We've made this point explicit in the ACS experiment section now.
       
-      The sensitivity of different values of $\alpha$ depends on the query itself. Performing a scan of values of $\alpha$ with small step sizes can return
-      a lot of the same plans for execution. In lieu of this, we extended the results section to include a subsection that presents the final frontiers for
+      The sensitivity to different values of $\alpha$ depends on the query itself. Performing a scan of values of $\alpha$ with small step sizes can return
+      a lot of the same plans for execution. We did run experiments with a range of $\alpha$ values, but instead of presenting a figure with each value of $\alpha$,
+      which can result in many duplicate plans (since different $\alpha$ values may result in the same plan), we extended the results section to include a subsection that presents the final frontiers for
       two queries, one from each dataset used during evaluation. This frontier can be exposed to the user to help in their workflow.
       
       We explored the planning times for queries with increasing number of joins by running additional experiments with up to 8 joins. 
