@@ -116,10 +116,10 @@ errors proportional to the fraction of relevant tuples retrieved and the \texttt
 
 \subsection{Results}\label{sec:results}
 
-We evaluate \ProjectName{} optimizing for quality ($\alpha=0$), optimizing for performance
+\review{We evaluate \ProjectName{} optimizing for quality ($\alpha=0$), optimizing for performance
 ($\alpha=1$), and targeting a balance of each ($\alpha = 0.5$). As a baseline, we fully impute the tables
 used by each query and then run the query on the imputed tables, simulating the process that
-an analyst would follow to apply existing imputation techniques.
+an analyst would follow to apply existing imputation techniques.}
 
 \Cref{fig:runtimes} summarizes the performance results. The quality-optimized
 queries are an order-of-magnitude faster than the baseline. We get another order-of-magnitude speedup when optimizing for performance.
@@ -169,9 +169,9 @@ We also experiment with mean-value imputation and hot
 deck imputation (\Cref{sec:imputation}). One approach to
 mean-value imputation, to facilitate non-blocking operation within the iterator
 model, is to estimate the column mean from base table histograms. In this case,
-imputations are identical no matter where the operator is placed in the query
+imputations are identical regardless of where the operator is placed in the query
 plan. Moreover, runtimes are essentially identical regardless of the value of
-$\alpha$ because the time cost of the imputation is relatively low no matter
+$\alpha$ because the time cost of the imputation is relatively low independent of
 how many tuples need to be imputed. In hot deck imputation, runtimes are also
 similar across $\alpha$, because the cost of buffering
 tuples and sampling at random is negligible compared to the rest of query
@@ -200,7 +200,7 @@ $\textsc{Penalty}$ estimate, along with the number of tuples that have been drop
 
 \Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced by the planner for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm.
 and encapsulate the possible trade-offs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
-can be exposed to the user to help in guiding their workflow.
+can be exposed to the user to guide their workflow.
 }
 
 \begin{table}

@@ -32,11 +32,20 @@ def plot_frontier():
     # damn you matplotlib
     ax.set_xlabel('')
     ax.set_ylabel('')
+    xtick_labels = ax.get_xticks().tolist()
+    xtick_labels[0] = ''
+    ax.set_xticklabels(xtick_labels)
+    
+    ytick_labels = ax.get_yticks().tolist()
+    ytick_labels[0] = ''
+    ytick_labels[-1] = ''
+    ytick_labels[-2] = ''
+    ax.set_yticklabels(ytick_labels)
 
     plt.subplots_adjust(bottom=0.2)
     fig.suptitle('Planner Pareto Frontiers', size=14)
-    fig.text(0.5, 0.04, r'$\textsc{Time}/\textsc{Max}(\textsc{Time})$', ha='center')
-    fig.text(0.04, 0.5, r'$\textsc{Penalty}$', va='center', rotation='vertical')
+    fig.text(0.5, 0.04, r'$\textsc{Time}/\textsc{Max}(\textsc{Time})$', ha='center', size=14)
+    fig.text(0.04, 0.5, r'$\textsc{Penalty}$', va='center', rotation='vertical', size=14)
     fig.savefig('figures/pareto_frontiers_plot.png')
 
 
