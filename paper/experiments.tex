@@ -124,7 +124,13 @@ used by each query and then run the query on the imputed tables, simulating the 
 an analyst would follow to apply existing imputation techniques.
 
 \textbf{Runtime vs. Base-table Imputation}\quad \Cref{fig:runtimes} summarizes the performance results. The quality-optimized
-queries are an order-of-magnitude faster than the baseline. We get another order-of-magnitude speedup when optimizing for performance.
+queries, with runtimes ranging from \runtimetreelowzero{} to \runtimetreehighzero{}, are an
+order-of-magnitude faster than the baseline, with runtimes ranging from
+\runtimetreelowbase{} to \runtimetreehighbase{}. We get another order-of-magnitude speedup when
+optimizing for performance, achieving runtimes as low as \runtimetreelowone{} to
+\runtimetreehighone{}. These speedups, ranging widely from \lowxalphazero{}x to 
+\highxalphaone{}x, depending on $\alpha$ and query, constitute significant workflow improvements
+for the analyst.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
