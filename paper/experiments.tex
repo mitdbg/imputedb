@@ -163,12 +163,12 @@ we compute tuple-wise absolute percentage deviations within each iteration of ea
 average this value over all iterations.
 Relative errors of query results, when optimizing for quality
 ($\alpha=0$), are low --- between \lowsmapealphazero{} and
-\highsmapealphazero{} --- indicating that on-the-fly imputation produces
+\highsmapealphazero{}\% --- indicating that on-the-fly imputation produces
 results similar to the baseline. When optimizing for performance ($\alpha=1$),
-relative errors can be modestly higher --- up to \highsmapealphaone{} in the
+relative errors can be modestly higher --- up to \highsmapealphaone{}\% in the
 worst case, as this approach most closely corresponds to dropping all
 \nullv{}s. Thus, it is important to recognize the tradeoffs between quality and
-performance for the specific use case.
+performance for a specific use case.
 
 \review{
 We also experiment with mean-value imputation and hot
@@ -256,13 +256,12 @@ This highlights the benefit of using our system for early data exploration.
 %\label{fig:planning-times}
 %\end{figure}
 
-Planning times for our benchmark queries are reasonable, with mean planning
-times across the benchmark queries ranging from \planninglowtime{} ms to
-\planninghightime{} ms, and ranging from \planninglowtimepct{} to
-\planninghightimepct{} as a share of total runtime.  In all cases, the
-optimizer returned a query plan within \planningmaxtime{} ms. The choice of
-$\alpha$ has no impact on planning times, because query selection is done after
-collecting the Pareto frontier.
+Planning times for our benchmark queries are reasonable, with mean planning times across the
+benchmark queries ranging from \planningtimelow{} to \planningtimehigh{}, and ranging from
+\planningtimelowpct{} to \planningtimehighpct{}\% of total runtime. In 99\% of individual
+cases, the optimizer returned a query plan with \planningtimepninetynine{}. The choice of
+$\alpha$ has no impact on planning times, because query selection is done after collecting
+the Pareto frontier.
 
 \review{
 However, \ProjectName{}'s planning algorithm is still exponential in the number of joins in the plan, and the use of Pareto sets exacerbates this exponential growth.
