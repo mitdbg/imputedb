@@ -108,10 +108,8 @@ down until she is satisfied with her query runtime. This iterative approach give
 immediate feedback.
 
 \review{
-An alternative strategy involves starting with $\alpha=1$ and iterating to lower values, as long as execution
-of the query completes within some user-defined time bound. \ProjectName{}'s planning
-algorithm can expose the final set of plans that tradeoff execution time and imputation quality, which allows
-the user to adjust their choice of $\alpha$ to uniquely select amongst these plans.
+As an alternative strategy, the analyst can start by executing their query with $\alpha=1$ and incrementally reducing $\alpha$, as long as execution of the query completes within some user-defined time bound.
+\ProjectName{}'s planning algorithm can expose the final set of plans with optimal time-quality trade-offs, which allows the user to adjust their choice of $\alpha$ to select from these plans.
 }
 
 Tens of queries later, our epidemiologist has a holistic view of the data and she has the information that she needs to construct a tailored imputation model for her queries of interest.

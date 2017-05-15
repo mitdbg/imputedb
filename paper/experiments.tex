@@ -162,7 +162,7 @@ we compute tuple-wise absolute percentage deviations within each iteration of a 
 we report this value averaged over all iterations.  We
 can see that optimizing for quality indeed reduces the SMAPE of query results.  In general, the SMAPE relative 
 to the baseline is low---\todo{update: between \lowsmapealphazero{} and
-\highsmapealphaoneexacs{} percent}---indicating that on-the-fly imputation produces results similar to the baseline. Notably, the results with largest error correspond
+\highsmapealphaoneexacs{} percent}---indicating that on-the-fly imputation produces results similar to the baseline. Notably, the results with the largest error correspond
 most closely to one existing approach of dropping all \nullv{}s.
 
 We also calculate the number of tuples used to produce each aggregate output.
@@ -177,7 +177,7 @@ By using \ProjectName{} this cost can be lowered significantly.
 
 \review{
 \Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced by the planner for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm.
-and encapsulate the possible tradeoffs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
+and encapsulate the possible trade-offs that the user can make in choosing a final plan for execution. The frontier is available at the end of the planning stage and
 can be exposed to the user to help in guiding their workflow.
 }
 
@@ -198,7 +198,7 @@ Queries optimized
 \includegraphics[scale=0.4]{figures/pareto_frontiers_plot.png}
 \caption{\review{
     \ProjectName{}'s final planner Pareto frontier for \Cref{q1} and \Cref{q6}. 
-    For clarity, we have removed from the plot plans that provide nearly indistinguishable tradeoffs in either dimension.
+    For clarity, we have removed from the plot plans that provide nearly indistinguishable trade-offs in either dimension.
 }}
 \label{fig:pareto-frontiers}
 \end{figure}

@@ -75,7 +75,7 @@ users to directly express queries on a potentially larger subset of their data.
 \textcite*{yang2015lenses} develops an incremental approach to ETL data cleaning, through the use
 of probabilistic compositional repair operators, called Lenses. These can be used
 to repair missing values by imposing data constraints such as \texttt{NOT NULL}. 
-Similarly to \ProjectName{}, they provide a way to balance between the quality of the cleaning 
+As with \ProjectName{}, they provide a way to balance between the quality of the cleaning 
 performed (expressed by the confidence of their output) and the cost of those operations. However, their 
 repairs take place on a per-tuple basis, with the non-deterministic layer of their system replacing place-holder
 variables with inferred values. In contrast, \ProjectName{} optimizes imputation at the plan-level and
@@ -96,7 +96,7 @@ In \ProjectName{}, costs are expected to grow monotonically as the size of the p
 }
 
 \subsection{Forecasting and Databases}
-\textcite*{parisi2011embedding} introduces the idea of incorporating time-series forecast operators into
+\textcite*{parisi2011embedding} introduce the idea of incorporating time-series forecast operators into
 databases, along with the necessary relational algebra extensions. Their work explores the theoretical
 properties of forecast operators and generalizes them into a family of operators, distinguished by
 the type of predictions returned. They highlight the use of forecasting for replacing missing values.
@@ -121,7 +121,7 @@ system automatically searches the space of attribute combinations/transformation
 to produce forecasts within a given accuracy threshold. Accuracy estimates are determined using
 standard techniques, such as cross-validation. 
 
-Similarly to Fa, \ProjectName{} provides a declarative language, as
+As with Fa, \ProjectName{} provides a declarative language, as
 a subset of standard SQL.\@ \ProjectName{}, however, is not searching the space of possible
 imputation models, but rather the space of query plans that incorporate imputation operators. Another major point
 of distinction between \ProjectName{} and Fa is that the latter doesn't consider trade-offs between accuracy and computation time, but rather returns the most accurate forecast (with some stopping criterion).
