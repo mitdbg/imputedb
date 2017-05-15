@@ -17,13 +17,7 @@ conducted by the CDC on a national sample of several thousand individuals~\cite{
 The data consists on survey responses, physical examinations, and laboratory
 results, amongst others.
 
-There are 6 tables in the NHANES data set. We use three tables for our experiments:
-
-\begin{itemize}
-	\item \texttt{demo}: demographic information of subjects
-	\item \texttt{exams}: physical exam results
-	\item \texttt{labs}: laboratory exam results
-\end{itemize}
+There are 6 tables in the NHANES data set. We use three tables for our experiments: demographic information of subjects (\texttt{demo}), physical exam results (\texttt{exams}), and laboratory exam results (\texttt{labs}).
 
 The original tables have a large number of attributes, in some cases providing more granular tests results or alternative metrics.
 We focus on a subset of the attributes for each table to simplify the presentation and exploration of queries.
@@ -129,10 +123,7 @@ used by each query and then run the query on the imputed tables, simulating the 
 an analyst would follow to apply existing imputation techniques.
 
 \Cref{fig:runtimes} summarizes the performance results. The quality-optimized
-queries are an order-of-magnitude faster than the baseline. We get another order-of-magnitude speedup when optimizing for performance. This performance
-differential means it is feasible
-to explore multiple imputation operations (including more expensive operators) when using
-\ProjectName{}, in contrast to the traditional approach of fully imputing the dataset.
+queries are an order-of-magnitude faster than the baseline. We get another order-of-magnitude speedup when optimizing for performance.
 
 \begin{figure}
 \includegraphics[width=\columnwidth]{figures/running_times_combined_bar.png}
