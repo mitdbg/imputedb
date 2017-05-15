@@ -13,15 +13,14 @@ then formulating queries. Furthermore, the difference in query results between t
 shown to be small in all queries considered (\lowsmapealphazero{}-\highsmapealphaone{}\% error, \Cref{sec:results}). Data analysts need not commit to a specific imputation strategy and can instead
 vary this across queries.
 
-We discuss the long history of dealing with missing data both in the statistical learning and database communities.
-Similar to existing work, we consider the impact of \nullv{} values in databases and develop a simple set of invariants to 
-successfully plan around them. In contrast to existing statistical learning work, our emphasis is not on the specific algorithm
+We discuss the long history of dealing with missing data both in the statistics and database communities.
+In contrast to existing work in statistics, our emphasis is not on the specific algorithm
 used to impute but rather on the placement of imputation steps in the execution of a query. In contrast to existing database work,
 we incorporate imputation into a cost-based optimizer and hide any details
 regarding missing values inside the system, allowing users to use traditional SQL as if the database were complete.
 While prior work has incorporated operations such as prediction into their databases, this has been domain-specific
 in some cases, and in others, operations have not been integrated into the planner. The novelty
-of our contribution lies in the formalization of missing value imputation for query planning, which results in performance
+of our contribution lies in the formalization of missing value imputation for query planning, resulting in performance
 gains over traditional approaches. This approach acknowledges that different users performing different queries on the same
 dataset will likely have varying imputation needs and that execution plans should appropriately reflect that variation.
 
