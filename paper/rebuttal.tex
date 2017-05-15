@@ -27,25 +27,25 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 \begin{itemize}[leftmargin=*]
 \item Redundant figures, excessive whitespace, formatting.
   
-  \resp{Several reviewers commented on the amount of whitespace, so we've compressed many of the figures and removed whitespace to make room for additional material.}
+  \resp{Several reviewers commented on the amount of whitespace, so we have compressed many of the figures and removed whitespace to make room for additional material.}
   
 \item \resp{
     We have improved our system since the paper was submitted by adding imputation for categorical variables.
     This has a minor impact on the experimental results.
-    It improves the ability of the regression tree model to perform imputation by making these variables available to the model.
+    It improves the ability of the regression tree model to perform imputation by making these variables available to the model. Note that this has a small impact on the results presented in the experiments section, relative
+    to the original version submitted.
   }
 
-\item \resp{We extended the original paper two additional popular imputation techniques: mean value imputation and hot-deck imputation.
+\item \resp{We extended the original paper with two additional popular imputation techniques: mean value imputation and hot-deck imputation.
 
 We added a section discussing how to construct the imputation-related functions used by our cost model, which represent the API for a new imputation operator,
-for these two new techniques and the reference technique used in the original submission (\Cref{sec:imputation})
-}
+for these two new techniques and the reference technique used in the original submission (\Cref{sec:imputation}). }
 
 \item \resp{We extended experiments to include the new operators and provide more details on results for $\alpha$ (\Cref{sec:results}). We also added the Pareto frontiers for various plans (\Cref{fig:pareto-frontiers} ) and
 explored planning times for more complex queries.}
 
 
-\item \resp{We included a new section that provides a roadmap for implementing \ProjectName{} on top of an existing database. (\Cref{sec:implementation})}
+\item \resp{We included a new section that provides a roadmap for implementing \ProjectName{} on top of an existing database (\Cref{sec:implementation}).}
 \end{itemize}
 
   \section{Reviewer 1}
@@ -56,7 +56,7 @@ explored planning times for more complex queries.}
     We extended our evaluation to include two commonly used imputation methods: mean value imputation and hot-deck imputation.
     These methods are in addition to the original imputation method (CART), which is based on regression trees.
     The regression tree model incorporates correlations between attributes, so should be able to take advantage of any functional dependencies to make better predictions.
-    Interpolation based imputation is useful for data where the ordering of tuples is significant, like time series, but is not well suited for survey data where the ordering of tuples is arbitrary.
+    Interpolation-based imputation is useful for data where the ordering of tuples is significant, like time series, but is not well suited for survey data where the ordering of tuples is arbitrary.
     
     We also added details on how to pick the cost functions that define the API for impute operators.
     We provide details on how these functions are defined for all the methods used in our evaluation.
@@ -75,6 +75,9 @@ explored planning times for more complex queries.}
       groups, which skewed the average calculation for each group significantly. For example, the average student debt for subjects with no high school degree was almost 83\% off from the estimate
       using the base table imputation, but if we look at the underlying population the former was calculated with 6 people, while the latter was with 258 people.
       
+      Note that after improving the categorical variable imputation in \ProjectName{}, the error for $\alpha=1.0$
+      with the reference imputation method is now slightly lower in Q8 (19.99\%).
+
       We can trivially extend \ProjectName{} to warn users when the query chosen for execution has a high $\textsc{Penalty}$ estimate, along with the number of tuples that have
       been dropped (after execution), so that situations such as those observed in Q8 can be identified by the user. We've added this detail to the paper (\Cref{sec:results}).
     }
@@ -84,7 +87,7 @@ explored planning times for more complex queries.}
    \resp{
      Yang's work is definitely related, and we've added it to our related work section.
    Their system helps an analyst prioritize cleaning tasks for a particular query.
-   It uses pre-trained regression models as one of a number of repair strategies for missing data rather than creating a query plan which incorporates the training and running of such models. (\Cref{subsec:missing-value})
+   It uses pre-trained regression models as one of a number of repair strategies for missing data rather than creating a query plan which incorporates the training and running of such models (\Cref{subsec:missing-value}).
    }
 
  \item S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach between 0 and 24 percent" 24 percent error is pretty bad.
@@ -104,12 +107,12 @@ explored planning times for more complex queries.}
 
   \item S3.4.1, Definition 2: On my first read-through, I was puzzled about why there was no plan with zero-loss. It would help to clarify that Loss is not about tuple loss, but rather a heuristic penalty function.
 
-    \resp{We have clarified this in the paper (\Cref{sec:cost-model}) by emphasizing that \textit{Loss} is not a loss in the statistical sense or in the tuple loss sense and by renaming it to $\textsc{Penalty}$.}
+    \resp{We have clarified this in the paper (\Cref{sec:cost-model}) by emphasizing that \textit{Loss} is not a loss in the statistical sense or in the tuple loss sense and renaming it to $\textsc{Penalty}$.}
 
   \item S3.4.3: An extremely nice emergent property from the L-value function for the imputation operator seems to be that the operator will be moved to a position in the plan where it has access to the maximum training data. I am slightly concerned that by focusing entirely on size, this might lead to skew in the training set. For example, consider a one-to-many join \verb/µ(R) |X| S/. Your optimization algorithm would likely wish to move imputation up: \verb/µ(R |X| S)/. Yes, there is more training data, but if the fanout for each tuple is skewed, some tuples in R will become over-represented in the join result. A similar observation holds for selection. For example take your Q8, where the conditions "studentdebtowe $>$ 0 AND schooldegree $\geq$ 0" presumably indicate invalid data that should not be used for training. (is this perhaps why you have so much error for full imputation on Q8?)
 
-    \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the query requires the construction a large, skewed data set. The problem seems to be particular to queries which generate large intermediate tables. In some cases, as when joining two datasets, the intermediate table is a good target for training because it exposes correlations which would be hidden in the separate tables. In other cases, this intermediate table is large and skewed, which causes problems for imputation. 
-    
+    \resp{This is a reasonable concern. Though often an appropriate proxy, optimizing for the maximum training set is flawed when the query constructs a large, skewed data set. The problem seems to be particular to queries which generate large intermediate tables. In some cases, as when joining two datasets, the intermediate table is a good target for training because it exposes correlations which would be hidden in the separate tables. In other cases, this intermediate table is large and skewed, which causes problems for imputation. 
+
       Avoiding this case requires us to estimate the skew in these intermediate tables, which is an area that traditional query optimizers struggle with as well.
       However, if we had improved intermediate estimates, we could incorporate them to improve our system.
       }
@@ -121,8 +124,8 @@ explored planning times for more complex queries.}
 
   \item S3.4.4: "Drop is a special case of a sequential scan, and its time complexity can be expressed as a function of the number of heap pages read and the I/O cost per page." seems to suggest that drop is implemented as a blocking operator. Why not just take the same approach as selection and treat it as having negligible cost?
     
-    \resp{We mistakenly suggest in S3 that we treat \textit{Drop} as a blocking operator. In
-      our implementation, it has $0$ cost, and we have updated the text to reflect that.}
+    \resp{We mistakenly suggested in the original submission that we treated \textit{Drop} as a blocking operator.
+    In our implementation, it has $0$ cost, and we have updated the text to reflect that (\Cref{sec:query-runtime}).}
 
   \item S4: All of the workload queries are (data-size-independent) AVG queries. What about other types of aggregates (e.g., SUM, COUNT)?
 
@@ -146,7 +149,7 @@ explored planning times for more complex queries.}
 
   \item There are a number of opportunities for trimming in the figures, tables, and algorithms: Algorithms 1-3 could be compacted a bunch, Table 1 is full of whitespace (e.g., make it a 3-column {figure*}), Tables 1-2 could also be summarized as CDFs, Figure 6 is full of whitespace, Table 3 could be put queries on a single row (e.g., Q1 would easily fit on 1 line), and the references have a lot of redundant information (URLs, for example).
 
-    \resp{We have compacted the algorithms and tables. Note that Tables 1-2 show the percentage of missing values for \emph{each attribute}, not as an overall percentage, so cannot be summarized as CDFs. We think that the URLs add value to the references, particularly for data sets.}
+    \resp{We have compacted the algorithms and tables. Note that \Cref{table:nhanes-description, table:fcc-description} 1-2 show the percentage of missing values for \emph{each attribute}, not as an overall percentage, so cannot be summarized as CDFs. We think that the URLs add value to the references, particularly for data sets.}
   \end{itemize}
 
   \section{Reviewer 2}
@@ -192,7 +195,7 @@ explored planning times for more complex queries.}
   \item W3. More experiments needed.
   
   \resp{
-  We've extended the evaluation section to include more impute operators and an evaluation of planning times.
+  We've extended the evaluation section to include more impute operators and an evaluation of planning times (\Cref{sec:results}).
   }
 
   \item D1. Section 3, which is the meat of the paper, is very overloaded, without getting in depth in various parts of the system. It definitely should be split in more sections, and more details should be given. In particular:
@@ -202,8 +205,8 @@ explored planning times for more complex queries.}
     
     \resp{
     We've broken up this section and consolidated algorithm notation. The cardinality estimation section provides more detail about the algorithm. We also
-    added intuition for how the heuristic Penalty (a renaming of Loss, for clarity) and Time should be designed. We walk through these definitions for three different
-    impute operators.
+    added intuition for how the heuristic \textsc{Penalty} (a renaming of Loss, for clarity) and \textsc{Time} should be designed. We walk through these definitions for three different
+    impute operators (\Cref{sec:quality} and \Cref{sec:query-runtime}).
     }
 
   \item D2. It would be nice to show how exactly your approach can be implemented in an existing optimizer. This comes up in various places in the paper:
@@ -227,7 +230,7 @@ explored planning times for more complex queries.}
 
     \resp{In our intended usage, the user starts by running with $\alpha = 0$ and increases $\alpha$ if the query takes too long to complete.
      
-     We agree that having a way of providing an estimate on error, based on $\alpha$, would be both useful and interesting to develop.
+     We agree that having a way of providing an estimate of error, based on $\alpha$, would be both useful and interesting to develop.
      Providing error estimates further requires a reasonable notion of ground-truth. For evaluation, we've used the values imputed on the 
      tables when applying whole-table imputation. Based on our evaluation, higher values of $\alpha$ correctly identify increased error
      within a query, however, extending that to be predictive is not something we implemented in the current system.
@@ -255,7 +258,7 @@ explored planning times for more complex queries.}
     \item D7. When defining the cost of impute operator, how do you know a priori the number of iterations for the algorithm (given it has to converge)?
       
   \resp{For the iterative regression impute operator, we set a predefined number of iterations as an upper bound on its execution. If the imputation converges,
-  we can return immediately, otherwise we return after this upper bound is reached. This is a common approach used in iterative optimization techniques, such
+  we can return immediately, otherwise we return when this upper bound is reached. This is a common approach used in iterative optimization techniques, such
   as gradient descent. We've clarified this technique in the section discussing this imputation operation (\Cref{subsubsec:decision-trees}).
 }
 
@@ -276,14 +279,14 @@ explored planning times for more complex queries.}
       
       The sensitivity to different values of $\alpha$ depends on the query itself. Performing a scan of values of $\alpha$ with small step sizes can return
       a lot of the same plans for execution. We did run experiments with a range of $\alpha$ values, but instead of presenting a figure with each value of $\alpha$,
-      which can result in many duplicate plans (since different $\alpha$ values may result in the same plan), we extended the results section to include a subsection that presents the final frontiers for
-      two queries, one from each dataset used during evaluation. This frontier can be exposed to the user to help in their workflow.
+      which can result in many duplicate plans, we extended the results section to include the final frontiers for
+      two queries from our benchmarks. This frontier can be exposed to the user to help in their workflow.
       
-     The current set of results have been extended to show an additional intermediate $\alpha$ value.
+     The current set of results have also been extended to show an additional intermediate $\alpha$ value.
       
       We explored the planning times for queries with increasing number of joins by running additional experiments with up to 8 joins. 
       The standard algorithm presented in the original version submitted handles
-      up to 5 joins, with columns requiring imputation in all tables, with planning time of approximately one second or less. We added a small optimization to help reduce
+      up to 5 joins, with columns requiring imputation in all tables, with planning times of approximately one second or less. We added a small optimization to help reduce
       planning times for a larger number of joins. We maintain an approximation of the Pareto sets, rather than the exact set, by only adding non-dominated plans that
       are sufficiently different. This optimization reduces planning time linearly with respect to the reduction in the size of the final frontier. Users can increase
       the level of approximation to reduce planning times further.}
@@ -308,7 +311,6 @@ explored planning times for more complex queries.}
       Our cost functions are monotonic, which allows us to use a simpler optimizer than what Tummer \& Koch propose.
     We have added a discussion of their work to the related works section (\Cref{sec:relatedwork}).}
 
-\item Could be interesting for the optimizer to pick imputation strategy based on the type of the query.
   \end{itemize}
 \end{document}
 %%% Local Variables:
