@@ -82,7 +82,7 @@ interesting joins and aggregates. Our aim was to craft meaningful queries that w
 provide performance figures relevant to practitioners using similar datasets.
 \review{
 Our benchmark queries performed well for both cases of \texttt{AVG} and \texttt{COUNT} aggregates, 
-so we expect \ProjectName{} would provide similar performance for \texttt{SUM}, with 
+so we expect \ProjectName{} to perform similarly for \texttt{SUM}, with 
 errors proportional to the fraction of relevant tuples retrieved and the \texttt{AVG} value estimated.}
 
 %Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
@@ -189,7 +189,7 @@ table histograms. Therefore, imputed values are identical no matter where the op
 placed in the query plan (relative errors are $0$). Runtimes are in the range of
 \runtimemeanlow{} to \runtimemeanhigh{} for queries using \ProjectName{}, as compared to
 \runtimemeanlowbase{} to \runtimemeanhighbase{} when imputing on the base table.  Here, the
-time cost of the imputation is relatively low no matter how many tuples need to be imputed.  
+time cost of the imputation is low no matter how many tuples need to be imputed.  
 
 In hot deck imputation, runtimes are also similar across $\alpha$, ranging from
 \runtimehotdecklow{} to \runtimehotdeckhigh{} using dynamic imputation, as compared to
