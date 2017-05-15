@@ -25,14 +25,15 @@ In our draft, new or significantly changed text is highlighted in {\color{blue}b
 
 \section{Overall changes}
 \begin{itemize}[leftmargin=*]
-\item Redundant figures, excessive whitespace, formatting.
-  
-  \resp{Several reviewers commented on the amount of whitespace, so we've compressed many of the figures and removed whitespace to make room for additional material.}
+\item \resp{
+    Several reviewers commented on redundant figures, excessive whitespace, and
+    formatting, so we've compressed many of the figures and removed whitespace to make room for additional material.
+}
   
 \item \resp{
     We have improved our system since the paper was submitted by adding imputation for categorical variables.
     This has a minor impact on the experimental results.
-    It improves the ability of the regression tree model to perform imputation by making these variables available to the model.
+    It improves the ability of the decision tree model to perform imputation by making these variables available to the model.
   }
 
 \item \resp{We extended the original paper two additional popular imputation techniques: mean value imputation and hot-deck imputation.
@@ -54,8 +55,8 @@ explored planning times for more complex queries.}
   
   \resp{
     We extended our evaluation to include two commonly used imputation methods: mean value imputation and hot-deck imputation.
-    These methods are in addition to the original imputation method (CART), which is based on regression trees.
-    The regression tree model incorporates correlations between attributes, so should be able to take advantage of any functional dependencies to make better predictions.
+    These methods are in addition to the original imputation method which is based on decision trees.
+    The decision tree model incorporates correlations between attributes, so should be able to take advantage of any functional dependencies to make better predictions.
     Interpolation based imputation is useful for data where the ordering of tuples is significant, like time series, but is not well suited for survey data where the ordering of tuples is arbitrary.
     
     We also added details on how to pick the cost functions that define the API for impute operators.
@@ -87,7 +88,7 @@ explored planning times for more complex queries.}
    It uses pre-trained regression models as one of a number of repair strategies for missing data rather than creating a query plan which incorporates the training and running of such models. (\Cref{subsec:missing-value})
    }
 
- \item S1: "Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach between 0 and 24 percent" 24 percent error is pretty bad.
+ \item S1: ``Furthermore, the results obtained with this approach are similar in quality to those obtained with the traditional imputation approach between 0 and 24 percent" 24 percent error is pretty bad.
 
    \resp{See the response to W3 for discussion of Q8.}
 
@@ -119,7 +120,7 @@ explored planning times for more complex queries.}
 
     \resp{Agreed. Our database stores tables in files, so our plans are I/O bound, but a database which uses an in-memory representation will need a different Time() function. We have clarified this in the paper (\Cref{sec:query-runtime}).}
 
-  \item S3.4.4: "Drop is a special case of a sequential scan, and its time complexity can be expressed as a function of the number of heap pages read and the I/O cost per page." seems to suggest that drop is implemented as a blocking operator. Why not just take the same approach as selection and treat it as having negligible cost?
+  \item S3.4.4: ``Drop is a special case of a sequential scan, and its time complexity can be expressed as a function of the number of heap pages read and the I/O cost per page." seems to suggest that drop is implemented as a blocking operator. Why not just take the same approach as selection and treat it as having negligible cost?
     
     \resp{We mistakenly suggest in S3 that we treat \textit{Drop} as a blocking operator. In
       our implementation, it has $0$ cost, and we have updated the text to reflect that.}
@@ -146,7 +147,7 @@ explored planning times for more complex queries.}
 
   \item There are a number of opportunities for trimming in the figures, tables, and algorithms: Algorithms 1-3 could be compacted a bunch, Table 1 is full of whitespace (e.g., make it a 3-column {figure*}), Tables 1-2 could also be summarized as CDFs, Figure 6 is full of whitespace, Table 3 could be put queries on a single row (e.g., Q1 would easily fit on 1 line), and the references have a lot of redundant information (URLs, for example).
 
-    \resp{We have compacted the algorithms and tables. Note that Tables 1-2 show the percentage of missing values for \emph{each attribute}, not as an overall percentage, so cannot be summarized as CDFs. We think that the URLs add value to the references, particularly for data sets.}
+    \resp{We have compacted the algorithms, tables, and references as possible. Note that Tables 1-2 show the percentage of missing values for \emph{each attribute}, not as an overall percentage, so cannot be summarized as CDFs. We think that the URLs add value to the references, particularly for data sets.}
   \end{itemize}
 
   \section{Reviewer 2}
@@ -214,7 +215,7 @@ explored planning times for more complex queries.}
    \resp{
    We've added a section (\Cref{sec:implementation}) that describes in detail the components that need to be added to an existing database system to implement our technique. 
    The details come directly from our implementation of \ProjectName{} on top of SimpleDB, a popular teaching database used at MIT, University of Washington, and Northwestern University, 
-   amongst others. These extensions could further exploit any existing sophistication in the underlying system for tasks such as execution cost estimates.
+   among others. These extensions could further exploit any existing sophistication in the underlying system for tasks such as execution cost estimates.
    
    Extending a rule-based optimizer to perform dynamic imputation would certainly be an interesting idea. However, the planning algorithm presented benefits from the tight
    interaction between traditional query planning and imputation operator placement. The latter can influence aspects such as join ordering and cardinality estimates for subplans.
