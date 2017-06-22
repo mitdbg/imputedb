@@ -184,3 +184,5 @@ auto/
 /.metadata/
 /.recommenders/
 _region_.tex
+
+.DS_Store
