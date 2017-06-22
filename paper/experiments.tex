@@ -26,20 +26,22 @@ For readability, we have replaced the NHANES attribute names with self-explanato
 
 \begin{table*}
   \centering
+  \captionsetup{labelfont=bf}
+  \caption{Percentage of values missing in the CDC NHANES 2013--2014 data.}\label{table:nhanes-description}
+  \captionsetup{labelfont=up}
   \begin{subtable}{0.3\textwidth}
     \centering
-    \input{tables/cdc_demo}
     \caption{Demographics (\texttt{demo}). \demorows{} rows.}
+    \input{tables/cdc_demo}
   \end{subtable}\quad\begin{subtable}{0.3\textwidth}
     \centering
-    \input{tables/cdc_labs}
     \caption{Laboratory Results (\texttt{labs}). \labexrows{} rows.}
+    \input{tables/cdc_labs}
   \end{subtable}\quad\begin{subtable}{0.3\textwidth}
     \centering
-    \input{tables/cdc_exams}
     \caption{Physical Results (\texttt{exams}). \labexrows{} rows.}
+    \input{tables/cdc_exams}
   \end{subtable}
-  \caption{Percentage of values missing in the CDC NHANES 2013--2014 data.}\label{table:nhanes-description} 
 \end{table*}
 
 \subsubsection{freeCodeCamp 2016 New Coder Survey}
@@ -61,8 +63,9 @@ with the percentage of missing values.
 
 \begin{table}
   \centering
+  \captionsetup{labelfont=bf}
+  \caption{Percentage of values missing in the freeCodeCamp Survey data (\texttt{fcc}).}\label{table:fcc-description}
   \input{tables/fcc}
-  \caption{Percentage of values missing in the freeCodeCamp Survey data (\texttt{fcc}).}\label{table:fcc-description} 
 \end{table}
 
 \subsubsection{American Community Survey}
@@ -101,9 +104,9 @@ errors proportional to the fraction of relevant tuples retrieved and the \texttt
 
 \begin{table*}
   \centering
-  \input{queries}
-  \vspace{1ex}
+  \captionsetup{labelfont=bf}
   \caption{Queries used in our experiments.}\label{tbl:queries}
+  \input{queries}
 \end{table*}
 
 %\begin{table*}
@@ -218,17 +221,17 @@ and encapsulate the possible trade-offs that the user can make in choosing a fin
 can be exposed to the user to guide their workflow.
 
 \begin{table}
-\centering
-\input{tables/perf_summary.tex}
-\caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$ parameterizations, as compared to the baseline.
-Queries optimized
+  \centering
+  \captionsetup{labelfont=bf}
+  \caption{Symmetric-Mean-Absolute-Percentage-Error for queries run under different $\alpha$ parameterizations, as compared to the baseline.
+    Queries optimized
     for quality ($\alpha=0$) generally achieve lower error than queries optimized for
     efficiency ($\alpha=1$). With ($\alpha=0.5$), an intermediate plan may be chosen if
     available.
     The count fraction column shows the number of tuples used in calculating each aggregate
-     as a fraction of the number of tuples used when running the same query after imputing on the base table.
-    A lower count share reflects more potential for errors.}
-\label{table:smape}
+    as a fraction of the number of tuples used when running the same query after imputing on the base table.
+    A lower count share reflects more potential for errors.}\label{table:smape}
+  \input{tables/perf_summary.tex}
 \end{table}
 
 \begin{figure}

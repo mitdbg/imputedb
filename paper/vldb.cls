@@ -1389,9 +1389,9 @@
 \global\boilerplate={This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.  To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.  For any use beyond those covered by this license, obtain permission by emailing info@vldb.org.}
 
 \global\conf{Proceedings of the VLDB Endowment,}
-\global\confinfo{Vol. 10, No. 7}
+\global\confinfo{Vol. 10, No. 11}
 \newtoks\copyrightetc
-\global\copyrightetc{Copyright 2017 VLDB Endowment 2150-8097/17/03}
+\global\copyrightetc{Copyright 2017 VLDB Endowment 2150-8097/17/07}
 
 %% Uncomment for camera ready
 \toappear{\the\boilerplate\par
