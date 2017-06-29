@@ -20,7 +20,6 @@ public class Parser {
     
     public Parser(double alpha, boolean imputeAtBase) {
         this(x -> new ImputedLogicalPlan(alpha, imputeAtBase));
-        System.out.println("==> Using parser with alpha=" + alpha + " impute at base=" + imputeAtBase);
     }
 
     public Parser() {
@@ -611,97 +610,38 @@ public class Parser {
             "group by", "max(", "min(", "avg(", "count", "rollback", "commit",
             "insert", "delete", "values", "into" };
 
-    public static void main(String argv[]) throws IOException {
-        if (argv.length < 1 || argv.length > 7) {
-            System.out.println("Invalid number of arguments.\n" + usage);
-            System.exit(0);
-        }
-
-
-        List<String> cleanArgs = new ArrayList<>();
-        double alpha = 0.0;
-        boolean imputeAtBase = false;
-
-        for(int i = 0; i < argv.length; i++) {
-            String arg = argv[i];
-            if (arg.equals("--base")) {
-                imputeAtBase = true;
-            } else if (arg.equals("--alpha")) {
-                i++;
-                String alphaStr = argv[i];
-                alpha = Double.parseDouble(alphaStr);
-            } else {
-                cleanArgs.add(arg);
-            }
-        }
-
-        Parser p = new Parser(alpha, imputeAtBase);
-        p.start(cleanArgs.toArray(new String[0]));
-    }
-
     static final String usage = "Usage: parser catalogFile [-explain] [-f queryFile] [--alpha <double>] [--base]";
 
     protected void shutdown() {
         System.out.println("Bye");
     }
 
-    protected boolean interactive = true;
+    protected int start(File catalogFile, Boolean shouldExplain) {
+        explain = shouldExplain;
 
-    protected void start(String[] argv) throws IOException {
         // first add tables to database
-        Database.getCatalog().loadSchema(argv[0]);
+        Database.getCatalog().loadSchema(catalogFile.toString());
         TableStats.computeStatistics();
 
-        String queryFile = null;
-
-        if (argv.length > 1) {
-            for (int i = 1; i < argv.length; i++) {
-                if (argv[i].equals("-explain")) {
-                    explain = true;
-                    System.out.println("Explain mode enabled.");
-                } else if (argv[i].equals("-f")) {
-                    interactive = false;
-                    if (i++ == argv.length) {
-                        System.out.println("Expected file name after -f\n"
-                                + usage);
-                        System.exit(0);
-                    }
-                    queryFile = argv[i];
-
-                } else {
-                    System.out.println("Unknown argument " + argv[i] + "\n "
-                            + usage);
-                }
-            }
+        ConsoleReader reader;
+        try {
+            reader = new ConsoleReader();
+        } catch (IOException e) {
+            System.err.println("Error: opening console failed.");
+            return 1;
         }
-        if (!interactive) {
-            try {
-                // curtrans = new Transaction();
-                // curtrans.start();
-                long startTime = System.currentTimeMillis();
-                processNextStatement(new FileInputStream(new File(queryFile)));
-                long time = System.currentTimeMillis() - startTime;
-                System.out.printf("----------------\n%.2f seconds\n\n",
-                        ((double) time / 1000.0));
-                System.out.println("Press Enter to exit");
-                System.in.read();
-                this.shutdown();
-            } catch (FileNotFoundException e) {
-                System.out.println("Unable to find query file" + queryFile);
-                e.printStackTrace();
-            }
-        } else { // no query file, run interactive prompt
-            ConsoleReader reader = new ConsoleReader();
 
-            // Add really stupid tab completion for simple SQL
-            ArgumentCompletor completor = new ArgumentCompletor(
-                    new SimpleCompletor(SQL_COMMANDS));
-            completor.setStrict(false); // match at any position
-            reader.addCompletor(completor);
+        // Add really stupid tab completion for simple SQL
+        ArgumentCompletor completor = new ArgumentCompletor(
+                new SimpleCompletor(SQL_COMMANDS));
+        completor.setStrict(false); // match at any position
+        reader.addCompletor(completor);
 
-            StringBuilder buffer = new StringBuilder();
-            String line;
-            boolean quit = false;
+        StringBuilder buffer = new StringBuilder();
+        String line;
+        boolean quit = false;
+
+        try {
             while (!quit && (line = reader.readLine("SimpleDB> ")) != null) {
                 // Split statements at ';': handles multiple statements on one
                 // line, or one
@@ -735,7 +675,12 @@ public class Parser {
                     buffer.append("\n");
                 }
             }
+        } catch (IOException e) {
+            System.err.println("Error: Reading from console failed.");
+            return 1;
         }
+
+        return 0;
     }
 }
 

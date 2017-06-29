@@ -59,13 +59,14 @@ public class TableStats {
     public static void computeStatistics() {
         Iterator<Integer> tableIt = Database.getCatalog().tableIdIterator();
 
-        System.out.println("Computing table stats.");
+        System.err.print("Computing table stats.");
         while (tableIt.hasNext()) {
             int tableid = tableIt.next();
             TableStats s = new TableStats(tableid, IOCOSTPERPAGE);
             setTableStats(Database.getCatalog().getTableName(tableid), s);
+            System.err.print('.');
         }
-        System.out.println("Done.");
+        System.err.println(" done.");
     }
 
     /**
