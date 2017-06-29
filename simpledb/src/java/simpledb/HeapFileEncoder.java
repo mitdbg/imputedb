@@ -137,10 +137,17 @@ public class HeapFileEncoder {
 		boolean ignoredFields = false;
 		ArrayList<String> fields = new ArrayList<>();
 		for (String key : types.keySet()) {
-			if (Type.INT_TYPE.equals(types.get(key))) {
+			Type type = types.get(key);
+			if (Type.INT_TYPE.equals(type)) {
 				fields.add(key);
 			} else {
-				System.err.format("Warning: Ignoring field %s.\n", key);
+				String typeStr;
+				if (type == null) {
+					typeStr = "mixed types";
+				} else {
+					typeStr = type.toString();
+				}
+				System.err.format("Warning: Ignoring field %s (%s).\n", key, typeStr);
 				ignoredFields = true;
 			}
 		}
