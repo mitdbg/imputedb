@@ -124,7 +124,6 @@ public class LogicalPlan {
         if (j1.tableAlias.equals(j2.tableAlias))
             throw new ParsingException("Cannot join on two fields from same table");
         LogicalJoinNode lj = new LogicalJoinNode(j1.tableAlias, j2.tableAlias, j1.attrName, j2.attrName, pred);
-        System.out.println("Added join between " + joinField1 + " and " + joinField2);
         joins.addElement(lj);
     }
 
@@ -143,7 +142,6 @@ public class LogicalPlan {
     public void addJoin( String joinField1, DbIterator joinField2, Predicate.Op pred) throws ParsingException {
         QualifiedName j = disambiguateName(joinField1);
         LogicalSubplanJoinNode lj = new LogicalSubplanJoinNode(j.tableAlias, j.attrName, joinField2, pred);
-        System.out.println("Added subplan join on " + joinField1);
         joins.addElement(lj);
     }
 
@@ -154,7 +152,6 @@ public class LogicalPlan {
     */
 
     public void addScan(int table, String name) {
-        System.out.println("Added scan of table " + name);
         tables.addElement(new LogicalScanNode(table,name));
         tableMap.put(name,table);
     }
@@ -167,10 +164,6 @@ public class LogicalPlan {
     */
     public void addProjectField(String fname, String aggOp) throws ParsingException {
         QualifiedName f = disambiguateName(fname);
-        System.out.println("Added select list field " + fname);
-        if (aggOp != null) {
-            System.out.println("\t with aggregator " + aggOp);
-        }
         selectList.addElement(new LogicalSelectListNode(aggOp, f.toString()));
     }
     

@@ -464,8 +464,6 @@ public class Parser {
             curtrans.commit();
             curtrans = null;
             inUserTrans = false;
-            System.out.println("Transaction " + curtrans.getId().getId()
-                    + " committed.");
         } else if (s.getStmtType().equals("ROLLBACK")) {
             if (curtrans == null)
                 throw new simpledb.ParsingException(
@@ -483,8 +481,6 @@ public class Parser {
             curtrans = new Transaction();
             curtrans.start();
             inUserTrans = true;
-            System.out.println("Started a new transaction tid = "
-                    + curtrans.getId().getId());
         } else {
             throw new simpledb.ParsingException("Unsupported operation");
         }
