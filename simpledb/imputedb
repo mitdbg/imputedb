@@ -1,3 +1,10 @@
 #!/bin/sh
 
-java -jar dist/simpledb.jar $@
+IMPUTEDB_PATH="$(dirname "$0")/dist/simpledb.jar"
+
+if [ ! -e "$IMPUTEDB_PATH" ]; then
+    echo "ImputeDB has not been built! Try running 'ant'."
+    exit 1
+fi
+
+java -jar $IMPUTEDB_PATH $@
