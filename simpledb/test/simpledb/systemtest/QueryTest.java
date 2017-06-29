@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import simpledb.BufferPool;
@@ -93,6 +94,7 @@ public class QueryTest {
 	 * and there are too many tables for a brute-force search of all possible query plans.
 	 */
 	// Not required for Lab 4
+	@Ignore
 	@Test(timeout=600000) public void largeJoinTest() throws IOException, DbException, TransactionAbortedException {
 		final int IO_COST = 103;
 						
