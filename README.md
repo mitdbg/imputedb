@@ -1,4 +1,4 @@
-# ImputeDB #
+# ImputeDB [![Build Status](https://travis-ci.org/jfeser/ImputeDB.svg?branch=master)](https://travis-ci.org/jfeser/ImputeDB)
 
 ImputeDB is a SQL database which automatically imputes missing data on-the-fly.
 Users can issue SQL queries over data with NULL values and ImputeDB will use a regression model to fill in the missing values during the execution of the query.
