@@ -1,9 +1,6 @@
 package simpledb;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 
@@ -137,6 +134,25 @@ public class Catalog {
     /** Delete all tables from the catalog */
     public void clear() {
         tables.clear();
+    }
+
+    /**
+     * Writes a catalog to disk as a catalog file.
+     * @param catalogFile
+     */
+    public void dumpSchema(File catalogFile) {
+        try (PrintWriter wr = new PrintWriter(new FileWriter(catalogFile))) {
+            for (TableInfo table : tables.values()) {
+                ArrayList<String> tdStrs = new ArrayList<>();
+                for (TDItem ti : table.file.getTupleDesc()) {
+                    tdStrs.add(String.format("%s %s", ti.fieldName, ti.fieldType.toString()));
+                }
+                String tdStr = String.join(", ", tdStrs);
+                wr.format("%s(%s)\n", table.name, tdStr);
+            }
+        } catch (IOException e) {
+            System.err.format("Error: Failed to write catalog file: %s\n", catalogFile);
+        }
     }
     
     /**

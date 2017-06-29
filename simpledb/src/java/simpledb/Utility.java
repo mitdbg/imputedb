@@ -179,5 +179,12 @@ public class Utility {
         }
         return out;
     }
+
+    public static String stripSuffix(String s, String suffix) {
+        if (s.endsWith(suffix)) {
+            return s.substring(0, s.length() - suffix.length());
+        }
+        return s;
+    }
 }
 

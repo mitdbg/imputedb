@@ -8,10 +8,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.cli.*;
 
@@ -156,19 +153,19 @@ imputationMethod);
                 .desc(String.format("the level of imputation (default: %s)", defaultAlpha))
                 .build());
         options.addOption(Option.builder()
-                .longOpt("catalog")
-                .argName("file")
+                .longOpt("db")
+                .argName("path")
                 .hasArg()
                 .required()
                 .type(File.class)
-                .desc("the catalog file describing the tables in the database")
+                .desc("the directory which contains the database")
                 .build());
 
 	    CommandLineParser parser = new DefaultParser();
 	    try {
 	        CommandLine line = parser.parse(options, args);
             double alpha = Double.parseDouble(line.getOptionValue("alpha", defaultAlpha));
-            File catalogFile = new File(line.getOptionValue("catalog"));
+            File catalogFile = new File(line.getOptionValue("db") + "/catalog.txt");
 
             Parser sqlParser = new Parser(alpha, false);
             return sqlParser.start(catalogFile, false);
@@ -181,88 +178,118 @@ imputationMethod);
 	}
 
 	private static int print(String[] args) throws DbException, TransactionAbortedException {
-		if (args.length != 3) {
-            System.out.println("Usage: simpledb print FILE NUM_COLUMNS");
-            return 1;
-        }
+        Options options = new Options();
+        options.addOption(Option.builder()
+            .longOpt("table")
+            .argName("name")
+            .hasArg()
+            .required()
+            .type(String.class)
+            .desc(String.format("the table to print"))
+            .build());
+        options.addOption(Option.builder()
+            .longOpt("catalog")
+            .argName("file")
+            .hasArg()
+            .required()
+            .type(File.class)
+            .desc("the catalog file describing the tables in the database")
+            .build());
 
-		File tableFile = new File(args[1]);
-		int columns = Integer.parseInt(args[2]);
-		DbFile table = Utility.openHeapFile(columns, tableFile);
+        CommandLineParser parser = new DefaultParser();
+        try {
+            CommandLine line = parser.parse(options, args);
+            String tableName = line.getOptionValue("table");
+            File catalogFile = new File(line.getOptionValue("catalog"));
 
-		TransactionId tid = new TransactionId();
-		DbFileIterator it = table.iterator(tid);
-		if (null == it) {
-            System.out.println("Error: method HeapFile.iterator(TransactionId tid) not yet implemented!");
-            return 1;
-        } else {
+            Catalog catalog = Database.getCatalog();
+            catalog.loadSchema(catalogFile.toString());
+            DbFile table = catalog.getDatabaseFile(catalog.getTableId(tableName));
+
+            TransactionId tid = new TransactionId();
+            DbFileIterator it = table.iterator(tid);
             it.open();
             while (it.hasNext()) {
                 Tuple t = it.next();
                 System.out.println(t);
             }
             it.close();
+            return 0;
+        } catch (org.apache.commons.cli.ParseException exp) {
+            System.err.println(exp.getMessage());
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("simpledb print", options);
+            return 1;
         }
-        return 0;
 	}
 
-	private static int load(String[] args) throws IOException {
-		BufferedReader in = null;
-		BufferedOutputStream out = null;
-		try {
-            if (args.length < 3 || args.length > 5) {
-                System.err.println("Usage: simpledb convert FILE NUM_COLUMNS");
-                System.err.println("Usage: simpledb convert FILE NUM_COLUMNS TYPE_STRING [FIELD_SEP]");
-                System.exit(-1);
+	private static int load(String[] args) {
+	    String nullStringsDefault = "#N/A,#NA,-1.#IND,-1.#QNAN,-NaN,-nan,1.#IND,1.#QNAN,N/A,NA,NULL,NaN,nan";
+
+        Options options = new Options();
+        options.addOption(Option.builder()
+                .longOpt("null-strings")
+                .argName("strings")
+                .hasArg()
+                .type(String.class)
+                .desc(String.format("strings which will be treated as null values (default: %s)",
+                        nullStringsDefault))
+                .build());
+        options.addOption(Option.builder()
+                .longOpt("db")
+                .argName("path")
+                .hasArg()
+                .required()
+                .type(File.class)
+                .desc("the directory to write the new database tables in")
+                .build());
+
+        CommandLineParser parser = new DefaultParser();
+
+        try {
+            CommandLine line = parser.parse(options, args);
+            File outDir = new File(line.getOptionValue("db"));
+            File catalogFile = new File(outDir.toString() + "/catalog.txt");
+
+            Set<String> nullStrings = new HashSet<>();
+            for (String s : line.getOptionValue("null-strings", nullStringsDefault).split(",")) {
+                nullStrings.add(s);
             }
+            String[] inputFiles = line.getArgs();
 
-            File inFile = new File(args[1]);
-            if (!inFile.canRead()) {
-                System.err.format("Cannot read input file: %s", inFile);
-                System.exit(-1);
-            }
-            in = new BufferedReader(new FileReader(args[1]));
+            Catalog catalog = new Catalog();
 
-            out = new BufferedOutputStream(System.out);
+            for (String fileStr : inputFiles) {
+                File inFile = new File(fileStr);
 
-            int numOfAttributes = Integer.parseInt(args[2]);
-            Type[] ts = new Type[numOfAttributes];
-            char fieldSeparator = ',';
-
-            if (args.length == 3)
-                for (int i = 0; i < numOfAttributes; i++)
-                    ts[i] = Type.INT_TYPE;
-            else {
-                String typeString = args[3];
-                String[] typeStringAr = typeString.split(",");
-                if (typeStringAr.length != numOfAttributes) {
-                    System.err.println("The number of types does not agree with the number of columns");
-                    return 1;
+                if (!inFile.getPath().endsWith(".csv")) {
+                    System.err.format("Error: Expected a CSV file: %s\n", inFile);
+                    continue;
                 }
-                int index = 0;
-                for (String s : typeStringAr) {
-                    try {
-                        ts[index++] = Type.ofString(s);
-                    } catch (ParseException ex) {
-                        System.err.println(ex.getMessage());
-                        return 1;
-                    }
+
+                String tableName = Utility.stripSuffix(inFile.getName(), ".csv");
+                File outFile = new File(outDir.toString() + "/" + tableName + ".dat");
+
+                try (
+                    BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outFile))
+                ) {
+                    TupleDesc desc = HeapFileEncoder.convert(inFile, out, BufferPool.getPageSize(), ',', nullStrings);
+                    catalog.addTable(new HeapFile(outFile, desc), tableName);
+                } catch (IOException e) {
+                    System.err.format("Error: Processing file failed: %s\n", inFile);
+                    e.printStackTrace(System.err);
+                    continue;
                 }
-                if (args.length == 5)
-                    fieldSeparator = args[4].charAt(0);
             }
 
-            HeapFileEncoder.convert(in, out, BufferPool.getPageSize(), numOfAttributes, ts, fieldSeparator);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-            if (out != null) {
-                out.close();
-            }
+            catalog.dumpSchema(catalogFile);
+        } catch (org.apache.commons.cli.ParseException exp) {
+            System.err.println(exp.getMessage());
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("simpledb load", options);
+            return 1;
         }
+
         return 0;
 	}
 
