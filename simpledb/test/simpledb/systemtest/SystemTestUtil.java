@@ -84,7 +84,7 @@ public class SystemTestUtil {
         File temp = File.createTempFile("table", ".dat");
         temp.deleteOnExit();
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
-        HeapFileEncoder.convert(tuples, out, BufferPool.getPageSize(), columns);
+        HeapFileEncoder.convert(tuples, out, BufferPool.getPageSize(), columns, false);
         // flush out, otherwise temp file will have 0 bytes
         out.flush();
         return temp;

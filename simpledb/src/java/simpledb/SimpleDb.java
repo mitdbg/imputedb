@@ -273,7 +273,7 @@ imputationMethod);
                 try (
                     BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outFile))
                 ) {
-                    TupleDesc desc = HeapFileEncoder.convert(inFile, out, BufferPool.getPageSize(), ',', nullStrings);
+                    TupleDesc desc = HeapFileEncoder.convert(inFile, out, BufferPool.getPageSize(), ',', nullStrings, true);
                     catalog.addTable(new HeapFile(outFile, desc), tableName);
                 } catch (IOException e) {
                     System.err.format("Error: Processing file failed: %s\n", inFile);

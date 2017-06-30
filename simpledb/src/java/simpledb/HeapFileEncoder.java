@@ -35,10 +35,12 @@ public class HeapFileEncoder {
 	 *            The number of bytes per page in the output file
 	 * @param numFields
 	 *            the number of fields in each input tuple
+	 * @param withHeader
+	 * 				whether first record constitutes a header
 	 * @throws IOException
 	 *             if the temporary/output file can't be opened
 	 */
-	public static void convert(ArrayList<ArrayList<Integer>> tuples, BufferedOutputStream out, int npagebytes, int numFields)
+	public static void convert(ArrayList<ArrayList<Integer>> tuples, BufferedOutputStream out, int npagebytes, int numFields, boolean withHeader)
 			throws IOException {
 		// write out tuples to simple csv format
 		File outFile = File.createTempFile("tuples", ".csv");
@@ -64,7 +66,7 @@ public class HeapFileEncoder {
 		bw.close();
 
 		// read in csv file as dat binary data and write to out
-		convert(outFile, out, npagebytes, ',', new HashSet<String>());
+		convert(outFile, out, npagebytes, ',', new HashSet<String>(), withHeader);
 	}
 
 	private static Map<String, Type> getTypes(List<String> columns, Iterable<CSVRecord> records, Set<String> nullStrings) {
@@ -109,6 +111,25 @@ public class HeapFileEncoder {
 		return types;
 	}
 
+	private static String[] getUniqueFields(File inFile) throws IOException {
+		CSVParser parser = new CSVParser(new BufferedReader(new FileReader(inFile)),
+				CSVFormat.EXCEL.withNullString(NULL_STRING));
+		// first record used as header
+		CSVRecord header = parser.iterator().next();
+		List<String> uniqueFields = new ArrayList<String>();
+		for(int i = 0; i < header.size(); i++) {
+			String col = header.get(i);
+			if (!uniqueFields.contains(col)) {
+				// we can add it directly
+				uniqueFields.add(col);
+			} else {
+				// disambiguate by appending index
+				uniqueFields.add(col + "_" + i);
+			}
+		}
+		return uniqueFields.toArray(new String[0]);
+	}
+
 	/**
 	 * Convert the specified input text file into a binary page file. <br>
 	 * Assume format of the input file is (note that only integer fields are
@@ -134,10 +155,18 @@ public class HeapFileEncoder {
 	 *             line is encountered
 	 */
 	public static TupleDesc convert(File inFile, BufferedOutputStream out, int npagebytes,
-									char fieldSeparator, Set<String> nullStrings) throws IOException {
-		// allow missing values
-		final CSVParser typeParser = new CSVParser(new BufferedReader(new FileReader(inFile)),
-			CSVFormat.EXCEL.withNullString(NULL_STRING).withHeader());
+									char fieldSeparator, Set<String> nullStrings, boolean withHeaders) throws IOException {
+		CSVParser typeParser;
+		try {
+			typeParser = new CSVParser(new BufferedReader(new FileReader(inFile)),
+					CSVFormat.EXCEL.withNullString(NULL_STRING).withHeader());
+		} catch (IllegalArgumentException ex) {
+			// if header values are not unique, we can get an exception. We'll try to make progress
+			// by creating unique header names based on first tuple
+			String[] uniqueFields = getUniqueFields(inFile);
+			typeParser = new CSVParser(new BufferedReader(new FileReader(inFile)),
+					CSVFormat.EXCEL.withNullString(NULL_STRING).withHeader(uniqueFields));
+		}
 		// provide headers in appropriate order, based on underlying csv....
 		List<String> columns = new ArrayList<>();
 		for (Map.Entry<String, Integer> entry : typeParser.getHeaderMap().entrySet()) {
@@ -203,8 +232,14 @@ public class HeapFileEncoder {
 		final DataOutputStream headerStream = new DataOutputStream(headerBAOS);
 		final DataOutputStream pageStream = new DataOutputStream(pageBAOS);
 
-		final CSVParser parser = new CSVParser(new BufferedReader(new FileReader(inFile)),
-			CSVFormat.EXCEL.withNullString(NULL_STRING).withFirstRecordAsHeader());
+		CSVFormat formatter = CSVFormat.EXCEL.withNullString(NULL_STRING);
+		if (withHeaders) {
+			formatter = formatter.withFirstRecordAsHeader();
+		} else {
+			// use the fields we extracted before as headers
+			formatter = formatter.withHeader(fields.toArray(new String[0]));
+		}
+		final CSVParser parser = new CSVParser(new BufferedReader(new FileReader(inFile)), formatter);
 		final Iterator<CSVRecord> records = parser.iterator();
 
 		boolean done = false;

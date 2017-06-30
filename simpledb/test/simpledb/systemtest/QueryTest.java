@@ -34,7 +34,7 @@ public class QueryTest {
         File temp = File.createTempFile("table", ".dat");
         temp.deleteOnExit();
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
-        HeapFileEncoder.convert(tuples, out, BufferPool.getPageSize(), columns);
+        HeapFileEncoder.convert(tuples, out, BufferPool.getPageSize(), columns, false);
         return Utility.openHeapFile(columns, colPrefix, temp);
 	}
 	
