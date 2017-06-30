@@ -85,6 +85,8 @@ public class SystemTestUtil {
         temp.deleteOnExit();
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(temp));
         HeapFileEncoder.convert(tuples, out, BufferPool.getPageSize(), columns);
+        // flush out, otherwise temp file will have 0 bytes
+        out.flush();
         return temp;
     }
 

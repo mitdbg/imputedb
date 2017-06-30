@@ -40,7 +40,8 @@ public class HeapFileEncoder {
 	 */
 	public static void convert(ArrayList<ArrayList<Integer>> tuples, BufferedOutputStream out, int npagebytes, int numFields)
 			throws IOException {
-		File outFile = File.createTempFile("tuples", "csv");
+		// write out tuples to simple csv format
+		File outFile = File.createTempFile("tuples", ".csv");
 
 		FileWriter sw = new FileWriter(outFile);
 		BufferedWriter bw = new BufferedWriter(sw);
@@ -62,14 +63,20 @@ public class HeapFileEncoder {
 		}
 		bw.close();
 
+		// read in csv file as dat binary data and write to out
 		convert(outFile, out, npagebytes, ',', new HashSet<String>());
 	}
 
-	private static Map<String, Type> getTypes(Iterable<CSVRecord> records, Set<String> nullStrings) {
-		Map<String, Type> types = new HashMap<>();
+	private static Map<String, Type> getTypes(List<String> columns, Iterable<CSVRecord> records, Set<String> nullStrings) {
+		// linked hash map has predictable iteration order
+		// in particular, it retrieves keys in the order they are put in
+		// we want this to make sure columns aren't in a different order than the file
+		// they were read from (can be confusing, and messes up tests)
+		Map<String, Type> types = new LinkedHashMap<>();
+
 		for (CSVRecord record : records) {
 			Map<String, String> recordMap = record.toMap();
-			for (String key : recordMap.keySet()) {
+			for (String key : columns) {
 				String val = recordMap.get(key);
 				if (val == null ||
 					(types.containsKey(key) && types.get(key) == null) ||
@@ -131,7 +138,13 @@ public class HeapFileEncoder {
 		// allow missing values
 		final CSVParser typeParser = new CSVParser(new BufferedReader(new FileReader(inFile)),
 			CSVFormat.EXCEL.withNullString(NULL_STRING).withHeader());
-		Map<String, Type> types = getTypes(typeParser, nullStrings);
+		// provide headers in appropriate order, based on underlying csv....
+		List<String> columns = new ArrayList<>();
+		for (Map.Entry<String, Integer> entry : typeParser.getHeaderMap().entrySet()) {
+			columns.add(entry.getValue(), entry.getKey());
+		}
+		// map is returned in appropriate order based on columns
+		Map<String, Type> types = getTypes(columns, typeParser, nullStrings);
 
 		// Get the list of integer fields.
 		boolean ignoredFields = false;
