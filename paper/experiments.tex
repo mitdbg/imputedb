@@ -87,6 +87,10 @@ provide performance figures relevant to practitioners using similar datasets.
 Our benchmark queries performed well for both cases of \texttt{AVG} and \texttt{COUNT} aggregates, 
 so we expect \ProjectName{} to perform similarly for \texttt{SUM}, with 
 errors proportional to the fraction of relevant tuples retrieved and the \texttt{AVG} value estimated.}
+\cameraready{Aggregates such as \texttt{MAX} and \texttt{MIN} are unlikely to perform well with dynamic imputation,
+a difficulty carried over from traditional imputation and compounded by the dynamic nature 
+of our approach.}
+
 
 %Our first set of queries is on the CDC data (\Cref{fig:queries-cdc}).
 %\Cref{q1} calculates the average cuff size for individuals based on their income data, with a constraint on height.
@@ -261,7 +265,9 @@ We explored the limits of our planning algorithm by constructing a series of que
 Planning times for queries involving 1--5 joins---a practical value for  real world exploratory queries---are less than 1 second.
 We extended \ProjectName{} to support an approximation of Pareto sets to improve planning times for queries with 6 or more joins. Approximate Pareto sets
 displayed a reduction in planning time linear with respect to the reduction in size of the final frontier. For queries with 6--8 joins, approximate sets achieved a reduction
-in planning time between 14\% and 23\%, on average. Users can increase the level of approximation to reduce planning times further.
+in planning time between 14\% and 23\%, on average. \cameraready{For 6 joins, this is
+a decrease from a mean planning time of 3.3 seconds to 2.5 seconds. For 7 joins, the decrease was from 14.2 to 12.2 seconds, while for 8 joins, it was
+from 60 to 49 seconds.} Users can increase the level of approximation to reduce planning times further.
 
 \textbf{Imputation on Large Data}\quad
 In many real-world cases, applying imputation to an entire dataset is prohibitively expensive.
