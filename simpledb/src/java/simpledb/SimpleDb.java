@@ -36,7 +36,7 @@ public class SimpleDb {
 		} else if (command.equals("query")) {
 			ret = query(rest);
 		} else if (command.equals("experiment")) {
-			ret = experiment(rest);
+			ret = experiment(args); // TODO: Redo argument parsing.
 		} else if (command.equals("draw")) {
 			ret = draw(rest);
 		} else {
