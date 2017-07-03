@@ -89,11 +89,13 @@ set of plans is significantly smaller than the set of all plans, which our algor
 In order to pick a final plan from the frontier, our model introduces a trade-off parameter $\alpha$, which is an upper bound on the $\textsc{Penalty}$ value that the user is willing
 to tolerate relative to the minimum possible among the frontier plans.
 
+\cameraready{
 \begin{definition}
-Let $Q$ be a set of plans. For $q \in Q$, we say $q$ is $\alpha$-bound, if $(\textsc{Penalty}(q) - \min_{q' \in Q}(\textsc{Penalty}(q')) \leq \alpha$. We denote this as $q^\alpha$.
-We define the set of $\alpha$-bound plans in $Q$ as $Q^\alpha$.
-We say a plan $q^\alpha$ is $\alpha$-bound optimal if $\forall q' \in Q^\alpha. \textsc{Time}(q) \leq \textsc{Time}(q')$. 
+Let $Q$ be a set of plans. For $q \in Q$, we say $q$ is $\alpha$-bound if \[\textsc{Penalty}(q) - \min_{q' \in Q} \textsc{Penalty}(q') \leq \alpha.\] We denote this as $q^\alpha$.
+Let the set of $\alpha$-bound plans in $Q$ be $Q^\alpha$.
+We say a plan $q^\alpha$ is $\alpha$-bound optimal if \[\textsc{Time}(q^\alpha) = \min_{q' \in Q} \textsc{Time}(q').\]
 \end{definition}
+}
 
 Given $\alpha$ and $Q$, \ProjectName{} returns an $\alpha$-bound optimal plan in $Q$. In essence, $\alpha$ is a tunable parameter 
 that determines whether the optimizer focuses on quality or on performance, as plans that
