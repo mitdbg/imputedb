@@ -186,5 +186,15 @@ public class Utility {
         }
         return s;
     }
+
+    public static void removeDirectory(File dir) {
+        File[] contents = dir.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                removeDirectory(f);
+            }
+        }
+        dir.delete();
+    }
 }
 

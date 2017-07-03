@@ -257,6 +257,20 @@ imputationMethod);
             }
             String[] inputFiles = line.getArgs();
 
+            if (outDir.exists()) {
+                System.err.format("Database %s already exists. Remove? [y/n] ", outDir);
+                if ((new Scanner(System.in)).nextLine().toLowerCase().startsWith("y")) {
+                    Utility.removeDirectory(outDir);
+                } else {
+                    return 0;
+                }
+            }
+
+            if (!outDir.mkdirs()) {
+                System.err.format("Error: Failed to create database %s.\n", outDir);
+                return 1;
+            }
+
             Catalog catalog = new Catalog();
 
             for (String fileStr : inputFiles) {
