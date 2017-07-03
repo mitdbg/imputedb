@@ -321,22 +321,18 @@ cost and imputation quality. The plan-cache semantics are shown in~\Cref{fig:sem
   \cameraready{
   \begin{align*}
     \llbracket Q[T] \rrbracket &= \begin{cases}
-      P & (T, P) \in Q \\
+      P & (T,\ P) \in Q \\
       \emptyset & \text{otherwise} \\
     \end{cases} \\
-    \llbracket Q[T] \lhd p \rrbracket &= \begin{aligned} Q \cup \{(T,\ P') \} \end{aligned}\\
-    \text{ where }\\ 
-    S = \llbracket Q[T] \rrbracket \cup \{p\}\\
-    \text{ in }
-    P' &= \left\{q ~\Bigg|~ \begin{aligned}
-              q \in S,\\
-              \textsc{Dirty}(q) = \textsc{Dirty}(p) \implies\\
-              \not \exists q' \in S.\doms{q'}{q}
+    \llbracket Q[T] \lhd p \rrbracket &= \begin{aligned} Q \cup \{(T,\ P) \} \end{aligned} \text{ where }\\
+    P &= \left\{q \in S ~|~ \begin{aligned}
+              \textsc{Dirty}(q) \neq \textsc{Dirty}(p) \lor
+              \not \exists q' \in S:\ \doms{q'}{q}
               \end{aligned}
-            \right\}
+            \right\} \\
+    S &= \llbracket Q[T] \rrbracket \cup \{p\}
   \end{align*}
-  \caption{Semantics of a plan cache $Q$, where $T$ is a set of tables and $p$ is a query plan. \cameraready{When extending with a new plan $p$, the cache guarantees
-  no dominated plans with the same dirty set are kept.}}
+  \caption{\cameraready{Semantics of a plan cache $Q$. $T$ is a set of tables and $p$ is a query plan. The cache guaranteees that plans for the same set of tables either have distinct dirty sets or are Pareto optimal.}}
   \label{fig:semantics-plan-cache}
   }
 \end{figure}
