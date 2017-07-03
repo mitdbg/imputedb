@@ -2,6 +2,7 @@
 \renewcommand{\algorithmicindent}{1em}
 
 \review{
+\cameraready{
 \begin{algorithmic}[1]
     \Require{
     \Statex
@@ -11,20 +12,24 @@
     \end{itemize}}
   
   \Function{UpdateHistograms}{$H,\ op$}
+  \State Let $\mathit{Cols} = Keys(H)$ \Comment{all attribute names in the relation}
   \If{op = $\delta_C$}\label{lst:drop-start}
   \State Set null count to zero for $H[c]$ where $c \in C$.
-  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = \min_d \Call{Card}{H[d]}$, $\forall c$.\label{lst:drop-end}
+  \State Scale $H[c']$ s.t. $\Call{Card}{H[c']} = \min_{d \in \mathit{Cols}} \Call{Card}{H[d]}$, $\forall c' \in \mathit{Cols}$.\label{lst:drop-end}
   \ElsIf{op = $\mu_C$}\label{lst:impute-start}
   \State Scale $H[c]$ s.t. $\Call{Card}{H[c]}$ is unchanged and null
-  \State count is zero, $\forall c$.\label{lst:impute-end}
+  \State count is zero, $\forall c \in C$.\label{lst:impute-end}
   \ElsIf{op = $\sigma_\phi$}\label{lst:std-start}
-  \State Scale $H[c]$ by $\Call{Selectivity}{\phi, H}$, $\forall c$.
+  \State Scale $H[c']$ by $\Call{Selectivity}{\phi, H}$, $\forall c' \in \mathit{Cols}$.
   \ElsIf{op = $\bowtie_\phi$}
-  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = \Call{Card}{\bowtie_\phi}$, $\forall c$.
+
+  \State Let $N_{join}$ be the output cardinality of the join
+  \State Scale $H[c']$ s.t. $\Call{Card}{H[c']} = N_{join}$, $\forall c' \in \mathit{Cols}$.
   \EndIf\label{lst:std-end}
   \State \Return $H$
   \EndFunction
 \end{algorithmic}
+}
 }
 \caption{\review{An algorithm for in-plan histogram updates}}
 \label{algo:histogram-transformation}
