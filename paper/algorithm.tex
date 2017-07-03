@@ -138,7 +138,6 @@ this is a helper function $\textsc{L}_{P(q)}$, which
 is a recursive accumulator of penalties along imputation nodes instantiated
 with an impute-specific penalty operator. This accumulator is computed
 as follows.}
-
 \begin{align*}
     &\textsc{L}_{P}(q) = \begin{cases}
      1 + \textsc{L}(q') & q = \delta_C(q') \\
@@ -259,18 +258,16 @@ algorithm~\cite{quinlan1993}. Roughly, the time complexity of building one
 decision tree is $\mathcal{O}(nm \text{ } log(n))$, where $n$ is the number of tuples
 and $m$ is the number of dependent attributes~\cite{witten2016data}. Since we build
 $k * |\textsc{Dirty}(q)|$ trees, we have
-
 \begin{equation*}
     \begin{aligned}
     T(q) = k * &|\textsc{Dirty}(q)| * \textsc{Card}(q) * \\
-               &(|\textsc{Clean}(q)| + |\textsc{Dirty}(q)| - 1) * log(\textsc{Card}(q))
+               &(|\textsc{Clean}(q)| + |\textsc{Dirty}(q)| - 1) * log(\textsc{Card}(q)).
     \end{aligned}
 \end{equation*}
 
 Separately, we specify a heuristic penalty that takes into account the
 improvement in imputation quality from more tuples and attributes, as well as
 the diminishing returns from more data.
-
 \[
     P(q) = \frac{|\textsc{Dirty}(q)|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
 \]
@@ -283,11 +280,10 @@ Mean value imputation replaces missing values in a column with the mean of the a
 We can take advantage of the histograms maintained by \ProjectName{} to estimate the mean and construct a non-blocking impute operator.
 Applying the heuristics from~\Cref{sec:quality} and~\Cref{sec:query-runtime}, we
 have
-
 \begin{equation*}
 \begin{aligned}
     P(q) &= \sum_{c \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
-    T(q) &\approx 0
+    T(q) &\approx 0.
 \end{aligned}
 \end{equation*}
 
@@ -299,7 +295,6 @@ Random hot deck imputation is a nonparametric method in which missing values in 
 replaced with randomly selected complete values from the same column, preserving the
 distribution of the complete values. We use the same $P$ as for mean value imputation, but
 we modify $T$ to account for the fact that hot-deck is blocking in our implementation.  
-
 \begin{equation*}
 \begin{aligned}
     P(q) &= \sum_{c \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
