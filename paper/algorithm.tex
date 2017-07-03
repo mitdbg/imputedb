@@ -55,8 +55,8 @@ operators.
 We place imputation operators into the query plan so that no relational operator encounters a tuple containing \nullv{} in an attribute that the operator examines, regardless of the state of the data in the base tables.
 
 Imputation operators can be placed at any point, but there are cases where an imputation operator is required to meet the guarantee that no non-imputation operator sees a \nullv{} value. To track these cases, we associate each query plan $q$ with a set of dirty attributes $\textsc{Dirty}(q)$. An attribute $c$ is \emph{dirty} in some relation if the values for $c$ contain \nullv{}. We compute a dirty set for each table using the table histograms, which track the number of \nullv{} values in each column. The dirty set for a query plan can be computed recursively as follows:
-
 \begin{align*}
+\scalebox{0.95}[1]{
   \textsc{Dirty}(q) = \begin{cases}
     \textsc{Dirty}(q') \setminus C & q = \delta_C(q')\ \text{or}\ q = \mu_C(q') \\
     \textsc{Dirty}(q') \cap C & q = \pi_C(q') \\
@@ -64,6 +64,7 @@ Imputation operators can be placed at any point, but there are cases where an im
     \textsc{Dirty}(q') & q = \sigma_\phi(q') \\
     \textsc{Dirty}(t) & q = \text{some table}\ t \\
   \end{cases}
+}
 \end{align*}
 
 Note that \textsc{Dirty} over-approximates the set of attributes that contain \nullv{}. For example, a filter might remove all tuples which contain \nullv{}, but the dirty set would be unchanged. We choose to over-approximate to ensure that all \nullv{} values are explicitly imputed or dropped.
