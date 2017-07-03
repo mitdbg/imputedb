@@ -130,7 +130,11 @@ Cardinality estimation for standard relational operators (\Crefrange{lst:std-sta
 \subsubsection{Imputation quality} 
 \label{sec:quality}
 Each imputation method has an associated cost function $P$, which is a measure of the quality of its output.
-\ProjectName{} estimates the aggregate quality of the imputations in a plan $q$ using the heuristic measure $\textsc{Penalty}_{P}(q)$, computed as follows.
+\ProjectName{} estimates the aggregate quality of the imputations in a plan $q$ using the heuristic measure $\textsc{Penalty}_{P}(q)$. \cameraready{Underlying
+this is a helper function $\textsc{L}_{P(q)}$, which
+is a recursive accumulator of penalties along imputation nodes instantiated
+with an impute-specific penalty operator. This accumulator is computed
+as follows.}
 
 \begin{align*}
     &\textsc{L}_{P}(q) = \begin{cases}
