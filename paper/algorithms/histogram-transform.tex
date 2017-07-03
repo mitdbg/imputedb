@@ -10,21 +10,24 @@
     \item $H$: A map from attribute names to histograms.
     \item $op$: A relational operator.
     \end{itemize}}
-  
-  \Function{UpdateHistograms}{$H,\ op$}
-  \State Let $\mathit{Cols} = Keys(H)$ \Comment{all attribute names in the relation}
-  \If{op = $\delta_C$}\label{lst:drop-start}
-  \State Set null count to zero for $H[c]$ where $c \in C$.
-  \State Scale $H[c']$ s.t. $\Call{Card}{H[c']} = \min_{d \in \mathit{Cols}} \Call{Card}{H[d]}$, $\forall c' \in \mathit{Cols}$.\label{lst:drop-end}
-  \ElsIf{op = $\mu_C$}\label{lst:impute-start}
-  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]}$ is unchanged and null
-  \State count is zero, $\forall c \in C$.\label{lst:impute-end}
-  \ElsIf{op = $\sigma_\phi$}\label{lst:std-start}
-  \State Scale $H[c']$ by $\Call{Selectivity}{\phi, H}$, $\forall c' \in \mathit{Cols}$.
-  \ElsIf{op = $\bowtie_\phi$}
 
-  \State Let $N_{join}$ be the output cardinality of the join
-  \State Scale $H[c']$ s.t. $\Call{Card}{H[c']} = N_{join}$, $\forall c' \in \mathit{Cols}$.
+  \Function{UpdateHistograms}{$H,\ op$}
+  \State Let $Cols$ be the set of attribute names in $H$.
+  \If{op = $\delta_C$}\label{lst:drop-start}
+  \State Set null count to zero for $H[c]$ for $c \in C$.
+  \State $m \gets \min_{d \in \mathit{Cols}} \Call{Card}{H[d]}$
+  \State Scale $H[d]$ s.t. $\Call{Card}{H[d]} = m$ for $d \in Cols$.\label{lst:drop-end}
+  \ElsIf{op = $\mu_C$}\label{lst:impute-start}
+  \For{$c \in C$}
+  \State $k \gets \Call{Card}{H[c]}$
+  \State Set null count of $H[c]$ to zero.
+  \State Scale $H[c]$ s.t. $\Call{Card}{H[c]} = k$.
+  \EndFor\label{lst:impute-end}
+  \ElsIf{op = $\sigma_\phi$}\label{lst:std-start}
+  \State Scale $H[d]$ by $\Call{Selectivity}{\phi, H}$ for $d \in Cols$.
+  \ElsIf{op = $\bowtie_\phi$}
+  \State Let $k_{join}$ be the estimated cardinality of the join.
+  \State Scale $H[d]$ s.t. $\Call{Card}{H[d]} = k_{join}$ for $d \in Cols$.
   \EndIf\label{lst:std-end}
   \State \Return $H$
   \EndFunction
@@ -33,7 +36,7 @@
 }
 \caption{\review{An algorithm for in-plan histogram updates}}
 \label{algo:histogram-transformation}
-  
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../main"
