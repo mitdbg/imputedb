@@ -12,17 +12,39 @@ To build ImputeDB, run:
 cd simpledb; ant
 ```
 
-To create a database from a collection of CSV files, run:
+To create a database from the demo collection of CSV files, run:
 
 ``` shell
-./imputedb load --db demo.db data/demographic.csv data/labs.csv data/examination.csv
+./imputedb load --db demo.db demo_data/*
 ```
+
+This creates three tables:
+
+* `demo`: demographics data from the CDC
+* `labs`: laboratory data from the CDC
+* `exams`: physical examination data from the CDC
+
+and places their serialized representations in the `demo.db` folder,
+along with a catalog describing the table schemas..
 
 Then, to query the database, run:
 
 ``` shell
 ./imputedb query --db demo.db
 ```
+
+This launches the ImputeDB interpreter with an `--alpha 0.0` parameter
+as a default, which
+means ImputeDB will optimize for data quality. You can modify this
+by calling the interpreter with the `--alpha <double>` option.
+
+For example,
+
+``` shell
+./imputedb query --db demo.db --alpha 1.0
+```
+
+launches an interpreter that optimizes for query execution speed.
 
 # Experiments #
 
