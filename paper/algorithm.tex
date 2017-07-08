@@ -257,8 +257,9 @@ column in subsequent iterations. For our experiments, we use Weka's \texttt{REPT
 decision tree implementation~\cite{witten2016data}, a variant of the canonical \texttt{C4.5}
 algorithm~\cite{quinlan1993}. Roughly, the time complexity of building one
 decision tree is $\mathcal{O}(nm \text{ } log(n))$, where $n$ is the number of tuples
-and $m$ is the number of dependent attributes~\cite{witten2016data}. Since we build
-$k * |\textsc{Dirty}(q)|$ trees, we have
+and $m$ is the number of dependent attributes~\cite{witten2016data}.
+\cameraready{With $k$ cycles of the algorithm, where in each cycle there are
+$|\textsc{Dirty}(q)|$ iterations of fitting models for each dirty attribute, we have}
 \begin{equation*}
     \begin{aligned}
     T(q) = k * &|\textsc{Dirty}(q)| * \textsc{Card}(q) * \\
