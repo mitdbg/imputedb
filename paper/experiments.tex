@@ -5,7 +5,7 @@ base-table imputation and produces results of comparable quality, showing that o
 
 \subsection{Data Sets}\label{subsec:datasets}
 We collect three data sets for our experiments.
-For all data sets, we selected a subset of the original attributes.
+For all data sets, we select a subset of the original attributes.
 We also transform all data values to an integer representation by enumerating strings and transforming floating-point values into an appropriate range.
 
 \subsubsection{CDC NHANES}
@@ -137,7 +137,7 @@ order-of-magnitude faster than the baseline, with runtimes ranging from
 \runtimetreelowbase{} to \runtimetreehighbase{}. We get another order-of-magnitude speedup when
 optimizing for performance, achieving runtimes as low as \runtimetreelowone{} to
 \runtimetreehighone{}. These speedups, ranging from \lowxalphazero{}x to 
-\highxalphaone{}x, depending on $\alpha$ and query, constitute significant workflow improvements
+\highxalphaone{}x depending on $\alpha$ and query, constitute significant workflow improvements
 for the analyst.
 \end{sloppypar}
 
@@ -216,8 +216,8 @@ rest of query execution. Relative errors using hot deck are close to zero, rangi
 of \smapehotdeckhighoutlier{}\% and exhibits significant skew.) Since the baseline, in these
 cases, is hot deck imputation on the base table, it is skew in the distributions arising from
 filters and joins that often leads to larger errors. Indeed, \ProjectName{} yields
-larger benefit when using relatively sophisticated, higher quality imputation algorithms as
-opposed to simpler strategies that would even be quick to implement on the base table.
+larger benefits when using relatively sophisticated, higher quality imputation algorithms as
+opposed to simpler strategies that would be quick to implement even on the base tables.
 
 \textbf{Pareto Frontiers}\quad
 \Cref{fig:pareto-frontiers} shows the final Pareto frontiers produced by the planner for \Cref{q1} and \Cref{q6}. These are the resulting set of plans after pruning dominated plans throughout our algorithm
@@ -243,7 +243,7 @@ can be exposed to the user to guide their workflow.
 \includegraphics[scale=0.4]{figures/pareto_frontiers_plot.png}
 \caption{\review{
     \ProjectName{}'s final planner Pareto frontier for \Cref{q1} and \Cref{q6}. 
-    For clarity, we have removed from the plot plans that provide nearly indistinguishable trade-offs in either dimension.
+    For clarity, we have not shown plans that provide nearly indistinguishable trade-offs in either dimension.
 }
 \label{fig:pareto-frontiers}
 }
