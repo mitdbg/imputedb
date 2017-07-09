@@ -248,7 +248,10 @@ and are widely used in epidemiological domains~\cite{burgette2010multiple}.
 
 The chained-equation algorithm proceeds by
 iteratively fitting decision trees for the target attributes. 
-In each iteration, the missing values of a single attribute are replaced with newly imputed values.  Values in a single column can be updated over multiple
+In each iteration, the missing values of a single attribute are replaced with newly imputed
+values. \cameraready{Attributes that contain missing values but that are not being imputed are
+ignored by the imputation.}
+Values in a single column can be updated over multiple
 iterations of the algorithm. With more iterations, the quality of the
 imputation improves as values progressively reflect more accurate relationships
 between attributes. The algorithm terminates after a fixed number of
