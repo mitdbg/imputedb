@@ -182,7 +182,7 @@ worst case, as this approach most closely corresponds to dropping all
 performance for a specific use case.
 
 \textbf{Accuracy vs. Base-table Imputation (COUNT)}\quad
-We also calculate the number of tuples used to produce each aggregate output.
+We calculate the number of tuples used to produce each aggregate output.
 The count fraction columns in \Cref{table:smape} show the number of tuples in the aggregate for $\alpha = 0$ and $\alpha = 1$ as a fraction of the number of tuples used when running the query on the imputed base table.
 This shows that when optimizing for performance, not quality, many tuples are dropped due to
 insertion of $\delta$ operators.
@@ -198,7 +198,7 @@ By using \ProjectName{} this cost can be lowered significantly. We can also triv
 $\textsc{Penalty}$ estimate, along with the number of tuples that have been dropped (after execution), so that situations with high potential for skewed results can be identified by the user.
 
 \textbf{Alternate Imputation Methods}\quad
-We also experiment with mean-value imputation and hot deck imputation
+We experiment with mean-value imputation and hot deck imputation
 (\Cref{sec:imputation}). In our implementation of mean-value imputation, to facilitate
 non-blocking operation within the iterator model, we estimate the column mean from base
 table histograms. Therefore, imputed values are identical no matter where the operator is
