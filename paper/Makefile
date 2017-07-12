@@ -1,11 +1,27 @@
+.DEFAULT_TARGET := help
+
 MAIN=main
 REBUTTAL=rebuttal
 
-pdf: $(MAIN).tex $(MAIN).bcf $(REBUTTAL).tex
-	pdflatex main.tex
-	biber main.bcf
-	pdflatex main.tex
-	pdflatex rebuttal.tex
+help:
+	@echo "make help"
+	@echo "    all: compile main.pdf and rebuttal.pdf"
+	@echo "    main: compile main.pdf"
+	@echo "    rebuttal: compile rebuttal.pdf"
+	@echo "    clean: clean auxiliary files for main and rebuttal"
+	@echo
+	@echo "    *Note*: uses \`latexmk' for compilation management. Please install latexmk"
+	@echo "            if you do not have it already."
+
+all: $(MAIN) $(REBUTTAL)
+
+$(MAIN):
+	latexmk -pdf $@
+
+$(REBUTTAL):
+	latexmk -pdf $@
 
 clean:
-	rm -vf *.bbl *.bbg *.blg *.aux *.fls *.fdb_latexmk *.log *.out *.toc *.synctex.gz $(MAIN).pdf
+	latexmk -quiet -C $(MAIN)
+	latexmk -quiet -C $(REBUTTAL)
+
