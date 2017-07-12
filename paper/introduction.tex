@@ -45,12 +45,16 @@ and allow the analyst to specify their desired plan from this frontier.
 % Implications
 Our approach enables an exploratory analysis workflow in which the analyst can issue
 standard SQL queries over a data set, even if that data has missing values.
-These queries execute between \lowxalphazero{} and \highxalphazero{} times faster than
-imputing all missing values and then running queries (the traditional approach). Furthermore, the results obtained with this approach
-are similar in quality to those obtained with the traditional imputation approach
---- between \lowsmapealphazero{} and \cameraready{\highsmapealphazero{}}
-percent --- in our empirical results over real-world data sets (see~\Cref{sec:experiments}
-for details).
+\cameraready{
+Using dynamic imputation, these queries execute between \lowxalphazero{} and
+\highxalphazero{} times faster than the traditional approach of first imputing all missing
+values and then running queries. Empirical results obtained using dynamic imputation
+on real-world datasets show errors within \lowsmapealphazero{} to \highsmapealphazero{} percent of
+the traditional approach (see~\Cref{sec:experiments} for more details). Alternately,
+configuring dynamic imputation to prioritize query runtime yields further speedups of
+\lowxalphaone{} to \highxalphaone{} times, with errors of \lowsmapealphaone{} to
+\highsmapealphaone{} percent.
+}
 
 
 \subsection{Contributions}
