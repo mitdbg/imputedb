@@ -249,8 +249,10 @@ and are widely used in epidemiological domains~\cite{burgette2010multiple}.
 The chained-equation algorithm proceeds by
 iteratively fitting decision trees for the target attributes. 
 In each iteration, the missing values of a single attribute are replaced with newly imputed
-values. \cameraready{Attributes that contain missing values but that are not being imputed are
-ignored by the imputation.}
+values. \cameraready{
+Attributes that contain missing values but that are not being imputed are
+ignored by the imputation.
+}
 Values in a single column can be updated over multiple
 iterations of the algorithm. With more iterations, the quality of the
 imputation improves as values progressively reflect more accurate relationships
@@ -261,12 +263,16 @@ decision tree implementation~\cite{witten2016data}, a variant of the canonical \
 algorithm~\cite{quinlan1993}. Roughly, the time complexity of building one
 decision tree is $\mathcal{O}(nm \text{ } log(n))$, where $n$ is the number of tuples
 and $m$ is the number of dependent attributes~\cite{witten2016data}.
-\cameraready{With $k$ cycles of the algorithm, where in each cycle there are
-$|\textsc{Dirty}(q)|$ iterations of fitting models for each dirty attribute, we have}
+\cameraready{
+Recall that $C$ is the set of dirty attributes that are being imputed in a
+given operation, where $C \subseteq \textsc{Dirty}(q)$.
+With $k$ cycles of the algorithm, where in each cycle there are
+$|C|$ iterations of fitting models for each dirty attribute, we have
+}
 \begin{equation*}
     \begin{aligned}
-    T(q) = k * &|\textsc{Dirty}(q)| * \textsc{Card}(q) * \\
-               &(|\textsc{Clean}(q)| + |\textsc{Dirty}(q)| - 1) * log(\textsc{Card}(q)).
+    T(q) = k * &|C| * \textsc{Card}(q) * \\
+               &(|\textsc{Clean}(q)| + |C| - 1) * log(\textsc{Card}(q)).
     \end{aligned}
 \end{equation*}
 
@@ -274,7 +280,7 @@ Separately, we specify a heuristic penalty that takes into account the
 improvement in imputation quality from more tuples and attributes, as well as
 the diminishing returns from more data.
 \[
-    P(q) = \frac{|\textsc{Dirty}(q)|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
+    P(q) = \frac{|C|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
 \]
 
 \subsubsection{\cameraready{Non-Blocking Approximate Mean}}\label{subsubsec:mean}
@@ -287,7 +293,7 @@ Applying the heuristics from~\Cref{sec:quality} and~\Cref{sec:query-runtime}, we
 have
 \begin{equation*}
 \begin{aligned}
-    P(q) &= \sum_{c \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
+    P(q) &= \sum_{c \in C} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
     T(q) &\approx 0.
 \end{aligned}
 \end{equation*}
@@ -302,7 +308,7 @@ distribution of the complete values. We use the same $P$ as for mean value imput
 we modify $T$ to account for the fact that hot-deck is blocking in our implementation.  
 \begin{equation*}
 \begin{aligned}
-    P(q) &= \sum_{c \in \textsc{Dirty}(q)} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
+    P(q) &= \sum_{c \in C} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
     T(q) &= \textsc{Card}(q)
 \end{aligned}
 \end{equation*}
