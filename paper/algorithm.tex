@@ -271,7 +271,7 @@ $|C|$ iterations of fitting models for each dirty attribute, we have
 }
 \begin{equation*}
     \begin{aligned}
-    T(q) = k * &|C| * \textsc{Card}(q) * \\
+    T(q) = k * &|\cameraready{C}| * \textsc{Card}(q) * \\
                &(|\textsc{Clean}(q)| + |C| - 1) * log(\textsc{Card}(q)).
     \end{aligned}
 \end{equation*}
@@ -280,7 +280,7 @@ Separately, we specify a heuristic penalty that takes into account the
 improvement in imputation quality from more tuples and attributes, as well as
 the diminishing returns from more data.
 \[
-    P(q) = \frac{|C|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
+    P(q) = \frac{|\cameraready{C}|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
 \]
 
 \subsubsection{\cameraready{Non-Blocking Approximate Mean}}\label{subsubsec:mean}
@@ -293,7 +293,7 @@ Applying the heuristics from~\Cref{sec:quality} and~\Cref{sec:query-runtime}, we
 have
 \begin{equation*}
 \begin{aligned}
-    P(q) &= \sum_{c \in C} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
+    P(q) &= \sum_{c \in \cameraready{C}} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
     T(q) &\approx 0.
 \end{aligned}
 \end{equation*}
@@ -308,7 +308,7 @@ distribution of the complete values. We use the same $P$ as for mean value imput
 we modify $T$ to account for the fact that hot-deck is blocking in our implementation.  
 \begin{equation*}
 \begin{aligned}
-    P(q) &= \sum_{c \in C} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
+    P(q) &= \sum_{c \in \cameraready{C}} \frac{1+\widehat{Var}(c)}{\textsc{Card}(q)} \\
     T(q) &= \textsc{Card}(q)
 \end{aligned}
 \end{equation*}
