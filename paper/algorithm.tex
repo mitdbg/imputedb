@@ -261,20 +261,24 @@ decision tree implementation~\cite{witten2016data}, a variant of the canonical \
 algorithm~\cite{quinlan1993}. Roughly, the time complexity of building one
 decision tree is $\mathcal{O}(nm \text{ } log(n))$, where $n$ is the number of tuples
 and $m$ is the number of dependent attributes~\cite{witten2016data}.
-\cameraready{With $k$ cycles of the algorithm, where in each cycle there are
-$|\textsc{Dirty}(q)|$ iterations of fitting models for each dirty attribute, we have}
-\begin{equation*}
+
+\cameraready{
+  We define the time function as follows.
+  Let $C$ be the set of attributes to be imputed and let $k$ be the number of cycles of the algorithm, where in each cycle there are
+  $|\textsc{Dirty}(q)|$ iterations of fitting models for each dirty attribute.
+  Then, we have
+  \begin{equation*}
     \begin{aligned}
-    T(q) = k * &|\textsc{Dirty}(q)| * \textsc{Card}(q) * \\
-               &(|\textsc{Clean}(q)| + |\textsc{Dirty}(q)| - 1) * log(\textsc{Card}(q)).
+      T(q) = k &\times |C| \times \textsc{Card}(q) \\
+      &\times \left(|\textsc{Clean}(q)| + |\textsc{Dirty}(q)| - 1\right) \times \log\ \textsc{Card}(q).
     \end{aligned}
-\end{equation*}
+\end{equation*}}
 
 Separately, we specify a heuristic penalty that takes into account the
 improvement in imputation quality from more tuples and attributes, as well as
 the diminishing returns from more data.
 \[
-    P(q) = \frac{|\textsc{Dirty}(q)|}{\sqrt{ \textsc{Attr}(q) * \textsc{Card}(q)}}
+    P(q) = \frac{|\textsc{Dirty}(q)|}{\sqrt{ \textsc{Attr}(q) \times \textsc{Card}(q)}}
 \]
 
 \subsubsection{\cameraready{Non-Blocking Approximate Mean}}\label{subsubsec:mean}
