@@ -192,9 +192,9 @@ In these cases, the aggregate value is not significantly impacted by the missing
 particular, if values are missing completely at random,
 the aggregate should not be affected.
 However, if the missing data is biased then the aggregate will have a significant error.
-This highlights a challenge for a user handling data imputation traditionally: it is unclear if the missing data will have a large or small negative impact on their analysis until they have paid the cost of running it.
+This highlights a challenge for a user handling data imputation traditionally: it is unclear if the missing data will have a large or small negative impact on their analysis until they have paid the cost of running it. By using \ProjectName{} this cost can be lowered significantly.
 
-By using \ProjectName{} this cost can be lowered significantly. We can also trivially extend \ProjectName{} to warn users when the query chosen for execution has a high
+We can also trivially extend \ProjectName{} to warn users when the query chosen for execution has a high
 $\textsc{Penalty}$ estimate, along with the number of tuples that have been dropped (after execution), so that situations with high potential for skewed results can be identified by the user.
 
 \textbf{Alternate Imputation Methods}\quad
@@ -234,7 +234,7 @@ can be exposed to the user to guide their workflow.
     available.
     The count fraction column shows the number of tuples used in calculating each aggregate
     as a fraction of the number of tuples used when running the same query after imputing on the base table.
-    A lower count share reflects more potential for errors.}\label{table:smape}
+    A lower count fraction reflects more potential for errors.}\label{table:smape}
   \input{tables/perf_summary.tex}
 \end{table}
 

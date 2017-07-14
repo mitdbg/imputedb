@@ -37,7 +37,7 @@
   \State Let $Q$ be an empty plan cache.
   \For{$t \in T$} \Comment{Add selections to the plan cache.}
   \If {$\exists \phi: (t, \phi) \in F$}
-  \State $Q[\{t\}] \lhd \{\sigma_{\phi}(q)\ |\ q \in \Call{Impute}{t, \Call{Attrs}{\phi}, C_g}\}$~\label{lst:line:sel}
+  \State $Q[\{t\}] \lhd \{\sigma_{\phi}(q)\ |\ q \in \Call{Impute}{t, \Call{Attr}{\phi}, C_g}\}$~\label{lst:line:sel}
   \Else\ $Q[\{t\}] \lhd \{t\}$~\label{lst:line:scan}
   \EndIf
   \EndFor
@@ -46,8 +46,8 @@
   \For{$S \in \{\text{all length}\ size\ \text{subsets of}\ T\}$}
   \For{$t \in S$}
   \For{$(t,\ \psi,\ t') \in J$ where $t' \in S \setminus t$}
-  \State $L \gets \{\Call{Impute}{q,\ \Call{Attrs}{\psi},\ C_g} ~|~ q \in Q[S \setminus t] \}$
-  \State $R \gets \{\Call{Impute}{q,\ \Call{Attrs}{\psi},\ C_g} ~|~ q \in Q[\{t\}] \}$
+  \State $L \gets \{\Call{Impute}{q,\ \Call{Attr}{\psi},\ C_g} ~|~ q \in Q[S \setminus t] \}$
+  \State $R \gets \{\Call{Impute}{q,\ \Call{Attr}{\psi},\ C_g} ~|~ q \in Q[\{t\}] \}$
   \State $Q[S] \lhd \{l \bowtie_\psi r ~|~ l \in L,\ r \in R\}$
   \EndFor
   \EndFor
@@ -56,7 +56,7 @@
   \Statex
   \State $B \gets Q[T]$ \Comment{Get the best plans for all tables.}
   \If{$G \neq \emptyset$} \Comment{Add optional group \& aggregate.}~\label{lst:line:group}
-  \State $C_l \gets G \cup \Call{Attrs}{A}$
+  \State $C_l \gets G \cup \Call{Attr}{A}$
   \State $B \gets \bigcup_{q \in B} \{g(q', G, A) ~|~ q' \in \Call{Impute}{q, C_l,\ C_g}\}$~\label{lst:line:proj}
   \EndIf
   
