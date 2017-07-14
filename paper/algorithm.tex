@@ -1,4 +1,5 @@
 \section{Algorithm}
+\label{sec:algorithm}
 In order to correctly plan around missing values, we first extend the set of relational algebra operators (selection $\sigma$, projection $\pi$, join $\bowtie$, and group-by/aggregate $g$) 
 with two new operators (\Cref{sec:operators}). We then define the search space (\Cref{sec:search-space}) of plans to encompass non-trivial operations, such as joins and 
 aggregations. Soundness of query execution is provided by our main design invariant, which guarantees traditional relational
@@ -8,6 +9,26 @@ quality of the imputations performed and the runtime performance. Our planning a
 agnostic to the type of imputation used (\Cref{sec:imputation}).
 Finally, we show that while our algorithm is exponential in the number of joins (\Cref{sec:complexity}), planning times are not a concern in practice.
 
+\begin{table}
+  \centering
+  \caption{\cameraready{Notation used in Section~\ref{sec:algorithm}.}}
+\cameraready{
+  \begin{tabular}{ll}
+    \toprule
+    Operator & Description \\
+    \midrule
+    $\textsc{Attr}(\cdot)$ & Attributes used in a predicate. \\
+    $\textsc{Time}(\cdot)$ & Estimated time to run a plan. \\
+    $\textsc{Penalty}(\cdot)$ & Imputation quality penalty of a plan. \\
+    $\textsc{Card}(\cdot)$ & Estimated cardinality of a plan. \\
+    $\widehat{Var}(\cdot)$ & Estimated variance of a column. \\
+    $\textsc{Dirty}(\cdot)/\textsc{Clean}(\cdot)$ & Dirty/clean attributes in a plan. \\
+    $Q[\cdot]$ & Plan cache access operator. \\
+    $\cdot \triangleleft \cdot$ & Plan cache insertion operator. \\
+    \bottomrule
+  \end{tabular}
+}
+\end{table}
 
 \subsection{Imputation Operators}
 \label{sec:operators}
