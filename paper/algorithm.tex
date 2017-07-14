@@ -340,7 +340,7 @@ cost and imputation quality. The plan-cache semantics are shown in~\Cref{fig:sem
             \right\} \\
     S &= \llbracket Q[T] \rrbracket \cup \{p\}
   \end{align*}
-  \caption{\cameraready{Semantics of a plan cache $Q$. We use $\llbracket\ \rrbracket$ to mean evaluation. $T$ is a set of tables and $p$ is a query plan. The cache guaranteees that plans for the same set of tables either have distinct dirty sets or are Pareto optimal.}}
+  \caption{\cameraready{Semantics of the plan cache access and insertion syntax. We use $\llbracket\ \rrbracket$ to mean evaluation. $Q$ is a plan cache, $T$ is a set of tables, and $p$ is a query plan. The cache guaranteees that plans for the same set of tables either have distinct dirty sets or are Pareto optimal.}}
   \label{fig:semantics-plan-cache}
   }
 \end{figure}
