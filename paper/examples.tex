@@ -27,6 +27,7 @@ necessary to fill in the missing data.
 An example query is shown in~\Cref{fig:example-query}.
 
 \begin{figure}
+  \captionsetup{labelfont=bf}
 \begin{lstlisting}[language=SQL]
 SELECT income, AVG(white_blood_cell_ct)
 FROM demo, exams, labs
@@ -41,6 +42,7 @@ GROUP BY demo.income
 \end{figure}
 
 \begin{figure}
+  \captionsetup{labelfont=bf}
   \begin{subfigure}{\columnwidth}
     \Tree
   [.$\pi_{\text{income, AVG(white\_blood\_cell\_ct)}}$
