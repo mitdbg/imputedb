@@ -1391,7 +1391,7 @@
 \global\conf{Proceedings of the VLDB Endowment,}
 \global\confinfo{Vol. 10, No. 11}
 \newtoks\copyrightetc
-\global\copyrightetc{Copyright 2017 VLDB Endowment 2150-8097/17/07}
+\global\copyrightetc{Copyright 2017 VLDB Endowment 2150-8097/17/08}
 
 %% Uncomment for camera ready
 \toappear{\the\boilerplate\par
