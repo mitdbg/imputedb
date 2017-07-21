@@ -97,7 +97,7 @@ several plans on an optimal frontier. \Cref{fig:quality-plan} shows a quality-op
 which employs a reference imputation strategy to fill in missing values rather than dropping tuples.
 It waits to impute \verb|demo.income| until after the final join has taken place, though other imputations take place earlier on in the plan, some before filtering and join operations.
 Imputations are placed to maximize ImputeDB's estimate of the quality of the overall results.
-On the other hand, \Cref{fig:fast-plan} shows a performance-optimized plan that uses the \textit{Drop} operation $\delta$ instead of filling in missing values.
+On the other hand, \Cref{fig:fast-plan} shows a performance-optimized plan that uses the \textit{Drop} operator $\delta$ instead of filling in missing values.
 However, it is a significant improvement over dropping all tuples with missing data in any field, as it only drops tuples with missing values in attributes which are referenced by the rest of the plan. In both cases, only performing
 imputation on the necessary data yields a query that is much faster
 than performing imputation on the whole dataset and then executing
