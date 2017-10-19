@@ -203,7 +203,7 @@ public class Catalog {
             e.printStackTrace();
             System.exit(-1);
         } catch (IndexOutOfBoundsException e) {
-            System.out.println ("Invalid catalog entry : " + line);
+            System.err.println ("Invalid catalog entry : " + line);
             System.exit(-1);
         }
     }

@@ -213,7 +213,7 @@ public class Parser {
                                     + ") not supported.");
                 }
                 groupByField = ((ZConstant) gbe).getValue();
-                System.out.println("GROUP BY FIELD : " + groupByField);
+                System.err.println("GROUP BY FIELD : " + groupByField);
             }
 
         }
@@ -240,7 +240,7 @@ public class Parser {
                 aggField = ((ZConstant) ((ZExpression) si.getExpression())
                         .getOperand(0)).getValue();
                 aggFun = si.getAggregate();
-                System.out.println("Aggregate field is " + aggField
+                System.err.println("Aggregate field is " + aggField
                         + ", agg fun is : " + aggFun);
                 lp.addProjectField(aggField, aggFun);
             } else {
@@ -310,13 +310,13 @@ public class Parser {
                 java.lang.reflect.Method m = c.getMethod(
                         "updateOperatorCardinality", p, h, h);
 
-                System.out.println("The query plan is:");
+                System.err.println("The query plan is:");
                 m.invoke(null, (Operator) physicalPlan,
                         lp.getTableAliasToIdMapping(), TableStats.getStatsMap());
                 c = Class.forName("simpledb.QueryPlanVisualizer");
                 m = c.getMethod(
-                        "printQueryPlanTree", DbIterator.class, System.out.getClass());
-                m.invoke(c.newInstance(), physicalPlan,System.out);
+                        "printQueryPlanTree", DbIterator.class, System.err.getClass());
+                m.invoke(c.newInstance(), physicalPlan,System.err);
             } catch (ClassNotFoundException e) {
             } catch (SecurityException e) {
             } catch (NoSuchMethodException e) {
@@ -471,7 +471,7 @@ public class Parser {
             curtrans.abort();
             curtrans = null;
             inUserTrans = false;
-            System.out.println("Transaction " + curtrans.getId().getId()
+            System.err.println("Transaction " + curtrans.getId().getId()
                     + " aborted.");
 
         } else if (s.getStmtType().equals("SET TRANSACTION")) {
@@ -536,7 +536,7 @@ public class Parser {
                 if (!this.inUserTrans) {
                     curtrans = new Transaction();
                     curtrans.start();
-                    System.out.println("Started a new transaction tid = "
+                    System.err.println("Started a new transaction tid = "
                             + curtrans.getId().getId());
                 }
                 try {
@@ -550,7 +550,7 @@ public class Parser {
                         query = handleQueryStatement((ZQuery) s,
                                 curtrans.getId());
                     else {
-                        System.out
+                        System.err
                                 .println("Can't parse "
                                         + s
                                         + "\n -- parser only handles SQL transactions, insert, delete, and select statements");
@@ -560,14 +560,14 @@ public class Parser {
 
                     if (!inUserTrans && curtrans != null) {
                         curtrans.commit();
-                        System.out.println("Transaction "
+                        System.err.println("Transaction "
                                 + curtrans.getId().getId() + " committed.");
                     }
                 } catch (Throwable a) {
                     // Whenever error happens, abort the current transaction
                     if (curtrans != null) {
                         curtrans.abort();
-                        System.out.println("Transaction "
+                        System.err.println("Transaction "
                                 + curtrans.getId().getId()
                                 + " aborted because of unhandled error");
                     }
@@ -592,12 +592,12 @@ public class Parser {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (simpledb.ParsingException e) {
-            System.out
+            System.err
                     .println("Invalid SQL expression: \n \t" + e.getMessage());
         } catch (Zql.ParseException e) {
-            System.out.println("Invalid SQL expression: \n \t " + e);
+            System.err.println("Invalid SQL expression: \n \t " + e);
         } catch (Zql.TokenMgrError e) {
-            System.out.println("Invalid SQL expression: \n \t " + e);
+            System.err.println("Invalid SQL expression: \n \t " + e);
         }
     }
 
@@ -659,7 +659,7 @@ public class Parser {
                     processNextStatement(new ByteArrayInputStream(
                             statementBytes));
                     long time = System.currentTimeMillis() - startTime;
-                    System.out.printf("----------------\n%.2f seconds\n\n",
+                    System.err.printf("----------------\n%.2f seconds\n\n",
                             ((double) time / 1000.0));
 
                     // Grab the remainder of the line

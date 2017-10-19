@@ -396,7 +396,7 @@ public class ImputedLogicalPlan extends LogicalPlan {
 		if (tablesImputed.size() >= 7) {
 			// use approximate pareto set for large number of joins
 			// with imputation scatter across the tables
-			System.out.println("Using approximate pareto sets");
+			System.err.println("Using approximate pareto sets");
 			cache.setApproximate();
 		}
 

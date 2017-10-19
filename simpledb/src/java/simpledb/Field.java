@@ -51,10 +51,6 @@ public interface Field extends Serializable{
                 result = ((StringField) fo).equals((StringField) fi);
             }
         }
-        if (result==false){
-            System.out.println(fo);
-            System.out.println(fi);
-        }
         return result;
     }
 }
