@@ -140,13 +140,13 @@ These histograms track the distribution of values in the column as well as the n
 During query planning, each of the logical nodes in a query plan points to a set of histograms which describe the distribution of values in the output of the node.
 When the optimizer creates a new query plan, it copies the histograms of the sub-plans and modifies them as described in~\Cref{algo:histogram-transformation} to account for the new operation in the plan.
 
-Drop operators (\Crefrange{lst:drop-start}{lst:drop-end}) reduce the cardinality of their input relation by removing tuples which contain missing values.
-For a drop $\delta_C$, for each column $c \in C$ we set its missing value count to zero, because all of these tuples will be dropped.
+\textit{Drop} operators (\Crefrange{lst:drop-start}{lst:drop-end}) reduce the cardinality of their input relation by removing tuples which contain missing values.
+For a \textit{Drop} $\delta_C$, for each column $c \in C$ we set its missing value count to zero, because all of these tuples will be dropped.
 This can result in a set of histograms which have different cardinalities if some columns have more missing values than others.
 To account for the discrepancy, we rescale all the histograms without changing the shape of their distributions to match the lowest cardinality column.
 
-Impute operators (\Crefrange{lst:impute-start}{lst:impute-end}) maintain the cardinality of their inputs, but they also fill in missing values.
-For an impute $\mu_C$, we set the missing value count to zero, and rescale each histogram so that its new cardinality, with no missing values, is the same as its old cardinality.
+\textit{Impute} operators (\Crefrange{lst:impute-start}{lst:impute-end}) maintain the cardinality of their inputs, but they also fill in missing values.
+For an \textit{Impute} $\mu_C$, we set the missing value count to zero, and rescale each histogram so that its new cardinality, with no missing values, is the same as its old cardinality.
 We assume that the imputed values will not change the shape of the distribution of values in each column.
 
 Cardinality estimation for standard relational operators (\Crefrange{lst:std-start}{lst:std-end}) is the same as in a typical database.
