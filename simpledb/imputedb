@@ -7,4 +7,4 @@ if [ ! -e "$IMPUTEDB_PATH" ]; then
     exit 1
 fi
 
-java -jar $IMPUTEDB_PATH $@
+java -jar $IMPUTEDB_PATH "$@"
