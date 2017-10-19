@@ -481,13 +481,6 @@ public class ImputedLogicalPlan extends LogicalPlan {
 				}
 			}
 		}
-		
-		try {
-			(new ImputedPlanCacheDottedWriter(new File("query_plans/"), aggPlans)).write(allTables);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
 
 		DbIterator physicalPlan = null;
 		ImputedPlan chosenPlan = aggPlans.getFinalPlan(lossWeight, allTables);
