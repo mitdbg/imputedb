@@ -18,11 +18,6 @@ public class Transaction {
     /** Start the transaction running */
     public void start() {
         started = true;
-        try {
-            Database.getLogFile().logXactionBegin(tid);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public TransactionId getId() {
@@ -43,14 +38,6 @@ public class Transaction {
     public void transactionComplete(boolean abort) throws IOException {
 
         if (started) {
-            //write commit / abort records
-            if (abort) {
-                Database.getLogFile().logAbort(tid); //does rollback too
-            } else {
-                //write all the dirty pages for this transaction out
-                Database.getBufferPool().flushPages(tid);
-                Database.getLogFile().logCommit(tid);
-            }
 
             try {
                 Database.getBufferPool().transactionComplete(tid, !abort); // release locks
