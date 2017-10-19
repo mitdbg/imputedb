@@ -49,6 +49,6 @@ public class CleanTest {
 		ZStatement s = p.readStatement();
 		Parser pp = new Parser();
 		Query query = pp.handleQueryStatement((ZQuery)s, new TransactionId());
-		query.execute();
+		query.execute(new PrintTupleFormatter(System.out));
 	}
 }

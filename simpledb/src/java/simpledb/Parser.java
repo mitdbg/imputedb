@@ -11,11 +11,20 @@ import jline.ConsoleReader;
 import jline.SimpleCompletor;
 
 public class Parser {
-    static boolean explain = false;
+    private boolean explain = false;
     private final Function<Void, LogicalPlan> planFactory;
+    private Transaction curtrans = null;
+    private boolean inUserTrans = false;
+
+    // Basic SQL completions
+    public static final String[] SQL_COMMANDS = { "select", "from", "where",
+        "group by", "max(", "min(", "avg(", "count", "rollback", "commit",
+        "insert", "delete", "values", "into" };
+
+    static final String usage = "Usage: parser catalogFile [-explain] [-f queryFile] [--alpha <double>] [--base]";
     
     public Parser(Function<Void, LogicalPlan> planFactory) {
-    	this.planFactory = planFactory;
+        this.planFactory = planFactory;
     }
     
     public Parser(double alpha, boolean imputeAtBase) {
@@ -285,9 +294,6 @@ public class Parser {
         return lp;
     }
 
-    private Transaction curtrans = null;
-    private boolean inUserTrans = false;
-
     public Query handleQueryStatement(ZQuery s, TransactionId tId)
             throws TransactionAbortedException, DbException, IOException,
             simpledb.ParsingException, Zql.ParseException {
@@ -510,21 +516,20 @@ public class Parser {
     public void setTransaction(Transaction t) {
         curtrans = t;
     }
-
     public Transaction getTransaction() {
         return curtrans;
     }
 
-    public void processNextStatement(String s) {
+    public void processNextStatement(String s, ATupleFormatter formatter) {
         try {
-            processNextStatement(new ByteArrayInputStream(s.getBytes("UTF-8")));
+            processNextStatement(new ByteArrayInputStream(s.getBytes("UTF-8")), formatter);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
 
-    public void processNextStatement(InputStream is) {
+    public void processNextStatement(InputStream is, ATupleFormatter formatter) {
         try {
             ZqlParser p = new ZqlParser(is);
             ZStatement s = p.readStatement();
@@ -556,7 +561,7 @@ public class Parser {
                                         + "\n -- parser only handles SQL transactions, insert, delete, and select statements");
                     }
                     if (query != null)
-                        query.execute();
+                        query.execute(formatter);
 
                     if (!inUserTrans && curtrans != null) {
                         curtrans.commit();
@@ -601,23 +606,37 @@ public class Parser {
         }
     }
 
-    // Basic SQL completions
-    public static final String[] SQL_COMMANDS = { "select", "from", "where",
-            "group by", "max(", "min(", "avg(", "count", "rollback", "commit",
-            "insert", "delete", "values", "into" };
+    protected void shutdown() { }
 
-    static final String usage = "Usage: parser catalogFile [-explain] [-f queryFile] [--alpha <double>] [--base]";
-
-    protected void shutdown() {
-        System.out.println("Bye");
-    }
-
-    protected int start(File catalogFile, Boolean shouldExplain) {
+    protected void setup(File catalogFile, boolean shouldExplain) {
         explain = shouldExplain;
-
-        // first add tables to database
         Database.getCatalog().loadSchema(catalogFile.toString());
         TableStats.computeStatistics();
+    }
+
+    /**
+     * Run a single query
+     * @param catalogFile
+     */
+    public void runSingleQuery(File catalogFile, String query, boolean shouldExplain, boolean outputCsv) {
+        setup(catalogFile, shouldExplain);
+        ATupleFormatter formatter = null;
+        if (outputCsv) {
+            formatter = new CsvTupleFormatter(System.out);
+        } else {
+            formatter = new PrintTupleFormatter(System.out);
+        }
+        processNextStatement(query, formatter);
+    }
+
+    /**
+     * Start an interactive query session.
+     * @param catalogFile
+     * @param shouldExplain
+     * @return
+     */
+    protected int start(File catalogFile, boolean shouldExplain) {
+        setup(catalogFile, shouldExplain);
 
         ConsoleReader reader;
         try {
@@ -636,6 +655,8 @@ public class Parser {
         StringBuilder buffer = new StringBuilder();
         String line;
         boolean quit = false;
+
+        ATupleFormatter formatter = new PrintTupleFormatter(System.out);
 
         try {
             while (!quit && (line = reader.readLine("SimpleDB> ")) != null) {
@@ -656,8 +677,7 @@ public class Parser {
                     }
 
                     long startTime = System.currentTimeMillis();
-                    processNextStatement(new ByteArrayInputStream(
-                            statementBytes));
+                    processNextStatement(new ByteArrayInputStream(statementBytes), formatter);
                     long time = System.currentTimeMillis() - startTime;
                     System.err.printf("----------------\n%.2f seconds\n\n",
                             ((double) time / 1000.0));

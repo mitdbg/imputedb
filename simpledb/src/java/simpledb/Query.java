@@ -92,27 +92,20 @@ public class Query implements Serializable {
         started = false;
     }
 
-    public void execute() throws IOException, DbException, TransactionAbortedException {
+    public void execute(ATupleFormatter formatter) throws IOException, DbException, TransactionAbortedException {
         TupleDesc td = this.getOutputTupleDesc();
 
-        String names = "";
-        for (int i = 0; i < td.numFields(); i++) {
-            names += td.getFieldName(i) + "\t";
-        }
-        System.out.println(names);
-        for (int i = 0; i < names.length() + td.numFields() * 4; i++) {
-            System.out.print("-");
-        }
-        System.out.println("");
+        formatter.formatHeader(td);
+
+        int cnt = 0;
 
         this.start();
-        int cnt = 0;
         while (this.hasNext()) {
-            Tuple tup = this.next();
-            System.out.println(tup);
+            formatter.formatTuple(this.next());
             cnt++;
         }
-        System.out.println("\n " + cnt + " rows.");
         this.close();
+
+        formatter.formatFooter("\n " + cnt + " rows.");
     }
 }

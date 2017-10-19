@@ -160,15 +160,34 @@ imputationMethod);
                 .type(File.class)
                 .desc("the directory which contains the database")
                 .build());
+        options.addOption(Option.builder("c")
+                .optionalArg(true)
+                .hasArg()
+                .argName("command")
+                .type(String.class)
+                .desc("run a single query and exit")
+                .build());
+        options.addOption(Option.builder()
+                .longOpt("csv")
+                .optionalArg(true)
+                .build());
 
 	    CommandLineParser parser = new DefaultParser();
 	    try {
 	        CommandLine line = parser.parse(options, args);
             double alpha = Double.parseDouble(line.getOptionValue("alpha", defaultAlpha));
             File catalogFile = new File(line.getOptionValue("db") + "/catalog.txt");
+            String query = line.getOptionValue("c", null);
+            boolean useCsv = line.hasOption("csv");
 
             Parser sqlParser = new Parser(alpha, false);
-            return sqlParser.start(catalogFile, false);
+
+            if (query == null) {
+                return sqlParser.start(catalogFile, false);
+            } else {
+                sqlParser.runSingleQuery(catalogFile, query, false, useCsv);
+                return 0;
+            }
         } catch (org.apache.commons.cli.ParseException exp) {
 	        System.err.println(exp.getMessage());
 	        HelpFormatter formatter = new HelpFormatter();

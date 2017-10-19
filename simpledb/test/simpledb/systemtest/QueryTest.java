@@ -9,16 +9,7 @@ import java.util.ArrayList;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import simpledb.BufferPool;
-import simpledb.Database;
-import simpledb.DbException;
-import simpledb.HeapFile;
-import simpledb.HeapFileEncoder;
-import simpledb.Parser;
-import simpledb.TableStats;
-import simpledb.Transaction;
-import simpledb.TransactionAbortedException;
-import simpledb.Utility;
+import simpledb.*;
 
 public class QueryTest {
 	
@@ -83,7 +74,8 @@ public class QueryTest {
 		// So, don't bother for now; future TODO.
 		// Regardless, each of the following should be optimized to run quickly,
 		// even though the worst case takes a very long time.
-		p.processNextStatement("SELECT * FROM emp,dept,hobbies,hobby WHERE emp.c1 = dept.c0 AND hobbies.c0 = emp.c2 AND hobbies.c1 = hobby.c0 AND emp.c3 < 1000;");
+		PrintTupleFormatter f = new PrintTupleFormatter(System.out);
+		p.processNextStatement("SELECT * FROM emp,dept,hobbies,hobby WHERE emp.c1 = dept.c0 AND hobbies.c0 = emp.c2 AND hobbies.c1 = hobby.c0 AND emp.c3 < 1000;", f);
 	}
 	
 	/**
@@ -181,6 +173,7 @@ public class QueryTest {
 		// So, don't bother for now; future TODO.
 		// Regardless, each of the following should be optimized to run quickly,
 		// even though the worst case takes a very long time.
-		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t WHERE bigTable.c0 = n.c0 AND a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1 AND n.c0 = o.c0 AND o.c1 = p.c1 AND p.c1 = q.c1 AND q.c0 = r.c0 AND r.c1 = s.c1 AND s.c0 = t.c0;");
+		PrintTupleFormatter f = new PrintTupleFormatter(System.out);
+		p.processNextStatement("SELECT COUNT(a.c0) FROM bigTable, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t WHERE bigTable.c0 = n.c0 AND a.c1 = b.c1 AND b.c0 = c.c0 AND c.c1 = d.c1 AND d.c0 = e.c0 AND e.c1 = f.c1 AND f.c0 = g.c0 AND g.c1 = h.c1 AND h.c0 = i.c0 AND i.c1 = j.c1 AND j.c0 = k.c0 AND k.c1 = l.c1 AND l.c0 = m.c0 AND m.c1 = n.c1 AND n.c0 = o.c0 AND o.c1 = p.c1 AND p.c1 = q.c1 AND q.c0 = r.c0 AND r.c1 = s.c1 AND s.c0 = t.c0;", f);
 	}
 }
