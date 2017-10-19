@@ -18,26 +18,10 @@ public class Database {
     private final Catalog _catalog;
     private final BufferPool _bufferpool;
 
-    private final static String LOGFILENAME = "log";
-    private final LogFile _logfile;
-
     private Database() {
         _catalog = new Catalog();
         _bufferpool = new BufferPool(BufferPool.DEFAULT_PAGES);
-        LogFile tmp = null;
-        try {
-            tmp = new LogFile(new File(LOGFILENAME));
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        _logfile = tmp;
         // startControllerThread();
-    }
-
-    /** Return the log file of the static Database instance */
-    public static LogFile getLogFile() {
-        return _instance.get()._logfile;
     }
 
     /** Return the buffer pool of the static Database instance */
