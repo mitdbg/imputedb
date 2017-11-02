@@ -1,6 +1,6 @@
 package simpledb;
 
-import Zql.*;
+import org.gibello.zql.*;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -127,9 +127,6 @@ public class Parser {
                     } catch (IOException e) {
                         throw new simpledb.ParsingException("Invalid subquery "
                                 + ops.elementAt(1));
-                    } catch (Zql.ParseException e) {
-                        throw new simpledb.ParsingException("Invalid subquery "
-                                + ops.elementAt(1));
                     }
                 } else {
                     tab2field = ((ZConstant) ops.elementAt(1)).getValue();
@@ -156,9 +153,7 @@ public class Parser {
 
     }
 
-    public LogicalPlan parseQueryLogicalPlan(TransactionId tid, ZQuery q)
-            throws IOException, Zql.ParseException, simpledb.ParsingException {
-        @SuppressWarnings("unchecked")
+    public LogicalPlan parseQueryLogicalPlan(TransactionId tid, ZQuery q) throws IOException, simpledb.ParsingException {
         Vector<ZFromItem> from = q.getFrom();
         LogicalPlan lp = planFactory.apply(null);
         lp.setQuery(q.toString());
@@ -229,7 +224,6 @@ public class Parser {
 
         // walk the select list, pick out aggregates, and check for query
         // validity
-        @SuppressWarnings("unchecked")
         Vector<ZSelectItem> selectList = q.getSelect();
         String aggField = null;
         String aggFun = null;
@@ -275,7 +269,6 @@ public class Parser {
         // sort the data
 
         if (q.getOrderBy() != null) {
-            @SuppressWarnings("unchecked")
             Vector<ZOrderBy> obys = q.getOrderBy();
             if (obys.size() > 1) {
                 throw new simpledb.ParsingException(
@@ -296,7 +289,7 @@ public class Parser {
 
     public Query handleQueryStatement(ZQuery s, TransactionId tId)
             throws TransactionAbortedException, DbException, IOException,
-            simpledb.ParsingException, Zql.ParseException {
+            simpledb.ParsingException, ParseException {
         Query query = new Query(tId);
 
         LogicalPlan lp = parseQueryLogicalPlan(tId, s);
@@ -343,7 +336,7 @@ public class Parser {
 
     public Query handleQueryStatementSilent(ZQuery s, TransactionId tId)
             throws TransactionAbortedException, DbException, IOException,
-            simpledb.ParsingException, Zql.ParseException {
+            simpledb.ParsingException, ParseException {
         Query query = new Query(tId);
         LogicalPlan lp = parseQueryLogicalPlan(tId, s);
         DbIterator physicalPlan = lp.physicalPlan(tId,
@@ -355,7 +348,7 @@ public class Parser {
 
     public Query handleInsertStatement(ZInsert s, TransactionId tId)
             throws TransactionAbortedException, DbException, IOException,
-            simpledb.ParsingException, Zql.ParseException {
+            simpledb.ParsingException, ParseException {
         int tableId;
         try {
             tableId = Database.getCatalog().getTableId(s.getTable()); // will
@@ -429,7 +422,7 @@ public class Parser {
 
     public Query handleDeleteStatement(ZDelete s, TransactionId tid)
             throws TransactionAbortedException, DbException, IOException,
-            simpledb.ParsingException, Zql.ParseException {
+            simpledb.ParsingException, ParseException {
         int id;
         try {
             id = Database.getCatalog().getTableId(s.getTable()); // will fall
@@ -460,38 +453,6 @@ public class Parser {
 
     }
 
-    public void handleTransactStatement(ZTransactStmt s)
-            throws TransactionAbortedException, DbException, IOException,
-            simpledb.ParsingException, Zql.ParseException {
-        if (s.getStmtType().equals("COMMIT")) {
-            if (curtrans == null)
-                throw new simpledb.ParsingException(
-                        "No transaction is currently running");
-            curtrans.commit();
-            curtrans = null;
-            inUserTrans = false;
-        } else if (s.getStmtType().equals("ROLLBACK")) {
-            if (curtrans == null)
-                throw new simpledb.ParsingException(
-                        "No transaction is currently running");
-            curtrans.abort();
-            curtrans = null;
-            inUserTrans = false;
-            System.err.println("Transaction " + curtrans.getId().getId()
-                    + " aborted.");
-
-        } else if (s.getStmtType().equals("SET TRANSACTION")) {
-            if (curtrans != null)
-                throw new simpledb.ParsingException(
-                        "Can't start new transactions until current transaction has been committed or rolledback.");
-            curtrans = new Transaction();
-            curtrans.start();
-            inUserTrans = true;
-        } else {
-            throw new simpledb.ParsingException("Unsupported operation");
-        }
-    }
-
     public LogicalPlan generateLogicalPlan(TransactionId tid, String s)
             throws simpledb.ParsingException {
         ByteArrayInputStream bis = new ByteArrayInputStream(s.getBytes());
@@ -502,7 +463,7 @@ public class Parser {
                 LogicalPlan lp = parseQueryLogicalPlan(tid, (ZQuery) stmt);
                 return lp;
             }
-        } catch (Zql.ParseException e) {
+        } catch (org.gibello.zql.ParseException e) {
             throw new simpledb.ParsingException(
                     "Invalid SQL expression: \n \t " + e);
         } catch (IOException e) {
@@ -535,9 +496,9 @@ public class Parser {
             ZStatement s = p.readStatement();
 
             Query query = null;
-            if (s instanceof ZTransactStmt)
-                handleTransactStatement((ZTransactStmt) s);
-            else {
+            if (s instanceof ZTransactStmt) {
+                throw new simpledb.ParsingException("Transaction statements are not supported.");
+            } else {
                 if (!this.inUserTrans) {
                     curtrans = new Transaction();
                     curtrans.start();
@@ -579,10 +540,10 @@ public class Parser {
                     this.inUserTrans = false;
 
                     if (a instanceof simpledb.ParsingException
-                            || a instanceof Zql.ParseException)
+                            || a instanceof ParseException)
                         throw new ParsingException((Exception) a);
-                    if (a instanceof Zql.TokenMgrError)
-                        throw (Zql.TokenMgrError) a;
+                    if (a instanceof TokenMgrError)
+                        throw (TokenMgrError) a;
                     throw new DbException(a.getMessage());
                 } finally {
                     if (!inUserTrans)
@@ -590,8 +551,6 @@ public class Parser {
                 }
             }
 
-        } catch (TransactionAbortedException e) {
-            e.printStackTrace();
         } catch (DbException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -599,9 +558,9 @@ public class Parser {
         } catch (simpledb.ParsingException e) {
             System.err
                     .println("Invalid SQL expression: \n \t" + e.getMessage());
-        } catch (Zql.ParseException e) {
+        } catch (ParseException e) {
             System.err.println("Invalid SQL expression: \n \t " + e);
-        } catch (Zql.TokenMgrError e) {
+        } catch (TokenMgrError e) {
             System.err.println("Invalid SQL expression: \n \t " + e);
         }
     }

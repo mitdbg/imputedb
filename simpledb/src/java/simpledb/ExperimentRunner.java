@@ -1,9 +1,9 @@
 package simpledb;
 
-import Zql.ParseException;
-import Zql.ZQuery;
-import Zql.ZStatement;
-import Zql.ZqlParser;
+import org.gibello.zql.ParseException;
+import org.gibello.zql.ZQuery;
+import org.gibello.zql.ZStatement;
+import org.gibello.zql.ZqlParser;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileWriter;

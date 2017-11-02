@@ -8,10 +8,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import Zql.ParseException;
-import Zql.ZQuery;
-import Zql.ZStatement;
-import Zql.ZqlParser;
+import org.gibello.zql.ParseException;
+import org.gibello.zql.ZQuery;
+import org.gibello.zql.ZStatement;
+import org.gibello.zql.ZqlParser;
 import simpledb.*;
 
 @Ignore
