@@ -1,8 +1,8 @@
 package simpledb;
 
-import org.gibello.zql.ZQuery;
-import org.gibello.zql.ZStatement;
-import org.gibello.zql.ZqlParser;
+import Zql.ZQuery;
+import Zql.ZStatement;
+import Zql.ZqlParser;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -76,7 +76,7 @@ public class SimpleDb {
                 Query plan = pp.handleQueryStatement((ZQuery)s, new TransactionId());
                 String fileName = outputPrefix + "_" + i + ".dot";
                 QueryPlanDotter.print(plan.getPhysicalPlan(), fileName);
-            } catch (org.gibello.zql.ParseException | ParsingException e) {
+            } catch (Zql.ParseException | ParsingException e) {
                 e.printStackTrace();
             }
         }
